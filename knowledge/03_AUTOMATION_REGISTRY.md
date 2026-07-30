@@ -213,6 +213,28 @@ Contains the large-scale backup flows for Monday activity records and Emails & A
 
 ---
 
+## 5.1 Power Automate Solution mapping
+
+Read-only Power Automate Solution export evidence exists for a subset of the flows above under `exports/power-automate/solutions/`. See `exports/power-automate/solution-inventory.md` for the full flow-level mapping, including flows found in an export but not currently listed in §5 above, and vice versa. This table is a summary; the inventory file is authoritative for evidence status.
+
+| Automation ID | Solution Unique Name | Exact flows (export evidence) | Export location | Evidence status |
+|---|---|---|---|---|
+| `AUTO-DOCUSIGN-001` | `DocuSigntoSharePoint` | `DocuSign to SharePoint ` | `exports/power-automate/solutions/docusign-to-sharepoint/` | Confirmed from export and canonical documentation |
+| `AUTO-EMAIL-001` | `RSFAOutlookEmailFilling` | `Main Outlook Inbox Email Filling`, `OLD Outlook SENT Email Filling - Jet v2`, `Outlook SENT Email Filling - Rod v2`, `Outlook SENT Email Filling - Kathleen v2`, `Outlook Email Filing - Support v2`, `Overflow Emails Contact Matching`, `Overflow Emails Related Client Profile Change` | `exports/power-automate/solutions/rsfa-outlook-email-filing/` | Confirmed from export and canonical documentation |
+| `AUTO-EMAIL-001` | `RSFAOutlookEmailFilling` | `Outlook Email Filling - Jet v2`, `Outlook Email Filling - Kathleen v2`, `Outlook Email Filling - Rod v2` | `exports/power-automate/solutions/rsfa-outlook-email-filing/` | Likely mapping — registry spells these "Filing", export spells them "Filling"; not silently corrected |
+| `AUTO-EMAIL-001` (candidate) | `RSFAOutlookEmailFilling` | `Outlook INBOX items email filing (Rod)`, `Outlook INBOX items email filing (Kathleen)`, `Sent Emails Control`, `Outlook SENT Email Filling - Support v2` | `exports/power-automate/solutions/rsfa-outlook-email-filing/` | Unmapped Power Automate flow — canonical classification required. First two are for mailboxes already covered by other registered flows; last two have no equivalent registry entry at all |
+| `AUTO-EMAIL-001` | *(no export in this set)* | `Outlook Email Filing - Seth v2`, `Outlook SENT Email Filling - Seth v2`, `Overflow Emails Suggested Match Approval` | — | Registered in §5 but absent from every current export — inverse gap, not resolved |
+| `AUTO-EMAIL-BACKUP-001` | `RSFAOutlookEmailFilling` | `Email Filling Failed Items Processing` | `exports/power-automate/solutions/rsfa-outlook-email-filing/` | Confirmed from export and canonical documentation |
+| `AUTO-SP-FOLDER-001` | `SPClientFolderCreationandRenaming` | `SharePoint - Client Folder Creation from Monday.com`, `SharePoint - Rename Client Folder from Monday.com` | `exports/power-automate/solutions/sp-client-folder-creation-and-renaming/` | Confirmed from export and canonical documentation |
+| `AUTO-SP-FOLDER-001` | `SPAdviserNameChange` | `SharePoint - RSFA Asignees Permissions Creation and Modification` | `exports/power-automate/solutions/sp-adviser-name-change/` | Likely mapping — registry spells this "Assignees", export spells it "Asignees"; not silently corrected |
+| `AUTO-SP-FOLDER-001` (candidate) | `SPAdviserNameChange` | `SharePoint - RSFA Asignees Permissions Modification` | `exports/power-automate/solutions/sp-adviser-name-change/` | Unmapped Power Automate flow — canonical classification required. Draft/not-activated in this export |
+
+**`SPAdviserNameChange` naming note:** despite its display name, this Solution's flows implement RSFA Assignees permission creation/modification, not a client or adviser rename — the actual rename flow (`SharePoint - Rename Client Folder from Monday.com`) lives in the separate `SPClientFolderCreationandRenaming` Solution. See `exports/power-automate/solutions/sp-adviser-name-change/manifest.md` § "Known gaps".
+
+**Security note:** several of the flows above were found, on export inspection, to contain hardcoded Monday.com and OpenAI credentials directly in their action definitions rather than in a Connection Reference. See each Solution manifest's Security Review section — this is a live-credential exposure finding, not just a documentation gap, and both credentials should be rotated.
+
+---
+
 ## 6. Monday workflow inventory
 
 RSFA has hundreds of board-level native automation recipes. They are not individually inventoried in this initial registry. The two confirmed active Monday Workflows are:
@@ -323,4 +345,4 @@ When adding an automation:
 
 ## 13. Source inventory
 
-This registry was assembled from the read-only Make.com inventory and call graph, current Power Automate environment screenshots, available Power Automate documentation, the Monday workspace structure export, the confirmed two Monday Workflows and current RSFA system context.
+This registry was assembled from the read-only Make.com inventory and call graph, current Power Automate environment screenshots, available Power Automate documentation, the Monday workspace structure export, the confirmed two Monday Workflows and current RSFA system context. §5.1 additionally draws on four read-only Power Automate Solution exports inspected on 2026-07-30 — see `exports/power-automate/solution-inventory.md`.

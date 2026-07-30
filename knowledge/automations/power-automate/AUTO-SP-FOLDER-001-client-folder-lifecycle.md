@@ -99,12 +99,16 @@ Not applicable.
 
 | Exact flow name | Flow type | Role | Current status | Source confidence |
 |---|---|---|---|---|
-| SharePoint - Client Folder Creation from Monday.com | Automated | Creates folder + standard subfolders, writes link back to Monday | Active | Current (registry); source-material file "SharePoint Client File Creation from M.com.md" matches in substance |
-| SharePoint - RSFA Assignees Permissions Creation and Modification | Automated | Grants/revokes adviser edit permissions | Active | Current (registry); source-material file "RSFA Asignees Permissions Creation_Modification.md" matches closely (two sub-functionalities: Creation and Modification) |
-| SharePoint - Rename Client Folder from Monday.com | Automated | Renames folder on Client Profile name change, updates Monday link | Active | Current (registry); source-material file "Rename Client SP Folder per m.com change.md" matches in substance |
-| Massive Client Folders Renaming | Instant | Bulk maintenance rename utility | Active | Current (registry); execute only with explicit approval |
-| Massive SP Files Renaming | Instant | Bulk maintenance file-rename utility | Active | Current (registry); execute only with explicit approval |
-| Moves Client Folder to Recycle Bin | Automated | Deletes (soft) a client folder on manual request | Active | Current (registry); source-material file matches exactly by name |
+| SharePoint - Client Folder Creation from Monday.com | Automated | Creates folder + standard subfolders, writes link back to Monday | Active | Confirmed from export — `SPClientFolderCreationandRenaming` Solution export (2026-07-30), workflow ID `906285cd-0f9e-f011-bbd2-000d3ae0ae9d`, Activated, HTTP-Request trigger. Exact name match. Source-material file "SharePoint Client File Creation from M.com.md" matches in substance |
+| SharePoint - RSFA Assignees Permissions Creation and Modification | Automated | Grants/revokes adviser edit permissions | Active | Likely mapping — the `SPAdviserNameChange` Solution export (2026-07-30) contains `"SharePoint - RSFA Asignees Permissions Creation and Modification"` (workflow ID `74103209-0f9e-f011-bbd2-000d3ae0ae9d`, Activated, HTTP-Request trigger); registry spells "Assignees", export spells "Asignees" (missing one "s"). Not silently corrected. Source-material file "RSFA Asignees Permissions Creation_Modification.md" uses the same "Asignees" spelling |
+| SharePoint - Rename Client Folder from Monday.com | Automated | Renames folder on Client Profile name change, updates Monday link | Active | Confirmed from export — `SPClientFolderCreationandRenaming` Solution export, workflow ID `8f6285cd-0f9e-f011-bbd2-000d3ae0ae9d`, Activated, HTTP-Request trigger. Exact name match. Source-material file "Rename Client SP Folder per m.com change.md" matches in substance |
+| Massive Client Folders Renaming | Instant | Bulk maintenance rename utility | Active | Current (registry only) — not present in either Power Automate Solution export in this set |
+| Massive SP Files Renaming | Instant | Bulk maintenance file-rename utility | Active | Current (registry only) — not present in either Power Automate Solution export in this set |
+| Moves Client Folder to Recycle Bin | Automated | Deletes (soft) a client folder on manual request | Active | Current (registry only) — not present in either Power Automate Solution export in this set; source-material file matches exactly by name |
+
+**Additional flow found in the `SPAdviserNameChange` export with no current registry entry:** `SharePoint - RSFA Asignees Permissions Modification` (workflow ID `73103209-0f9e-f011-bbd2-000d3ae0ae9d`), Draft (not activated) at export time, HTTP-Request trigger. Not listed anywhere in `knowledge/03_AUTOMATION_REGISTRY.md` §5. Unmapped Power Automate flow — canonical classification required; not assumed to be a duplicate or predecessor of the "Creation and Modification" flow above without live verification.
+
+**Solution-naming note:** the `SPAdviserNameChange` Solution's display name ("SP Adviser Name Change") does not match what its two flows actually do (Assignees permission creation/modification) — the actual client/folder rename logic is the separate `SharePoint - Rename Client Folder from Monday.com` flow, packaged in the different `SPClientFolderCreationandRenaming` Solution. See `exports/power-automate/solutions/sp-adviser-name-change/manifest.md` § "Known gaps".
 
 ### Monday native automations or workflows
 
@@ -216,17 +220,22 @@ Disable the affected Power Automate flow. Bulk rename utilities have no automate
 - `source-material/power-automate/RSFA Asignees Permissions Creation_Modification.md` — Current. Permission creation/modification logic.
 - `source-material/power-automate/Rename Client SP Folder per m.com change.md` — Current. Rename logic.
 - `source-material/power-automate/Moves Client Folder to Recycle Bin.md` — Current. Recycle-bin logic.
-- `knowledge/03_AUTOMATION_REGISTRY.md` §3, §5 — Current. Flow inventory and status.
+- `knowledge/03_AUTOMATION_REGISTRY.md` §3, §5, §5.1 — Current. Flow inventory, status and Solution mapping.
 - `knowledge/01_RSFA_SYSTEM_MAP.md` §4.1 — Current. Client folder naming convention.
+- `exports/power-automate/solutions/sp-client-folder-creation-and-renaming/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms exact flow names, workflow IDs and Activated state for the creation and rename flows.
+- `exports/power-automate/solutions/sp-adviser-name-change/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms the "Asignees" spelling used in the live environment and surfaces one unmapped Draft-state flow.
 
 ## 25. Known gaps
 
 - Exact standard subfolder list is only partially confirmed ("Mortgages", "Risk Insurance" as examples in source material — TODO: verify the complete current list).
 - Error-handling behaviour for edge cases (duplicate folder names, missing `pulseID`) is unconfirmed.
 - Exact SharePoint permission-group names are not recorded.
+- **New, unresolved as of 2026-07-30:** `SharePoint - RSFA Asignees Permissions Modification` (Draft/not activated in the export) has no registry entry and its relationship to the registered "Creation and Modification" flow is unconfirmed. The bulk/maintenance flows (`Massive Client Folders Renaming`, `Massive SP Files Renaming`, `Moves Client Folder to Recycle Bin`) are registered but were not present in either Power Automate Solution exported so far — no export evidence exists for them yet.
+- **Security finding from the 2026-07-30 exports:** all four flows across the `SPAdviserNameChange` and `SPClientFolderCreationandRenaming` Solutions were found to call Monday.com using a hardcoded HTTP Authorization header containing a literal API bearer token, instead of a Connection Reference or Environment Variable. The literal value has been redacted in the repository's unpacked copies; see each Solution manifest's "Security review" section. This credential should be rotated.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and source-material evidence. | Claude (documentation task) |
+| 2026-07-30 | Added export evidence from the `SPClientFolderCreationandRenaming` and `SPAdviserNameChange` Power Automate Solution exports: exact workflow IDs and export-time states for 3 registered flows; flagged 1 unmapped Draft-state flow, the "Assignees"/"Asignees" spelling conflict, 3 registered flows with no export evidence yet, and a hardcoded-credential security finding — none silently resolved. | Claude (documentation task) |

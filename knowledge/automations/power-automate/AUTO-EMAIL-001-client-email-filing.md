@@ -128,19 +128,30 @@ Not applicable. This automation runs entirely on Power Automate.
 
 | Exact flow name | Flow type | Role | Current status | Source confidence |
 |---|---|---|---|---|
-| Main Outlook Inbox Email Filling | Instant child flow | Central reusable filing logic (matching, filing, tagging, timeline, Slack) | Active | Partial — matches source-material walkthrough closely but exact flow name in source material is "Outlook Email Filing to SharePoint" |
-| Outlook Email Filing - Support v2 | Automated | Mailbox-specific caller for `support` mailbox | Active | Current (registry) |
-| Outlook Email Filing - Seth v2 | Automated | Mailbox-specific caller | Active | Current (registry) |
-| Outlook SENT Email Filling - Seth v2 | Automated | Sent-folder caller for Seth | Active | Current (registry) |
-| Outlook Email Filing - Kathleen v2 | Automated | Mailbox-specific caller | Active | Current (registry) |
-| Outlook SENT Email Filling - Kathleen v2 | Automated | Sent-folder caller for Kathleen | Active | Current (registry) |
-| Outlook Email Filing - Rod v2 | Automated | Mailbox-specific caller | Active | Current (registry) |
-| Outlook SENT Email Filling - Rod v2 | Automated | Sent-folder caller for Rod | Active | Current (registry) |
-| Outlook Email Filing - Jet v2 | Automated | Mailbox-specific caller | Active - Planned Retirement | Current (registry) |
-| OLD Outlook SENT Email Filling - Jet v2 | Automated | Sent-folder caller for Jet | Active - Planned Retirement | Current (registry) |
-| Overflow Emails Contact Matching | Instant | AI-suggested Client Profile match for overflow items | Active | Current (registry); implementation detail TODO: verify |
-| Overflow Emails Suggested Match Approval | Automated | Human approval gate for AI-suggested match | Active | Current (registry); implementation detail TODO: verify |
-| Overflow Emails Related Client Profile Change | Automated | Reprocesses an email once a Client Profile is manually assigned | Active | Current (registry); implementation detail TODO: verify |
+| Main Outlook Inbox Email Filling | Instant child flow | Central reusable filing logic (matching, filing, tagging, timeline, Slack) | Active | Confirmed from export — `RSFAOutlookEmailFilling` Solution export (2026-07-30), workflow ID `f6906da4-c8ed-ef11-9341-6045bd3ce9ae`, Activated, HTTP-Request child-flow trigger. Matches source-material walkthrough closely, though the source-material file is titled "Outlook Email Filing to SharePoint" |
+| Outlook Email Filing - Support v2 | Automated | Mailbox-specific caller for `support` mailbox | Active | Confirmed from export — workflow ID `ca963563-abfb-ef11-bae3-6045bd4096fa`, Activated |
+| Outlook Email Filing - Seth v2 | Automated | Mailbox-specific caller | Active | Current (registry only) — absent from the 2026-07-30 `RSFAOutlookEmailFilling` export; not resolved as missing-from-export vs. registry-stale |
+| Outlook SENT Email Filling - Seth v2 | Automated | Sent-folder caller for Seth | Active | Current (registry only) — same gap as above |
+| Outlook Email Filing - Kathleen v2 | Automated | Mailbox-specific caller | Active | Likely mapping — export contains `"Outlook Email Filling - Kathleen v2"` (workflow ID `360d1f29-5bf8-ef11-bae2-002248185f06`, Activated); registry spells it "Filing", export spells it "Filling". Not silently corrected — see `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` |
+| Outlook SENT Email Filling - Kathleen v2 | Automated | Sent-folder caller for Kathleen | Active | Confirmed from export — workflow ID `5d50f6af-affa-ef11-bae2-6045bd4096fa`, Activated |
+| Outlook Email Filing - Rod v2 | Automated | Mailbox-specific caller | Active | Likely mapping — export contains `"Outlook Email Filling - Rod v2"` (workflow ID `d34b8f51-46f8-ef11-bae2-002248185f06`, Activated); same "Filing" vs "Filling" spelling conflict as Kathleen's flow above |
+| Outlook SENT Email Filling - Rod v2 | Automated | Sent-folder caller for Rod | Active | Confirmed from export — workflow ID `d2d40c71-dbf9-ef11-bae2-6045bd4096fa`, Activated |
+| Outlook Email Filing - Jet v2 | Automated | Mailbox-specific caller | Active - Planned Retirement | Likely mapping — export contains `"Outlook Email Filling - Jet v2"` (workflow ID `d30599eb-ec37-f011-8c4d-6045bd4096fa`, Activated); same spelling conflict |
+| OLD Outlook SENT Email Filling - Jet v2 | Automated | Sent-folder caller for Jet | Active - Planned Retirement | Confirmed from export — exact name match, workflow ID `80273d77-b79c-f011-bbd2-000d3ae0ae9d`, Activated |
+| Overflow Emails Contact Matching | Instant | AI-suggested Client Profile match for overflow items | Active | Confirmed from export — workflow ID `6bf7b40c-b29c-f011-bbd2-000d3ae0ae9d`, Activated, HTTP-Request trigger; implementation detail beyond trigger/name still TODO: verify |
+| Overflow Emails Suggested Match Approval | Automated | Human approval gate for AI-suggested match | Active | Current (registry only) — **absent from the 2026-07-30 `RSFAOutlookEmailFilling` export entirely**. Not resolved: either this flow lives in a different, not-yet-exported Solution, or it has been removed/renamed since the registry entry was written |
+| Overflow Emails Related Client Profile Change | Automated | Reprocesses an email once a Client Profile is manually assigned | Active | Confirmed from export — workflow ID `03b8f6d7-66af-f011-bbd3-000d3ae0ae9d`, Activated, HTTP-Request trigger |
+
+**Additional flows found in the 2026-07-30 export with no current registry entry** (not silently mapped to any of the above — see `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` for full detail):
+
+| Exact flow name (export) | Workflow ID | State (export) | Trigger (export) | Notes |
+|---|---|---|---|---|
+| Outlook INBOX items email filing (Rod) | `921a3139-e5da-ef11-8eea-00224814e0ff` | Draft (not activated) | `When_a_new_email_arrives_(V3)` | Distinct from the registered `Outlook Email Filing - Rod v2`; purpose relative to it unconfirmed |
+| Outlook INBOX items email filing (Kathleen) | `941a3139-e5da-ef11-8eea-00224814e0ff` | Draft (not activated) | `When_a_new_email_arrives_(V3)` | Distinct from the registered `Outlook Email Filing - Kathleen v2`; purpose relative to it unconfirmed |
+| Sent Emails Control | `32f10b1d-b79c-f011-bbd2-000d3ae0ae9d` | Draft (not activated) | HTTP Request | No registry equivalent found under any name |
+| Outlook SENT Email Filling - Support v2 | `816b9f65-6237-f011-8c4d-6045bd4096fa` | Draft (not activated) | `When_a_new_email_arrives_in_a_shared_mailbox_(V2)` | Registry has no SENT-side flow for the `support` mailbox; this may be a work-in-progress addition |
+
+**New mailbox discovered in export — not in this document's monitored-mailbox list (§4):** the `RSFAOutlookEmailFilling` Solution's connection references include `rsfa_sharedoffice365_326a9`, display name `Outlook_Insurance_RSFA`. `knowledge/06_NAMING_AND_ID_CONVENTIONS.md` §16 confirms `insurance@rsfa.co.nz` as a known RSFA account, but no flow in this export was confirmed to use this specific connection reference in this inspection pass, and §4 below still lists only Rod, Kathleen, Seth, Jet and Support. **Not silently added to §4 — flagged here for live verification.**
 
 Note: `knowledge/03_AUTOMATION_REGISTRY.md` §5 lists the exact flow names above as the current inventory. `source-material/power-automate/Outlook Email Filing to SharePoint.md` describes matching/filing logic in detail but does not use these exact flow names — treat the source-material walkthrough as **historical/partial** evidence of the filing logic, not as confirmation of current flow names. TODO: verify the source-material walkthrough still matches the current `Main Outlook Inbox Email Filling` implementation.
 
@@ -264,11 +275,11 @@ Disable the affected mailbox-specific flow(s) in Power Automate; the `Main Outlo
 ## 24. Source references
 
 - `source-material/power-automate/Outlook Email Filing to SharePoint.md` — Partial. Describes filing/matching/tagging logic step-by-step but flow name does not match current registry name; treat as historical/illustrative of logic, not confirmation of current flow structure.
-- `knowledge/03_AUTOMATION_REGISTRY.md` §5 — Current. Authoritative for exact flow names, roles and status.
+- `knowledge/03_AUTOMATION_REGISTRY.md` §5, §5.1 — Current. Authoritative for exact flow names, roles, status and Solution mapping.
 - `knowledge/01_RSFA_SYSTEM_MAP.md` §10, §15 — Current. Business context, overflow flow diagram, Jet retirement plan, logging gap.
 - `knowledge/02_SYSTEMS_REGISTRY.md` SYS-RSFA-REF-001 — Current. Forced-match subject convention.
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Overflow board IDs and descriptions.
-- `exports/power-automate/` — Unverified. No exports currently present in this folder.
+- `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms exact flow names, workflow IDs and export-time state (Activated/Draft) for 15 flows in the `RSFAOutlookEmailFilling` Solution.
 
 ## 25. Known gaps
 
@@ -277,9 +288,12 @@ Disable the affected mailbox-specific flow(s) in Power Automate; the `Main Outlo
 - No dedicated long-term email-processing log exists yet (per system map §10).
 - Planned `it-support@rsfa.co.nz` and `leo@rsfa.co.nz` mailbox flows are not yet confirmed active.
 - Exact SharePoint property/column names used for tagging are not confirmed from a current export.
+- **New, unresolved as of 2026-07-30:** three flows in the export ("Filling") differ from their registry counterparts ("Filing") by spelling only — treated as likely the same flow, not corrected. Four additional flows in the export (`Outlook INBOX items email filing (Rod)`/`(Kathleen)`, `Sent Emails Control`, `Outlook SENT Email Filling - Support v2`) have no registry counterpart at all and are unmapped. `Overflow Emails Suggested Match Approval` is registered but absent from the export. An `Outlook_Insurance_RSFA` connection reference suggests an undocumented Insurance mailbox. None of this has been silently resolved — see `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` for full detail and `knowledge/03_AUTOMATION_REGISTRY.md` §5.1 for the registry-level summary.
+- **Security finding from the 2026-07-30 export:** `Main Outlook Inbox Email Filling`, both `Outlook INBOX items email filing` flows, and both Overflow Emails flows were found to call Monday.com (and, in three flows, OpenAI) using hardcoded HTTP Authorization headers containing literal API credentials, instead of a Connection Reference or Environment Variable. The literal values have been redacted in the repository's unpacked copy; see the Solution manifest's "Security review" section. Both credentials should be rotated.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, system map and source-material evidence. | Claude (documentation task) |
+| 2026-07-30 | Added export evidence from the `RSFAOutlookEmailFilling` Power Automate Solution export: exact workflow IDs and export-time states for 11 registered flows; flagged 4 unmapped flows, 3 "Filing"/"Filling" spelling conflicts, 1 registered-but-missing flow, an undocumented Insurance mailbox connection reference, and a hardcoded-credential security finding — none silently resolved. | Claude (documentation task) |

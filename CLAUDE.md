@@ -620,6 +620,52 @@ Agents and skills must follow this file and may not override its safety, evidenc
 
 ---
 
+## Power Automate Solution exports
+
+Current Power Automate export evidence is stored under:
+
+`exports/power-automate/solutions/`
+
+When analysing a Power Automate flow:
+
+1. Read the canonical automation document.
+2. Identify the Solution containing the flow.
+3. Read the Solution manifest.
+4. Inspect the latest unpacked export.
+5. Preserve exact flow names, workflow IDs, connection references and component names.
+6. Treat every export as a point-in-time snapshot.
+7. Report its inspection date and verification status.
+8. Do not describe an export as confirmed live state.
+9. Do not modify files under `exports/`.
+10. Proposed or modified Solution files belong in:
+    `../rsfa-automation-development/projects/<project-slug>/power-automate/`
+11. Replace a `current/` snapshot only after a new export has been retrieved, inspected and documented.
+12. Never store credentials, tokens or secret Environment Variable values.
+13. Do not import, activate, deactivate, update or delete Power Automate resources unless explicitly requested and approved.
+14. Prefer complete Solution exports over isolated flow fragments.
+15. Review Connection References, Environment Variables, child flows and dependencies before proposing a change.
+
+Evidence hierarchy for Power Automate questions:
+
+```text
+Current live-system evidence
+→ latest inspected Solution export
+→ canonical automation documentation
+→ historical/source-material documentation
+→ inference
+```
+
+If an export contradicts documentation:
+
+- Document the conflict.
+- Do not correct it silently.
+- Indicate which source appears more recent.
+- Specify the exact verification required.
+
+Some Solution exports have been found to contain hardcoded credentials directly inside a flow's action definitions (not in an Environment Variable). Where this occurs, the literal value must be redacted in any unpacked copy stored in this repository and flagged in the affected manifest's Security Review section — never reproduced, even partially, in documentation. See `exports/power-automate/README.md` § "Security note" for the current handling procedure.
+
+---
+
 ## 19. Initial documentation priorities
 
 Prioritise documentation in this order:

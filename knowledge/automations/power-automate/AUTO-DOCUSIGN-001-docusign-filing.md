@@ -95,7 +95,7 @@ Not applicable.
 
 | Exact flow name | Flow type | Role | Current status | Source confidence |
 |---|---|---|---|---|
-| DocuSign to SharePoint | Automated | End-to-end envelope-completed handler | Active | Current (registry name); source-material file is titled "DocuSign to SharePoint Workflow", a close but not exact match — TODO: verify exact current flow name |
+| DocuSign to SharePoint | Automated | End-to-end envelope-completed handler | Active | Confirmed from export — the `DocuSigntoSharePoint` Solution export (inspected 2026-07-30) contains exactly one cloud flow, exported as `"DocuSign to SharePoint "` (trailing space), Activated, triggered by a DocuSign `When_an_envelope_status_changes_(Connect)_(V3)` webhook filtered to `envelope-completed` — matching this document's trigger description exactly. See `exports/power-automate/solutions/docusign-to-sharepoint/manifest.md`. |
 
 ### Monday native automations or workflows
 
@@ -210,17 +210,21 @@ Disable the `DocuSign to SharePoint` flow in Power Automate. No automated rollba
 ## 24. Source references
 
 - `source-material/power-automate/DocuSign to SharePoint Workflow.md` — Current/Partial. Step-by-step logic; exact current flow name not fully confirmed against the registry's "DocuSign to SharePoint" entry.
-- `knowledge/03_AUTOMATION_REGISTRY.md` §3, §5 — Current. Status, criticality, main systems.
+- `knowledge/03_AUTOMATION_REGISTRY.md` §3, §5, §5.1 — Current. Status, criticality, main systems, Solution mapping.
 - `knowledge/02_SYSTEMS_REGISTRY.md` SYS-DOCUSIGN-001 — Current. Platform role and status.
+- `exports/power-automate/solutions/docusign-to-sharepoint/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms exact flow name (with trailing-space variant), workflow ID `911a3139-e5da-ef11-8eea-00224814e0ff`, Activated state, and the DocuSign webhook trigger.
 
 ## 25. Known gaps
 
-- Exact Monday board used for signer-email matching is not confirmed (source material says "the Monday board" without naming it precisely).
+- Exact Monday board used for signer-email matching is not confirmed (source material says "the Monday board" without naming it precisely; the 2026-07-30 export calls Monday.com via a direct HTTP action rather than a bound board reference, so this remains unconfirmed even from the export).
 - Error-handling/retry behaviour beyond the fallback-folder path is unconfirmed.
-- Exact current Power Automate flow ID is not recorded.
+- Exact current Power Automate flow ID is now recorded from the 2026-07-30 export (`911a3139-e5da-ef11-8eea-00224814e0ff`) — treat as point-in-time evidence, not a live-system guarantee that this ID is still current.
+- **New conflict, not silently resolved:** the 2026-07-30 export shows this flow calling an OpenAI HTTP endpoint. This document's Scope/Process sections above describe no AI/OpenAI step at all. Either this document is missing a capability that has since been added to the live flow, or the OpenAI call is unused/vestigial. Requires live verification before this document's Scope is updated to include it.
+- **Security finding from the 2026-07-30 export:** this flow was found to call Monday.com and OpenAI using hardcoded HTTP Authorization headers containing literal API credentials, instead of a Connection Reference or Environment Variable. The literal values have been redacted in the repository's unpacked copy; see `exports/power-automate/solutions/docusign-to-sharepoint/manifest.md` § "Security review" for detail. Both credentials should be rotated.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and source-material evidence. | Claude (documentation task) |
+| 2026-07-30 | Added export evidence from the `DocuSigntoSharePoint` Power Automate Solution export (workflow ID, Activated state, DocuSign webhook trigger confirmed); flagged a new conflict (undocumented OpenAI call) and a security finding (hardcoded credentials) without silently resolving either. | Claude (documentation task) |

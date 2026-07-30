@@ -88,7 +88,7 @@ Not applicable.
 | Exact flow name | Flow type | Role | Current status | Source confidence |
 |---|---|---|---|---|
 | Email Back Up Generator | Manual | Batch mailbox backup to SharePoint, folder-by-folder, 25 emails per batch, dispatches to two child flows by parity | Active | Current (registry); source-material file matches by name and content |
-| Email Filling Failed Items Processing | Scheduled | Retries email-filing items that previously failed | Active | Current (registry); no dedicated source-material walkthrough found — TODO: verify implementation detail |
+| Email Filling Failed Items Processing | Scheduled | Retries email-filing items that previously failed | Active | Confirmed from export — this flow is packaged inside the `RSFAOutlookEmailFilling` Power Automate Solution export (2026-07-30), workflow ID `04531fc5-dced-ef11-9341-6045bd3ce9ae`, Activated, `Recurrence` trigger confirming the "Scheduled" trigger type. See `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md`. Exact recurrence interval not inspected in this pass — TODO: verify |
 
 ### Monday native automations or workflows
 
@@ -194,11 +194,13 @@ Disable the affected flow(s) in Power Automate. Since this is a backup/recovery 
 ## 24. Source references
 
 - `source-material/power-automate/Email Back Up Generator.md` — Current. Batch backup logic.
-- `knowledge/03_AUTOMATION_REGISTRY.md` §3, §5 — Current. Flow inventory and status.
+- `knowledge/03_AUTOMATION_REGISTRY.md` §3, §5, §5.1 — Current. Flow inventory, status and Solution mapping.
+- `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms `Email Filling Failed Items Processing`'s workflow ID, Activated state and `Recurrence` trigger type.
 
 ## 25. Known gaps
 
-- `Email Filling Failed Items Processing` has no dedicated source-material walkthrough; its exact trigger schedule and retry logic are unconfirmed.
+- `Email Filling Failed Items Processing`'s exact recurrence interval and retry logic are still unconfirmed even after the 2026-07-30 export inspection (trigger type confirmed as `Recurrence`, but the schedule/interval was not inspected in this pass).
+- `Email Back Up Generator` has no Power Automate Solution export in this set — no export evidence exists for it yet.
 - The two child flows called by `Email Back Up Generator` are not named in available evidence.
 - No confirmed dedicated log of backup runs or failure counts.
 
@@ -207,3 +209,4 @@ Disable the affected flow(s) in Power Automate. Since this is a backup/recovery 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and source-material evidence. | Claude (documentation task) |
+| 2026-07-30 | Added export evidence from the `RSFAOutlookEmailFilling` Power Automate Solution export confirming `Email Filling Failed Items Processing`'s workflow ID, Activated state and trigger type. | Claude (documentation task) |

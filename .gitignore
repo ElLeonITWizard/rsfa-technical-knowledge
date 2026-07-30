@@ -1,0 +1,17 @@
+# Power Platform local authentication
+**/.pac/
+**/authProfiles.json
+
+# Local secrets
+**/.env
+**/.env.*
+**/local.settings.json
+
+# Temporary Power Platform output
+**/temp/
+**/.tmp/
+**/bin/
+**/obj/
+
+# Export logs
+**/*.log

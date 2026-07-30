@@ -278,6 +278,13 @@ Power Automate is primarily retained for:
 - DocuSign filing.
 - Selected backup and operational flows.
 
+Read-only, point-in-time Solution export snapshots have been added for a subset of these flows, for inspection without live authentication:
+
+- `exports/power-automate/solution-inventory.md` — index of every exported Solution and its flows.
+- `knowledge/systems/power-automate/` — system-level documentation (README, Solutions, environments, connection references).
+
+These snapshots do not replace live verification — see `CLAUDE.md` § "Power Automate Solution exports".
+
 ---
 
 ## SYS-MONDAY-AUTO-001 — Monday Native Automations and Workflows
