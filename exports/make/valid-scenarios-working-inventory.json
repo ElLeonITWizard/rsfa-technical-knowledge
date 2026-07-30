@@ -1,0 +1,1781 @@
+[
+  {
+    "exact_make_name": "AffordX Subflow Client Creation (Sep 2025)",
+    "scenario_id": 7292131,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "On-demand (called by parent scenario)",
+    "created_at": "2025-09-19T21:17:43.964Z",
+    "last_modified_at": "2026-04-14T20:11:56.394Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent (also callable as subscenario)",
+    "apps_used": [
+      "HTTP / Custom API"
+    ],
+    "source_systems": [
+      "HTTP / Custom API"
+    ],
+    "destination_systems": [],
+    "functional_area": "Mortgage Applications",
+    "module_count": 12,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [
+      {
+        "scenario_id": 6468551,
+        "scenario_name": "M.com to AffordX Application Creation (Jul 2025)",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: On-demand (called by parent scenario). Uses HTTP / Custom API. Scenario both calls subscenarios and can itself be invoked as a subscenario. (12 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "StartSubscenario (scenario-service)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "bridge",
+    "is_started_as_subscenario": true
+  },
+  {
+    "exact_make_name": "AffordX to M.com Applications Sync (Aug 2025)",
+    "scenario_id": 6238398,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Scheduled (daily 08:00)",
+    "created_at": "2025-07-11T21:56:01.681Z",
+    "last_modified_at": "2026-04-22T02:16:39.326Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "HTTP / Custom API",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "HTTP / Custom API"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Mortgage Applications",
+    "module_count": 39,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": "unknown",
+        "scenario_name": "Subflow Application Creation Monday-AffordX (Apr 2026)",
+        "evidence": "confirmed from blueprint (target not found in this folder)"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: Scheduled (daily 08:00). Uses HTTP / Custom API, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (39 modules; 42 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [
+      "Target scenario id 9067654 not found in Valid scenarios/working, confirm its actual location"
+    ],
+    "documentation_status": "unknown",
+    "first_module": "SetVariables (util)",
+    "executions_recent": 42,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "Aircall Transcript Summary",
+    "scenario_id": 6123035,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2025-07-05T05:09:21.259Z",
+    "last_modified_at": "2026-02-23T15:03:09.982Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Make AI Tools",
+      "Aircall",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Make AI Tools"
+    ],
+    "destination_systems": [
+      "Monday.com",
+      "Aircall"
+    ],
+    "functional_area": "Aircall",
+    "module_count": 14,
+    "webhooks_used": [
+      "hook id 2774030 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Aircall\" work. Trigger: Monday.com instant trigger (watch). Uses Make AI Tools, Aircall, Monday.com. Scenario runs standalone with no subscenario chaining detected. (14 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "high",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardItemsV2 (monday)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "Macroforge to M.com: End Forms Filled (May 2026)",
+    "scenario_id": 9254149,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-05-18T16:57:34.255Z",
+    "last_modified_at": "2026-07-16T22:15:30.456Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "MacroForge",
+    "module_count": 2,
+    "webhooks_used": [
+      "hook id 4136771 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"MacroForge\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario runs standalone with no subscenario chaining detected. (2 modules; 10 recent executions, 1 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "high",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 10,
+    "errors_recent": 1,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Aircall Upload Transcriptions To SP (Jul 2026)",
+    "scenario_id": 9498962,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2026-07-08T14:52:19.412Z",
+    "last_modified_at": "2026-07-29T18:42:39.328Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Aircall",
+      "Docx Templater",
+      "Microsoft SharePoint",
+      "Monday.com",
+      "OpenAI (GPT)",
+      "Slack"
+    ],
+    "source_systems": [
+      "Aircall"
+    ],
+    "destination_systems": [
+      "Microsoft SharePoint",
+      "Slack",
+      "Monday.com",
+      "Aircall"
+    ],
+    "functional_area": "Aircall",
+    "module_count": 64,
+    "webhooks_used": [
+      "hook id 4248008 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Aircall\" work. Trigger: Monday.com instant trigger (watch). Uses Aircall, Docx Templater, Microsoft SharePoint, Monday.com, OpenAI (GPT), Slack. Scenario acts as a parent flow that calls one or more subscenarios. (64 modules; 177 recent executions, 6 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "high",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardItemsV2 (monday)",
+    "executions_recent": 177,
+    "errors_recent": 6,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Banks to send change in Masterboard v2 (Feb 26)",
+    "scenario_id": 8666173,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-02-12T18:21:25.295Z",
+    "last_modified_at": "2026-05-18T21:13:14.192Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "functional_area": "Masterboard / End Forms",
+    "module_count": 49,
+    "webhooks_used": [
+      "hook id 3874533 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Masterboard / End Forms\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Microsoft Outlook/Email, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (49 modules; 14 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 14,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Branded SOP Filling and Filing (Jul 2026)",
+    "scenario_id": 9555578,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-07-21T15:09:05.627Z",
+    "last_modified_at": "2026-07-23T15:16:37.771Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Docx Templater",
+      "Webhook Gateway",
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Docx Templater"
+    ],
+    "destination_systems": [
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "functional_area": "SharePoint and Documents",
+    "module_count": 5,
+    "webhooks_used": [
+      "hook id 4271870 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"SharePoint and Documents\" work. Trigger: Webhook (custom webhook). Uses Docx Templater, Webhook Gateway, Microsoft SharePoint, Monday.com. Scenario runs standalone with no subscenario chaining detected. (5 modules; 13 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario structure",
+    "confidence": "high",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 13,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Calls > Unknown/Client",
+    "scenario_id": 5543887,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2025-06-01T11:35:47.409Z",
+    "last_modified_at": "2026-07-08T18:22:28.355Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Aircall",
+    "module_count": 6,
+    "webhooks_used": [
+      "hook id 3905732 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"Aircall\" work. Trigger: Monday.com instant trigger (watch). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (6 modules; 302 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardItemsV2 (monday)",
+    "executions_recent": 302,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Connect Entities to Mortgage Pipeline (Dec25)",
+    "scenario_id": 8278547,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-12-10T14:43:37.075Z",
+    "last_modified_at": "2026-02-25T14:42:27.162Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Mortgage Applications",
+    "module_count": 10,
+    "webhooks_used": [
+      "hook id 3686730 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (10 modules; 1 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 1,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: CP and Deals Renaming after Contact Renaming",
+    "scenario_id": 1054927,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2024-04-29T03:57:19.315Z",
+    "last_modified_at": "2026-02-25T14:48:41.226Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "HTTP / Custom API",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "HTTP / Custom API"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Leads and Client Profiles",
+    "module_count": 39,
+    "webhooks_used": [
+      "hook id 3906052 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Leads and Client Profiles\" work. Trigger: Monday.com instant trigger (watch). Uses HTTP / Custom API, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (39 modules; 25 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchItemNameV2 (monday)",
+    "executions_recent": 25,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Creating Contact and Client Profile after Lead was Added (Mar 2026)",
+    "scenario_id": 8800779,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-03-05T18:16:15.608Z",
+    "last_modified_at": "2026-04-08T14:37:07.706Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Leads and Client Profiles",
+    "module_count": 36,
+    "webhooks_used": [
+      "hook id 3938002 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Leads and Client Profiles\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (36 modules; 2 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 2,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Fixed Rate Expiry Email Alert (May25)",
+    "scenario_id": 4840595,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Scheduled (every 900s, restricted window)",
+    "created_at": "2025-04-21T21:09:35.241Z",
+    "last_modified_at": "2026-07-07T22:34:42.656Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Microsoft Outlook/Email",
+      "Monday.com",
+      "Slack"
+    ],
+    "source_systems": [
+      "Microsoft Outlook/Email"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Slack",
+      "Monday.com"
+    ],
+    "functional_area": "Mortgage Applications",
+    "module_count": 72,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: Scheduled (every 900s, restricted window). Uses Microsoft Outlook/Email, Monday.com, Slack. Scenario acts as a parent flow that calls one or more subscenarios. (72 modules; 35 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "searchItemsInTheBoardByColumnValuesAdvancedV2 (monday)",
+    "executions_recent": 35,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Insurance Expiry Email (Jul 2025)",
+    "scenario_id": 6279522,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Scheduled (every 900s, restricted window)",
+    "created_at": "2025-07-14T22:43:14.513Z",
+    "last_modified_at": "2026-07-08T16:30:48.256Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Microsoft Outlook/Email",
+      "Monday.com",
+      "Slack"
+    ],
+    "source_systems": [
+      "Microsoft Outlook/Email"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Slack",
+      "Monday.com"
+    ],
+    "functional_area": "Insurance",
+    "module_count": 63,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Insurance\" work. Trigger: Scheduled (every 900s, restricted window). Uses Microsoft Outlook/Email, Monday.com, Slack. Scenario acts as a parent flow that calls one or more subscenarios. (63 modules; 38 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "searchItemsInTheBoardByColumnValuesAdvancedV2 (monday)",
+    "executions_recent": 38,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Mortgage renewals board, assign adviser and support",
+    "scenario_id": 722853,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2024-02-12T14:26:16.518Z",
+    "last_modified_at": "2024-07-17T03:15:04.406Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Mortgage Applications",
+    "module_count": 5,
+    "webhooks_used": [
+      "Mortgage Renewals Item Creation (4001998)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: Monday.com instant trigger (watch). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (5 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardItems (monday)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: New Adviser Assigned in Masterboard (Mar 26)",
+    "scenario_id": 8890068,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-03-18T20:23:47.953Z",
+    "last_modified_at": "2026-05-18T21:38:32.965Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "HTTP / Custom API",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Masterboard / End Forms",
+    "module_count": 8,
+    "webhooks_used": [
+      "hook id 3977162 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": "unknown",
+        "scenario_name": "unknown",
+        "evidence": "unknown"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Masterboard / End Forms\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, HTTP / Custom API, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (8 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [
+      "Blueprint inspection not completed for this scenario in this follow-up pass, subscenario call targets remain unresolved"
+    ],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: New Form Submission in IQ/MA/KQ (Jun 2026)",
+    "scenario_id": 9447215,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-06-26T18:01:17.032Z",
+    "last_modified_at": "2026-07-13T22:11:22.357Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Microsoft Outlook/Email",
+      "Microsoft SharePoint",
+      "Monday.com",
+      "Slack"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft SharePoint",
+      "Microsoft Outlook/Email",
+      "Slack",
+      "Monday.com"
+    ],
+    "functional_area": "SharePoint and Documents",
+    "module_count": 85,
+    "webhooks_used": [
+      "hook id 4224930 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"SharePoint and Documents\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Microsoft Outlook/Email, Microsoft SharePoint, Monday.com, Slack. Scenario acts as a parent flow that calls one or more subscenarios. (85 modules; 76 recent executions, 1 recent errors.)",
+    "summary_basis": "scenario structure",
+    "confidence": "high",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 76,
+    "errors_recent": 1,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: New item in Contacts (Aircall) -> Delete",
+    "scenario_id": 6548539,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2025-07-31T03:45:41.519Z",
+    "last_modified_at": "2026-02-18T20:11:13.701Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Aircall",
+    "module_count": 3,
+    "webhooks_used": [
+      "hook id 2904707 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"Aircall\" work. Trigger: Monday.com instant trigger (watch). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (3 modules; 23 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardItemsV2 (monday)",
+    "executions_recent": 23,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: New item in Mortgage App Copy to Masterboard End Forms (Jan 26)",
+    "scenario_id": 8410524,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-01-04T16:24:33.736Z",
+    "last_modified_at": "2026-07-07T20:23:58.779Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "functional_area": "Masterboard / End Forms",
+    "module_count": 54,
+    "webhooks_used": [
+      "hook id 3747923 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": "unknown",
+        "scenario_name": "unknown",
+        "evidence": "unknown"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Masterboard / End Forms\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Microsoft Outlook/Email, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (54 modules; 6 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [
+      "Blueprint inspection not completed for this scenario in this follow-up pass, subscenario call targets remain unresolved"
+    ],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 6,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Pigeon Board to Mortgage Pipeline (Nov 25)",
+    "scenario_id": 7950443,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-11-04T21:18:08.435Z",
+    "last_modified_at": "2026-03-12T21:26:57.011Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "HTTP / Custom API",
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "functional_area": "Pigeon",
+    "module_count": 59,
+    "webhooks_used": [
+      "hook id 3533464 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Pigeon\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, HTTP / Custom API, Microsoft SharePoint, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (59 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Pigeon Documents to Mortgage Pipeline (Dec 25)",
+    "scenario_id": 8367350,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-12-25T08:08:03.609Z",
+    "last_modified_at": "2026-01-21T10:46:44.857Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Webhook Gateway",
+      "HTTP / Custom API",
+      "Microsoft Outlook/Email",
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft SharePoint",
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "functional_area": "Pigeon",
+    "module_count": 15,
+    "webhooks_used": [
+      "hook id 3739785 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Pigeon\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, HTTP / Custom API, Microsoft Outlook/Email, Microsoft SharePoint, Monday.com. Scenario runs standalone with no subscenario chaining detected. (15 modules; 13 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 13,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Pigeon Notes to Mortgage Pipeline (Dec 25)",
+    "scenario_id": 8399114,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-01-01T21:20:53.363Z",
+    "last_modified_at": "2026-02-25T21:54:18.130Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Pigeon",
+    "module_count": 9,
+    "webhooks_used": [
+      "hook id 3728533 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Pigeon\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (9 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Renaming after Insurance Policy Added or Owner/Provider Change (Feb 2026)",
+    "scenario_id": 1215342,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2024-05-28T03:27:41.200Z",
+    "last_modified_at": "2026-02-25T21:58:51.442Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Insurance",
+    "module_count": 18,
+    "webhooks_used": [
+      "hook id 3906712 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Insurance\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (18 modules; 42 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 42,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com Reset Status And Reminder From Exisitng Insurance",
+    "scenario_id": 9235525,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Unknown/other (monthly)",
+    "created_at": "2026-05-14T16:43:23.420Z",
+    "last_modified_at": "2026-05-18T21:45:44.809Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Insurance",
+    "module_count": 5,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Insurance\" work. Trigger: Unknown/other (monthly). Uses Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (5 modules; 1 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "searchItemsInTheBoardByColumnValuesAdvancedV2 (monday)",
+    "executions_recent": 1,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Subflow Search Contacts in Monday (Feb 26)",
+    "scenario_id": 8518416,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "On-demand (called by parent scenario)",
+    "created_at": "2026-01-21T09:39:55.935Z",
+    "last_modified_at": "2026-03-07T14:11:52.295Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent (also callable as subscenario)",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Leads and Client Profiles",
+    "module_count": 22,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Leads and Client Profiles\" work. Trigger: On-demand (called by parent scenario). Uses Monday.com. Scenario both calls subscenarios and can itself be invoked as a subscenario. (22 modules; 15 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [
+      "No confirmed caller found among the scenarios inspected in this pass, parent may lie outside the fetched set"
+    ],
+    "documentation_status": "unknown",
+    "first_module": "StartSubscenario (scenario-service)",
+    "executions_recent": 15,
+    "errors_recent": 0,
+    "chaining_role_raw": "bridge",
+    "is_started_as_subscenario": true
+  },
+  {
+    "exact_make_name": "M.com to AffordX Application Creation (Jul 2025)",
+    "scenario_id": 6468551,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2025-07-26T00:17:29.400Z",
+    "last_modified_at": "2026-04-14T20:10:37.772Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "HTTP / Custom API",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "HTTP / Custom API"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Mortgage Applications",
+    "module_count": 24,
+    "webhooks_used": [
+      "hook id 3110871 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7292131,
+        "scenario_name": "AffordX Subflow Client Creation (Sep 2025)",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: Monday.com instant trigger (watch). Uses HTTP / Custom API, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (24 modules; 4 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardColumnValuesV2 (monday)",
+    "executions_recent": 4,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)",
+    "scenario_id": 8731317,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2026-02-23T13:37:59.315Z",
+    "last_modified_at": "2026-07-16T22:05:49.471Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "code",
+      "HTTP / Custom API",
+      "Monday.com",
+      "OpenAI (GPT)"
+    ],
+    "source_systems": [
+      "code"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "MacroForge",
+    "module_count": 16,
+    "webhooks_used": [
+      "hook id 3905270 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"MacroForge\" work. Trigger: Monday.com instant trigger (watch). Uses code, HTTP / Custom API, Monday.com, OpenAI (GPT). Scenario acts as a parent flow that calls one or more subscenarios. (16 modules; 41 recent executions, 1 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardColumnValuesV2 (monday)",
+    "executions_recent": 41,
+    "errors_recent": 1,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.Com: Unsubscribe Client Level (May 26)",
+    "scenario_id": 9229914,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2026-05-13T18:02:19.806Z",
+    "last_modified_at": "2026-05-14T18:52:29.744Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Email Campaigns",
+    "module_count": 9,
+    "webhooks_used": [
+      "hook id 4125486 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Email Campaigns\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (9 modules; 1 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 1,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Update Dependents (Dec25)",
+    "scenario_id": 8260037,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-12-08T12:53:14.172Z",
+    "last_modified_at": "2026-02-25T22:05:44.909Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Leads and Client Profiles",
+    "module_count": 6,
+    "webhooks_used": [
+      "hook id 3677826 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"Leads and Client Profiles\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario runs standalone with no subscenario chaining detected. (6 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Update Existing Mortgages Name from Borrowers (Dec25)",
+    "scenario_id": 1228763,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2024-05-30T02:26:10.180Z",
+    "last_modified_at": "2025-12-12T23:30:57.225Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Mortgage Applications",
+    "module_count": 3,
+    "webhooks_used": [
+      "hook id 3695469 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"Mortgage Applications\" work. Trigger: Monday.com instant trigger (watch). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (3 modules; 45 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardColumnValues (monday)",
+    "executions_recent": 45,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Updates profile name when participants added",
+    "scenario_id": 1054932,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Monday.com instant trigger (watch)",
+    "created_at": "2024-04-29T04:00:28.166Z",
+    "last_modified_at": "2025-12-09T04:40:22.029Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Leads and Client Profiles",
+    "module_count": 5,
+    "webhooks_used": [
+      "Participants Added or Removed Client Profiles"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Leads and Client Profiles\" work. Trigger: Monday.com instant trigger (watch). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (5 modules; 29 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "watchBoardColumnValues (monday)",
+    "executions_recent": 29,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Verification in Pigeon to Mortgage Pipeline (Dec 25)",
+    "scenario_id": 8356342,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-12-22T23:56:09.105Z",
+    "last_modified_at": "2026-01-21T10:47:20.530Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Webhook Gateway",
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "functional_area": "Pigeon",
+    "module_count": 9,
+    "webhooks_used": [
+      "hook id 3723317 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Pigeon\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Microsoft Outlook/Email, Monday.com. Scenario runs standalone with no subscenario chaining detected. (9 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "Monday Board Columns Generator from JSON",
+    "scenario_id": 8440979,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "On-demand (called by parent scenario)",
+    "created_at": "2026-01-09T03:33:39.496Z",
+    "last_modified_at": "2026-03-09T03:58:25.066Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "General / Shared Utilities",
+    "module_count": 8,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"General / Shared Utilities\" work. Trigger: On-demand (called by parent scenario). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (8 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "ParseJSON (json)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "Outlook: Email Notification after Failed Scenario",
+    "scenario_id": 8732008,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "On-demand (called by parent scenario)",
+    "created_at": "2026-02-23T14:45:43.997Z",
+    "last_modified_at": "2026-02-23T14:53:57.993Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "subscenario",
+    "apps_used": [
+      "Microsoft Outlook/Email"
+    ],
+    "source_systems": [
+      "Microsoft Outlook/Email"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email"
+    ],
+    "functional_area": "General / Shared Utilities",
+    "module_count": 8,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [
+      {
+        "scenario_id": 6238398,
+        "scenario_name": "AffordX to M.com Applications Sync (Aug 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8666173,
+        "scenario_name": "M.com: Banks to send change in Masterboard v2 (Feb 26)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9498962,
+        "scenario_name": "M.com: Aircall Upload Transcriptions To SP (Jul 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8800779,
+        "scenario_name": "M.com: Creating Contact and Client Profile after Lead was Added (Mar 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 1054927,
+        "scenario_name": "M.com: CP and Deals Renaming after Contact Renaming",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 4840595,
+        "scenario_name": "M.com: Fixed Rate Expiry Email Alert (May25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 6279522,
+        "scenario_name": "M.com: Insurance Expiry Email (Jul 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9447215,
+        "scenario_name": "M.com: New Form Submission in IQ/MA/KQ (Jun 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8399114,
+        "scenario_name": "M.com: Pigeon Notes to Mortgage Pipeline (Dec 25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7950443,
+        "scenario_name": "M.com: Pigeon Board to Mortgage Pipeline (Nov 25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 1215342,
+        "scenario_name": "M.com: Renaming after Insurance Policy Added or Owner/Provider Change (Feb 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8518416,
+        "scenario_name": "M.com: Subflow Search Contacts in Monday (Feb 26)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 6468551,
+        "scenario_name": "M.com to AffordX Application Creation (Jul 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9229914,
+        "scenario_name": "M.Com: Unsubscribe Client Level (May 26)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8731317,
+        "scenario_name": "M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7883004,
+        "scenario_name": "Pigeon to M.com: Request Creation (Nov25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7292131,
+        "scenario_name": "AffordX Subflow Client Creation (Sep 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8278547,
+        "scenario_name": "M.com: Connect Entities to Mortgage Pipeline (Dec25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9235525,
+        "scenario_name": "M.com Reset Status And Reminder From Exisitng Insurance",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "has_error_handlers": false,
+    "functional_summary": "Inferred from name and structure: likely handles \"General / Shared Utilities\" work. Trigger: On-demand (called by parent scenario). Uses Microsoft Outlook/Email. Scenario runs only as a subscenario, invoked by a parent flow. (8 modules; 9 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "StartSubscenario (scenario-service)",
+    "executions_recent": 9,
+    "errors_recent": 0,
+    "chaining_role_raw": "child",
+    "is_started_as_subscenario": true
+  },
+  {
+    "exact_make_name": "Pigeon to M.com: Request Creation (Nov25)",
+    "scenario_id": 7883004,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-10-30T21:14:33.132Z",
+    "last_modified_at": "2026-02-25T16:43:43.225Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "parent",
+    "apps_used": [
+      "Webhook Gateway",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Pigeon",
+    "module_count": 41,
+    "webhooks_used": [
+      "hook id 3503072 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Pigeon\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Monday.com. Scenario acts as a parent flow that calls one or more subscenarios. (41 modules; 5 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 5,
+    "errors_recent": 0,
+    "chaining_role_raw": "parent",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "Real Savvy Insurance Unsubscribe (11Sep)",
+    "scenario_id": 7178534,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-09-11T20:29:05.522Z",
+    "last_modified_at": "2025-12-09T05:05:01.502Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Webhook Gateway",
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "functional_area": "Insurance",
+    "module_count": 8,
+    "webhooks_used": [
+      "hook id 3189359 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Insurance\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Microsoft Outlook/Email, Monday.com. Scenario runs standalone with no subscenario chaining detected. (8 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "Real Savvy Unsubscribe (12May)",
+    "scenario_id": 5195381,
+    "folder": "Valid scenarios/working",
+    "status": "active",
+    "trigger_type": "Webhook (custom webhook)",
+    "created_at": "2025-05-12T17:46:03.574Z",
+    "last_modified_at": "2025-12-09T05:04:14.512Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Webhook Gateway",
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Webhook Gateway"
+    ],
+    "destination_systems": [
+      "Microsoft Outlook/Email",
+      "Monday.com"
+    ],
+    "functional_area": "Email Campaigns",
+    "module_count": 8,
+    "webhooks_used": [
+      "hook id 2304307 (name not resolved, not present in hooks_list result)"
+    ],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Email Campaigns\" work. Trigger: Webhook (custom webhook). Uses Webhook Gateway, Microsoft Outlook/Email, Monday.com. Scenario runs standalone with no subscenario chaining detected. (8 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "CustomWebHook (gateway)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: CRM Migration - Connect Client Profiles and Pipelines (Dec25)",
+    "scenario_id": 8264526,
+    "folder": "Valid scenarios/working",
+    "status": "inactive",
+    "trigger_type": "On-demand (called by parent scenario)",
+    "created_at": "2025-12-09T00:10:02.745Z",
+    "last_modified_at": "2025-12-12T23:22:30.328Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Monday.com"
+    ],
+    "destination_systems": [
+      "Monday.com"
+    ],
+    "functional_area": "Leads and Client Profiles",
+    "module_count": 22,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"Leads and Client Profiles\" work. Trigger: On-demand (called by parent scenario). Uses Monday.com. Scenario runs standalone with no subscenario chaining detected. (22 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario name only",
+    "confidence": "medium",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "ListBoardItems (monday)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  },
+  {
+    "exact_make_name": "M.com: Review Broken SP Links on CP Board (May 2026)",
+    "scenario_id": 9277255,
+    "folder": "Valid scenarios/working",
+    "status": "inactive",
+    "trigger_type": "On-demand (called by parent scenario)",
+    "created_at": "2026-05-22T15:09:22.413Z",
+    "last_modified_at": "2026-05-22T15:46:53.916Z",
+    "owner_or_team": "RSFA IT/tech",
+    "scenario_relationship": "standalone",
+    "apps_used": [
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "source_systems": [
+      "Microsoft SharePoint"
+    ],
+    "destination_systems": [
+      "Microsoft SharePoint",
+      "Monday.com"
+    ],
+    "functional_area": "SharePoint and Documents",
+    "module_count": 4,
+    "webhooks_used": [],
+    "data_stores_used": [],
+    "called_scenarios": [],
+    "called_by_scenarios": [],
+    "has_error_handlers": true,
+    "functional_summary": "Inferred from name and structure: likely handles \"SharePoint and Documents\" work. Trigger: On-demand (called by parent scenario). Uses Microsoft SharePoint, Monday.com. Scenario runs standalone with no subscenario chaining detected. (4 modules; 0 recent executions, 0 recent errors.)",
+    "summary_basis": "scenario structure",
+    "confidence": "high",
+    "manual_verification_required": [],
+    "documentation_status": "unknown",
+    "first_module": "ListBoardItemsV2 (monday)",
+    "executions_recent": 0,
+    "errors_recent": 0,
+    "chaining_role_raw": "none",
+    "is_started_as_subscenario": false
+  }
+]

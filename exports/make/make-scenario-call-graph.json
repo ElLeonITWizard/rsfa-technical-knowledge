@@ -1,0 +1,669 @@
+[
+  {
+    "scenario_id": 7292131,
+    "scenario_name": "AffordX Subflow Client Creation (Sep 2025)",
+    "chaining_role": "bridge",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [
+      {
+        "scenario_id": 6468551,
+        "scenario_name": "M.com to AffordX Application Creation (Jul 2025)",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "probable_automation_family": "AffordX Mortgage Application Sync",
+    "independent_business_automation": false,
+    "reusable_utility": true,
+    "manual_verification_required": [
+      "Reusable subflow/utility, recommend documenting as a shared component rather than a standalone canonical automation"
+    ]
+  },
+  {
+    "scenario_id": 6238398,
+    "scenario_name": "AffordX to M.com Applications Sync (Aug 2025)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": "unknown",
+        "scenario_name": "Subflow Application Creation Monday-AffordX (Apr 2026)",
+        "evidence": "confirmed from blueprint (target not found in this folder)"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "AffordX Mortgage Application Sync",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 6123035,
+    "scenario_name": "Aircall Transcript Summary",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Aircall Call Processing",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 9254149,
+    "scenario_name": "Macroforge to M.com: End Forms Filled (May 2026)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "MacroForge End-Forms Trigger",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 9498962,
+    "scenario_name": "M.com: Aircall Upload Transcriptions To SP (Jul 2026)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Aircall Call Processing",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8666173,
+    "scenario_name": "M.com: Banks to send change in Masterboard v2 (Feb 26)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Masterboard / Bank Change Sync",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 9555578,
+    "scenario_name": "M.com: Branded SOP Filling and Filing (Jul 2026)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "SharePoint and Documents",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 5543887,
+    "scenario_name": "M.com: Calls > Unknown/Client",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Aircall Call Processing",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8278547,
+    "scenario_name": "M.com: Connect Entities to Mortgage Pipeline (Dec25)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Client Profile / Contact Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 1054927,
+    "scenario_name": "M.com: CP and Deals Renaming after Contact Renaming",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Client Profile / Contact Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8800779,
+    "scenario_name": "M.com: Creating Contact and Client Profile after Lead was Added (Mar 2026)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Client Profile / Contact Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 4840595,
+    "scenario_name": "M.com: Fixed Rate Expiry Email Alert (May25)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Mortgage Fixed-Rate Expiry Alerts",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 6279522,
+    "scenario_name": "M.com: Insurance Expiry Email (Jul 2025)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Insurance Policy Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 722853,
+    "scenario_name": "M.com: Mortgage renewals board, assign adviser and support",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Mortgage Applications",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8890068,
+    "scenario_name": "M.com: New Adviser Assigned in Masterboard (Mar 26)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": "unknown",
+        "scenario_name": "unknown",
+        "evidence": "unknown"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Masterboard / Bank Change Sync",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": [
+      "Blueprint inspection not completed for this scenario in this follow-up pass, subscenario call targets remain unresolved"
+    ]
+  },
+  {
+    "scenario_id": 9447215,
+    "scenario_name": "M.com: New Form Submission in IQ/MA/KQ (Jun 2026)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Form Submission Filing (IQ/MA/KQ)",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 6548539,
+    "scenario_name": "M.com: New item in Contacts (Aircall) -> Delete",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Aircall Call Processing",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8410524,
+    "scenario_name": "M.com: New item in Mortgage App Copy to Masterboard End Forms (Jan 26)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": "unknown",
+        "scenario_name": "unknown",
+        "evidence": "unknown"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Masterboard / Bank Change Sync",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": [
+      "Blueprint inspection not completed for this scenario in this follow-up pass, subscenario call targets remain unresolved"
+    ]
+  },
+  {
+    "scenario_id": 7950443,
+    "scenario_name": "M.com: Pigeon Board to Mortgage Pipeline (Nov 25)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Pigeon Integration Suite",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8367350,
+    "scenario_name": "M.com: Pigeon Documents to Mortgage Pipeline (Dec 25)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Pigeon Integration Suite",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8399114,
+    "scenario_name": "M.com: Pigeon Notes to Mortgage Pipeline (Dec 25)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Pigeon Integration Suite",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 1215342,
+    "scenario_name": "M.com: Renaming after Insurance Policy Added or Owner/Provider Change (Feb 2026)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Insurance Policy Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 9235525,
+    "scenario_name": "M.com Reset Status And Reminder From Exisitng Insurance",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Insurance Policy Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8518416,
+    "scenario_name": "M.com: Subflow Search Contacts in Monday (Feb 26)",
+    "chaining_role": "bridge",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Client Profile / Contact Lifecycle (shared search utility)",
+    "independent_business_automation": false,
+    "reusable_utility": true,
+    "manual_verification_required": [
+      "No confirmed caller found among the scenarios inspected in this pass, parent may lie outside the fetched set",
+      "Reusable subflow/utility, recommend documenting as a shared component rather than a standalone canonical automation"
+    ]
+  },
+  {
+    "scenario_id": 6468551,
+    "scenario_name": "M.com to AffordX Application Creation (Jul 2025)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7292131,
+        "scenario_name": "AffordX Subflow Client Creation (Sep 2025)",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "AffordX Mortgage Application Sync",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8731317,
+    "scenario_name": "M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "MacroForge End-Forms Trigger",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 9229914,
+    "scenario_name": "M.Com: Unsubscribe Client Level (May 26)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Unsubscribe / Email Preference",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8260037,
+    "scenario_name": "M.com: Update Dependents (Dec25)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Leads and Client Profiles",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 1228763,
+    "scenario_name": "M.com: Update Existing Mortgages Name from Borrowers (Dec25)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Mortgage Applications",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 1054932,
+    "scenario_name": "M.com: Updates profile name when participants added",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Leads and Client Profiles",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8356342,
+    "scenario_name": "M.com: Verification in Pigeon to Mortgage Pipeline (Dec 25)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Pigeon Integration Suite",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8440979,
+    "scenario_name": "Monday Board Columns Generator from JSON",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "General / Shared Utilities",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8732008,
+    "scenario_name": "Outlook: Email Notification after Failed Scenario",
+    "chaining_role": "child",
+    "calls": [],
+    "called_by": [
+      {
+        "scenario_id": 6238398,
+        "scenario_name": "AffordX to M.com Applications Sync (Aug 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8666173,
+        "scenario_name": "M.com: Banks to send change in Masterboard v2 (Feb 26)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9498962,
+        "scenario_name": "M.com: Aircall Upload Transcriptions To SP (Jul 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8800779,
+        "scenario_name": "M.com: Creating Contact and Client Profile after Lead was Added (Mar 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 1054927,
+        "scenario_name": "M.com: CP and Deals Renaming after Contact Renaming",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 4840595,
+        "scenario_name": "M.com: Fixed Rate Expiry Email Alert (May25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 6279522,
+        "scenario_name": "M.com: Insurance Expiry Email (Jul 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9447215,
+        "scenario_name": "M.com: New Form Submission in IQ/MA/KQ (Jun 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8399114,
+        "scenario_name": "M.com: Pigeon Notes to Mortgage Pipeline (Dec 25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7950443,
+        "scenario_name": "M.com: Pigeon Board to Mortgage Pipeline (Nov 25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 1215342,
+        "scenario_name": "M.com: Renaming after Insurance Policy Added or Owner/Provider Change (Feb 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8518416,
+        "scenario_name": "M.com: Subflow Search Contacts in Monday (Feb 26)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 6468551,
+        "scenario_name": "M.com to AffordX Application Creation (Jul 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9229914,
+        "scenario_name": "M.Com: Unsubscribe Client Level (May 26)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8731317,
+        "scenario_name": "M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7883004,
+        "scenario_name": "Pigeon to M.com: Request Creation (Nov25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 7292131,
+        "scenario_name": "AffordX Subflow Client Creation (Sep 2025)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 8278547,
+        "scenario_name": "M.com: Connect Entities to Mortgage Pipeline (Dec25)",
+        "evidence": "confirmed from blueprint"
+      },
+      {
+        "scenario_id": 9235525,
+        "scenario_name": "M.com Reset Status And Reminder From Exisitng Insurance",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "probable_automation_family": "Shared utility (cross-cutting, not a business family)",
+    "independent_business_automation": false,
+    "reusable_utility": true,
+    "manual_verification_required": [
+      "Reusable subflow/utility, recommend documenting as a shared component rather than a standalone canonical automation"
+    ]
+  },
+  {
+    "scenario_id": 7883004,
+    "scenario_name": "Pigeon to M.com: Request Creation (Nov25)",
+    "chaining_role": "parent",
+    "calls": [
+      {
+        "scenario_id": 8732008,
+        "scenario_name": "Outlook: Email Notification after Failed Scenario",
+        "evidence": "confirmed from blueprint"
+      }
+    ],
+    "called_by": [],
+    "probable_automation_family": "Pigeon Integration Suite",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 7178534,
+    "scenario_name": "Real Savvy Insurance Unsubscribe (11Sep)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Insurance Policy Lifecycle",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 5195381,
+    "scenario_name": "Real Savvy Unsubscribe (12May)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Unsubscribe / Email Preference",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 8264526,
+    "scenario_name": "M.com: CRM Migration - Connect Client Profiles and Pipelines (Dec25)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "Leads and Client Profiles",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  },
+  {
+    "scenario_id": 9277255,
+    "scenario_name": "M.com: Review Broken SP Links on CP Board (May 2026)",
+    "chaining_role": "none",
+    "calls": [],
+    "called_by": [],
+    "probable_automation_family": "SharePoint and Documents",
+    "independent_business_automation": true,
+    "reusable_utility": false,
+    "manual_verification_required": []
+  }
+]
