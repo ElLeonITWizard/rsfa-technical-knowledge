@@ -1,0 +1,418 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_sharedsharepointonline_10f77"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_sharedoffice365_49c3f"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "triggerAuthenticationType": "All"
+          },
+          "metadata": {
+            "operationMetadataId": "8045fafc-bd79-4725-b91a-32e44adefc13"
+          }
+        }
+      },
+      "actions": {
+        "Get_Pulse_ID": {
+          "type": "Compose",
+          "inputs": "@outputs('Parse_JSON_Client_Information')?['body']?['event']?['pulseId']\r\n",
+          "runAfter": {
+            "Parse_JSON_Client_Information": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "833d1a3a-a375-43f5-9bcb-ce5cb54b7693"
+          }
+        },
+        "Parse_JSON_Client_Information": {
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@triggerBody()",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "type": "object",
+                  "properties": {
+                    "app": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "triggerTime": {
+                      "type": "string"
+                    },
+                    "subscriptionId": {
+                      "type": "integer"
+                    },
+                    "userId": {
+                      "type": "integer"
+                    },
+                    "originalTriggerUuid": {},
+                    "boardId": {
+                      "type": "integer"
+                    },
+                    "groupId": {
+                      "type": "string"
+                    },
+                    "PulseID": {
+                      "type": "integer"
+                    },
+                    "value": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "previousValue": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "triggerUuid": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Notification_Email_Address": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "130ab189-2ded-4f49-b4d6-35bc748ff1d6"
+          }
+        },
+        "Client_File_Name": {
+          "type": "Compose",
+          "inputs": "@{replace(outputs('Parse_JSON_Client_Information')?['body']?['event']?['value']?['name'], ' & ', ' and ')\n}_@{outputs('Get_Pulse_ID')}",
+          "runAfter": {
+            "Get_Pulse_ID": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "728d3f4a-c7ec-4307-99d7-8cc669efab2e"
+          }
+        },
+        "Try_Update_Folder_on_SharePoint": {
+          "type": "Scope",
+          "actions": {
+            "Get_folder_with_same_name_in_SP": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                  "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                  "$filter": "@concat('substringof(''', outputs('Get_Pulse_ID'), ''', FileLeafRef)')",
+                  "$top": 1000,
+                  "folderPath": "/Documents",
+                  "viewScopeOption": "Default"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "operationId": "GetFileItems",
+                  "connectionName": "shared_sharepointonline"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "122b33d9-b6cd-448c-905d-3951efbd5217"
+              }
+            },
+            "Apply_to_each_folder_found": {
+              "type": "Foreach",
+              "foreach": "@outputs('Get_folder_with_same_name_in_SP')?['body/value']",
+              "actions": {
+                "Update_folder_name_in_SP": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                      "parameters/method": "POST",
+                      "parameters/uri": "_api/web/lists/GetByTitle('Documents')/items(@{items('Apply_to_each_folder_found')?['ID']})/validateUpdateListItem",
+                      "parameters/headers": {
+                        "content-type": "application/json;odata=verbose"
+                      },
+                      "parameters/body": "{\n  \"formValues\": [\n    {\n      \"FieldName\": \"FileLeafRef\",\n      \"FieldValue\": \"@{outputs('Client_File_Name')}\"\n    }\n  ],\n  \"bNewDocumentUpdate\": false\n}"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "operationId": "HttpRequest",
+                      "connectionName": "shared_sharepointonline"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "4d789d76-c500-4ace-8651-a42786fe8987"
+                  }
+                }
+              },
+              "runAfter": {
+                "Get_folder_with_same_name_in_SP": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "5fbb6115-217c-4ac5-8604-539b4f60552c"
+              }
+            }
+          },
+          "runAfter": {
+            "Delay_10s": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch_Update_Folder_on_SP": {
+          "type": "Scope",
+          "actions": {
+            "Filter_Error_Action_01": {
+              "type": "Query",
+              "inputs": {
+                "from": "@result('Try_Update_Folder_on_SharePoint')",
+                "where": "@or(equals(item()?['Status'],'Failed'), equals(item()?['Status'],'TimedOut'))"
+              },
+              "metadata": {
+                "operationMetadataId": "17373608-e382-41c4-8407-57886b509d44"
+              }
+            },
+            "Send_Termination_Email_-_Update_Folders_on_SP": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "emailMessage/To": "@variables('NotificationEmailAddress')",
+                  "emailMessage/Subject": "Error on @{workflow()?['tags']?['flowDisplayName']} Flow Execution",
+                  "emailMessage/Body": "\n<div style=\"background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto;\">\n<div style=\"background-color: #d9534f; color: white; padding: 15px; text-align: center; font-size: 18px; border-radius: 8px 8px 0 0;\">\n⚠️ Error on Flow Execution\n</div>\n<div style=\"padding: 15px; color: #333;\">\n<p>Dear User,</p>\n<p>An error has been detected on <strong>@{workflow()?['tags']?['flowDisplayName']}</strong> flow execution.</p>\n<p>Error Details:</p>\n<div style=\"background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px;\">\n@{concat(first(body('Filter_Error_Action_01'))?['Name'], ': ', first(body('Filter_Error_Action_01'))?['error']?['message'])}\n</div>\n<p>You can access the corresponding flow execution through the link below:</p>\n<a href=\"@{concat('https://us.flow.microsoft.com/manage/environments/',workflow().tags.environmentName,'/flows/',workflow().name,'/runs/',workflow().run.name)}\" style=\"display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px;\">See Execution</a>\n</div>\n<div style=\"font-size: 12px; color: #777; text-align: center; margin-top: 20px;\">\n<p>This is an automatic generated message from Power Automate. You do not need to reply.</p>\n</div>\n</div>\n",
+                  "emailMessage/Importance": "High"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365"
+                }
+              },
+              "runAfter": {
+                "Filter_Error_Action_01": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7ed1c00e-1d3b-403c-87f0-fcf7b33352c4"
+              }
+            },
+            "Terminate_Process_01": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "SE 001",
+                  "message": "SE - Unable to Update Folder on SharePoint"
+                }
+              },
+              "runAfter": {
+                "Send_Termination_Email_-_Update_Folders_on_SP": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "1485e789-6e06-46d1-a95a-8b2826534007"
+              }
+            }
+          },
+          "runAfter": {
+            "Try_Update_Folder_on_SharePoint": [
+              "TimedOut",
+              "Failed"
+            ]
+          }
+        },
+        "Try_Update_Monday.com_Board": {
+          "type": "Scope",
+          "actions": {
+            "Compose_new_SP_URL": {
+              "type": "Compose",
+              "inputs": "@{replace(replace(outputs('Parse_JSON_Client_Information')?['body']?['event']?['value']?['name'], ' ', '%20'), '&', 'and')}_@{outputs('Get_Pulse_ID')}",
+              "metadata": {
+                "operationMetadataId": "a3f14ac8-3123-4e74-aa15-8626335ba1fd"
+              }
+            },
+            "Compose_GraphQL_query": {
+              "type": "Compose",
+              "inputs": "mutation {\n  change_simple_column_value(\n    item_id: @{outputs('Get_Pulse_ID')},\n    board_id: 5024661649,\n    column_id: \"link5\",\n    value: \"https://rodschubertfinancialadvice.sharepoint.com/:f:/r/sites/RealSavvyClients/Documents/@{outputs('Compose_new_SP_URL')} @{replace(outputs('Parse_JSON_Client_Information')?['body']?['event']?['value']?['name'], ' & ', ' and ')}\"\n  ) {\n    id\n  }\n}",
+              "runAfter": {
+                "Compose_new_SP_URL": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Add_SP_folder_link_to_Monday.com_board": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2/",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10",
+                  "Content-Type": "application/json"
+                },
+                "body": "@json(concat('{ \"query\": \"', replace(outputs('Compose_GraphQL_query'), '\"', '\\\"'), '\" }'))"
+              },
+              "runAfter": {
+                "Compose_GraphQL_query": [
+                  "Succeeded"
+                ]
+              },
+              "runtimeConfiguration": {
+                "contentTransfer": {
+                  "transferMode": "Chunked"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "f7d8e4d2-28c1-45f2-971a-762bc7dd0cc9"
+              }
+            }
+          },
+          "runAfter": {
+            "Try_Update_Folder_on_SharePoint": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Catch_Update_Monday.com_Board": {
+          "type": "Scope",
+          "actions": {
+            "Filter_Error_Action_02": {
+              "type": "Query",
+              "inputs": {
+                "from": "@result('Try_Update_Monday.com_Board')",
+                "where": "@or(equals(item()?['Status'],'Failed'), equals(item()?['Status'],'TimedOut'))"
+              },
+              "metadata": {
+                "operationMetadataId": "17373608-e382-41c4-8407-57886b509d44"
+              }
+            },
+            "Send_Termination_Email_-_Update_Monday.com": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "emailMessage/To": "@variables('NotificationEmailAddress')",
+                  "emailMessage/Subject": "Error on @{workflow()?['tags']?['flowDisplayName']} Flow Execution",
+                  "emailMessage/Body": "\n<div style=\"background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto;\">\n<div style=\"background-color: #d9534f; color: white; padding: 15px; text-align: center; font-size: 18px; border-radius: 8px 8px 0 0;\">\n⚠️ Error on Flow Execution\n</div>\n<div style=\"padding: 15px; color: #333;\">\n<p>Dear User,</p>\n<p>An error has been detected on <strong>@{workflow()?['tags']?['flowDisplayName']}</strong> flow execution.</p>\n<p>Error Details:</p>\n<div style=\"background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px;\">\n@{concat(first(body('Filter_Error_Action_02'))?['Name'], ': ', first(body('Filter_Error_Action_02'))?['error']?['message'])}\n</div>\n<p>You can access the corresponding flow execution through the link below:</p>\n<a href=\"@{concat('https://us.flow.microsoft.com/manage/environments/',workflow().tags.environmentName,'/flows/',workflow().name,'/runs/',workflow().run.name)}\" style=\"display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px;\">See Execution</a>\n</div>\n<div style=\"font-size: 12px; color: #777; text-align: center; margin-top: 20px;\">\n<p>This is an automatic generated message from Power Automate. You do not need to reply.</p>\n</div>\n</div>\n",
+                  "emailMessage/Importance": "High"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365"
+                }
+              },
+              "runAfter": {
+                "Filter_Error_Action_02": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7ed1c00e-1d3b-403c-87f0-fcf7b33352c4"
+              }
+            },
+            "Terminate_Process_02": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "SE 002",
+                  "message": "SE - Unable to Update Monday.com Board with SharePoint link"
+                }
+              },
+              "runAfter": {
+                "Send_Termination_Email_-_Update_Monday.com": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "1485e789-6e06-46d1-a95a-8b2826534007"
+              }
+            }
+          },
+          "runAfter": {
+            "Try_Update_Monday.com_Board": [
+              "TimedOut",
+              "Failed"
+            ]
+          }
+        },
+        "Initialize_Notification_Email_Address": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "NotificationEmailAddress",
+                "type": "string",
+                "value": "tech@rsfa.co.nz"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Delay_10s": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 10,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {
+            "Client_File_Name": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

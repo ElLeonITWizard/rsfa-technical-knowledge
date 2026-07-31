@@ -1,0 +1,122 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_Outlook_Jet_RSFA"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Initialize_Jet_Email_Connection": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "JetEmailConnection",
+                "type": "string",
+                "value": "jet@rsfa.co.nz"
+              }
+            ]
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "5342d22c-76a5-478b-9dec-6c2d9d685df5"
+          }
+        },
+        "Get_emails_(V3)_By_SearchQuery": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "importance": "Any",
+              "fetchOnlyWithAttachment": true,
+              "folderPath": "Id::AAMkADhlMTE2ODU2LWUwNTQtNDA5Mi04YmZkLWRkOGI0YTZmOWIzYQAuAAAAAAB0p8mj18G7SaXHNwaBQfzjAQB0QDbxvoyvTpbud9oQM3A3AAAAAAEJAAA=",
+              "fetchOnlyUnread": false,
+              "includeAttachments": true,
+              "top": 500
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "GetEmailsV3",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {
+            "Initialize_Jet_Email_Connection": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAALobVSGAAA=": "Failed Items - Email Filling",
+            "operationMetadataId": "31b3e691-2677-4cfc-aac4-deedd92118d0",
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAALobVSHAAA=": "Failed Items - Email Filling",
+            "Id::AAMkADhlMTE2ODU2LWUwNTQtNDA5Mi04YmZkLWRkOGI0YTZmOWIzYQAuAAAAAAB0p8mj18G7SaXHNwaBQfzjAQB0QDbxvoyvTpbud9oQM3A3AAAAAAEJAAA=": "Sent Items"
+          }
+        },
+        "Apply_to_each_Email": {
+          "type": "Foreach",
+          "foreach": "@outputs('Get_emails_(V3)_By_SearchQuery')?['body/value']",
+          "actions": {
+            "Run_a_Child_Flow": {
+              "type": "Workflow",
+              "inputs": {
+                "host": {
+                  "workflowReferenceName": "f6906da4-c8ed-ef11-9341-6045bd3ce9ae"
+                },
+                "body": {
+                  "text": "@items('Apply_to_each_Email')?['id']",
+                  "text_1": "@variables('JetEmailConnection')"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Get_emails_(V3)_By_SearchQuery": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 5
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "b302bf70-7cd7-4af1-ab17-cf9fe2d3a5c6"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,644 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "Subject of the overflow email being analysed ",
+                  "title": "Subject",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": "From addresses of the overflow email being analysed ",
+                  "title": "From",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_2": {
+                  "description": "To addresses of the overflow email being analysed ",
+                  "title": "To",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_3": {
+                  "description": "CC addresses of the overflow email being analysed ",
+                  "title": "CC",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_4": {
+                  "description": "BCC addresses of the overflow email being analysed ",
+                  "title": "BCC",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_5": {
+                  "description": "Content of the overflow email being analysed ",
+                  "title": "BodyPreview",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1",
+                "text_2"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Do_until_Cursor_is_Null": {
+          "type": "Until",
+          "expression": "@equals(variables('ContactsCursor'),'-')",
+          "limit": {
+            "count": 5,
+            "timeout": "PT3M"
+          },
+          "actions": {
+            "Get_Contacts_with_Cursor": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "Bearer REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10"
+                },
+                "body": {
+                  "query": "query ($cursor: String!, $limit: Int!) { next_items_page(cursor: $cursor, limit: $limit) { cursor items { id name } } }",
+                  "variables": {
+                    "cursor": "@{variables('ContactsCursor')}",
+                    "limit": 500
+                  }
+                }
+              },
+              "runtimeConfiguration": {
+                "contentTransfer": {
+                  "transferMode": "Chunked"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "d2fd3330-bdb8-4262-bd01-b2a1b05010a1"
+              }
+            },
+            "Update_Cursor_02": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "ContactsCursor",
+                "value": "@coalesce(body('Get_Contacts_with_Cursor')?['data']?['next_items_page']?['cursor'], '-')"
+              },
+              "runAfter": {
+                "Append_to_Contacts_Array_02": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Compose_Contacts_Array_02": {
+              "type": "Compose",
+              "inputs": "@union(variables('ContactsArray'), body('Get_Contacts_with_Cursor')?['data']?['next_items_page']?['items'])",
+              "runAfter": {
+                "Get_Contacts_with_Cursor": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Append_to_Contacts_Array_02": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "ContactsArray",
+                "value": "@outputs('Compose_Contacts_Array_02')"
+              },
+              "runAfter": {
+                "Compose_Contacts_Array_02": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Update_Cursor_01": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Cursor": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ContactsCursor",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_AI_Matcher_Prompt": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_Contacts_First_Page": {
+          "type": "Http",
+          "inputs": {
+            "uri": "https://api.monday.com/v2",
+            "method": "POST",
+            "headers": {
+              "Authorization": "Bearer REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+              "API-Version": "2023-10"
+            },
+            "body": {
+              "query": "query ($boardId: [ID!], $limit: Int!) { boards(ids: $boardId) { id name items_page(limit: $limit, query_params: { rules: [{ column_id: \"board_relation_mkxpzyfq\", compare_value: [], operator: is_not_empty }] }) { cursor items { id name } } } }",
+              "variables": {
+                "boardId": [
+                  2074688484
+                ],
+                "limit": 500
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Matched_IDs": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "d2fd3330-bdb8-4262-bd01-b2a1b05010a1"
+          }
+        },
+        "Initialize_Contacts_Array": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "ContactsArray",
+                "type": "array"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Cursor": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Compose_Contacts_Array": {
+          "type": "Compose",
+          "inputs": "@union(variables('ContactsArray'), first(body('Get_Contacts_First_Page')?['data']?['boards'])?['items_page']?['items'])",
+          "runAfter": {
+            "Get_Contacts_First_Page": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Append_to_Contacts_Array": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "ContactsArray",
+            "value": "@outputs('Compose_Contacts_Array')"
+          },
+          "runAfter": {
+            "Compose_Contacts_Array": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Update_Cursor_01": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "ContactsCursor",
+            "value": "@coalesce(first(body('Get_Contacts_First_Page')?['data']?['boards'])?['items_page']?['cursor'], '-')"
+          },
+          "runAfter": {
+            "Append_to_Contacts_Array": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Show_All_Contacts_Count": {
+          "type": "Compose",
+          "inputs": "@length(variables('ContactsArray'))",
+          "runAfter": {
+            "Do_until_Cursor_is_Null": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Filter_Contacts_List": {
+          "type": "Http",
+          "inputs": {
+            "uri": "https://filter-overflow-contacts-477110054601.europe-west1.run.app",
+            "method": "POST",
+            "body": {
+              "emailText": "@{toLower(concat('subject ', triggerBody()?['text'], ' from ', triggerBody()?['text_1'], ' to ', triggerBody()?['text_2'], ' cc ', coalesce(triggerBody()?['text_3'], '-'), ' bcc ', coalesce(triggerBody()?['text_4'], '-')))}",
+              "contacts": "@variables('ContactsArray')"
+            }
+          },
+          "runAfter": {
+            "Show_All_Contacts_Count": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "d2fd3330-bdb8-4262-bd01-b2a1b05010a1"
+          }
+        },
+        "Any_Potential_Contact_Found": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@empty(body('Filter_Contacts_List'))",
+                  "@false"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Get_Filtered_Contacts_Information": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "Bearer REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10"
+                },
+                "body": {
+                  "query": "query ($itemIds: [ID!]) { items(ids: $itemIds) { id name primary_email: column_values(ids: [\"contact_email\"]) { id text value } alternative_email: column_values(ids: [\"email_mkxd41p7\"]) { id text value } second_alternative_email: column_values(ids: [\"email_mkxdantz\"]) { id text value } preferred_name: column_values(ids: [\"text_mkxdbb7k\"]) { id text value } trusts_or_companies: column_values(ids: [\"contact_account\"]) { id text value ... on BoardRelationValue { display_value linked_item_ids linked_items { id name } } } } }",
+                  "variables": {
+                    "itemIds": "@outputs('Join_Item_IDs')"
+                  }
+                }
+              },
+              "runAfter": {
+                "Join_Item_IDs": [
+                  "Succeeded"
+                ]
+              },
+              "runtimeConfiguration": {
+                "contentTransfer": {
+                  "transferMode": "Chunked"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "d2fd3330-bdb8-4262-bd01-b2a1b05010a1"
+              }
+            },
+            "Join_Item_IDs": {
+              "type": "Compose",
+              "inputs": "@json(concat('[', join(body('Filter_Contacts_List'), ','), ']'))"
+            },
+            "Clean_Filtered_Contacts_Info": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Get_Filtered_Contacts_Information')?['data']?['items']",
+                "select": {
+                  "id": "@item()?['id']",
+                  "name": "@item()?['name']",
+                  "primary_email": "@first(item()?['primary_email'])?['text']",
+                  "alternative_email": "@first(item()?['alternative_email'])?['text']",
+                  "second_alternative_email": "@first(item()?['second_alternative_email'])?['text']",
+                  "preferred_name": "@first(item()?['preferred_name'])?['text']",
+                  "trusts_or_companies": "@first(item()?['trusts_or_companies'])?['display_value']"
+                }
+              },
+              "runAfter": {
+                "Get_Filtered_Contacts_Information": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "OpenAI_Client_Matcher": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.openai.com/v1/responses",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "Bearer REDACTED-SEE-1PASSWORD-OPENAI-API-KEY",
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "model": "gpt-4o-mini",
+                  "input": [
+                    {
+                      "role": "system",
+                      "content": [
+                        {
+                          "type": "input_text",
+                          "text": "You are an AI matching assistant for RSFA, a financial advisory business in New Zealand. Your task is to match an overflow email to the most likely contact or contacts from a provided candidate list. Be conservative: only select contacts when there is meaningful evidence in the email. Do not invent IDs. You may only return IDs that exist in the provided candidate_contacts array."
+                        }
+                      ]
+                    },
+                    {
+                      "role": "user",
+                      "content": [
+                        {
+                          "type": "input_text",
+                          "text": "@{replace(replace(variables('AIMatcherPrompt'), '%CANDIDATECONTACTS%', string(body('Clean_Filtered_Contacts_Info'))), '%EMAILDETAILS%', outputs('Compose_Email_Details_Object'))}"
+                        }
+                      ]
+                    }
+                  ],
+                  "text": {
+                    "format": {
+                      "type": "json_schema",
+                      "name": "overflow_email_contact_match",
+                      "strict": true,
+                      "schema": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "matched_contact_ids": {
+                            "type": "array",
+                            "description": "Numeric Monday contact IDs selected from candidate_contacts. Minimum 0 and maximum 3.",
+                            "minItems": 0,
+                            "maxItems": 3,
+                            "items": {
+                              "type": "integer"
+                            }
+                          },
+                          "matching_reason": {
+                            "type": "string",
+                            "description": "Brief explanation of why these contacts were selected."
+                          }
+                        },
+                        "required": [
+                          "matched_contact_ids",
+                          "matching_reason"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Compose_Email_Details_Object": [
+                  "Succeeded"
+                ]
+              },
+              "limit": {
+                "timeout": "PT2M"
+              },
+              "runtimeConfiguration": {
+                "contentTransfer": {
+                  "transferMode": "Chunked"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "3ac43f0e-6c0b-4e8a-8a17-643739485128"
+              }
+            },
+            "Compose_Email_Details_Object": {
+              "type": "Compose",
+              "description": "This expression concats all email addresses ignoring the RSFA ones",
+              "inputs": "@concat(\r\n  '{',\r\n    '\"subject\":\"', replace(replace(coalesce(triggerBody()?['text'], ''), '\"', '\\\"'), decodeUriComponent('%0A'), ' '), '\",',\r\n\r\n    '\"from\":\"',\r\n      replace(\r\n        replace(\r\n          replace(\r\n            replace(\r\n              toLower(replace(replace(coalesce(triggerBody()?['text_1'], ''), '\"', ''), '\\', '')),\r\n              'rod@rsfa.co.nz',\r\n              ''\r\n            ),\r\n            'insurance@rsfa.co.nz',\r\n            ''\r\n          ),\r\n          'seth@rsfa.co.nz',\r\n          ''\r\n        ),\r\n        'jet@rsfa.co.nz',\r\n        ''\r\n      ),\r\n    '\",',\r\n\r\n    '\"to\":\"',\r\n      replace(\r\n        replace(\r\n          replace(\r\n            replace(\r\n              toLower(replace(replace(coalesce(triggerBody()?['text_2'], ''), '\"', ''), '\\', '')),\r\n              'rod@rsfa.co.nz',\r\n              ''\r\n            ),\r\n            'insurance@rsfa.co.nz',\r\n            ''\r\n          ),\r\n          'seth@rsfa.co.nz',\r\n          ''\r\n        ),\r\n        'jet@rsfa.co.nz',\r\n        ''\r\n      ),\r\n    '\",',\r\n\r\n    '\"cc\":\"',\r\n      replace(\r\n        replace(\r\n          replace(\r\n            replace(\r\n              toLower(replace(replace(coalesce(triggerBody()?['text_3'], ''), '\"', ''), '\\', '')),\r\n              'rod@rsfa.co.nz',\r\n              ''\r\n            ),\r\n            'insurance@rsfa.co.nz',\r\n            ''\r\n          ),\r\n          'seth@rsfa.co.nz',\r\n          ''\r\n        ),\r\n        'jet@rsfa.co.nz',\r\n        ''\r\n      ),\r\n    '\",',\r\n\r\n    '\"bcc\":\"',\r\n      replace(\r\n        replace(\r\n          replace(\r\n            replace(\r\n              toLower(replace(replace(coalesce(triggerBody()?['text_4'], ''), '\"', ''), '\\', '')),\r\n              'rod@rsfa.co.nz',\r\n              ''\r\n            ),\r\n            'insurance@rsfa.co.nz',\r\n            ''\r\n          ),\r\n          'seth@rsfa.co.nz',\r\n          ''\r\n        ),\r\n        'jet@rsfa.co.nz',\r\n        ''\r\n      ),\r\n    '\",',\r\n\r\n    '\"body_preview\":\"',\r\n      replace(\r\n        replace(\r\n          replace(\r\n            coalesce(triggerBody()?['text_5'], ''),\r\n            '\"',\r\n            '\\\"'\r\n          ),\r\n          decodeUriComponent('%0D'),\r\n          ' '\r\n        ),\r\n        decodeUriComponent('%0A'),\r\n        ' '\r\n      ),\r\n    '\"',\r\n  '}'\r\n)",
+              "runAfter": {
+                "Clean_Filtered_Contacts_Info": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Parse_JSON_AI_Matcher_Results": {
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@json(body('OpenAI_Client_Matcher')?['output']?[0]?['content']?[0]?['text'])",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matched_contact_ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    },
+                    "matching_reason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "OpenAI_Client_Matcher": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Any_Matches": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@empty(body('Parse_JSON_AI_Matcher_Results')?['matched_contact_ids'])",
+                      "@false"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Set_Matching_Reason": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "MatchingReason",
+                    "value": "@body('Parse_JSON_AI_Matcher_Results')?['matching_reason']"
+                  }
+                },
+                "Set_Matched_IDs": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "MatchedIDs",
+                    "value": "@join(body('Select_Client_Profile_IDs'), ', ')"
+                  },
+                  "runAfter": {
+                    "Select_Client_Profile_IDs": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Get_Related_Client_Profiles": {
+                  "type": "Http",
+                  "inputs": {
+                    "uri": "https://api.monday.com/v2",
+                    "method": "POST",
+                    "headers": {
+                      "Authorization": "Bearer REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                      "API-Version": "2023-10"
+                    },
+                    "body": {
+                      "query": "query ($boardId: [ID!], $contactIds: CompareValue!) { boards(ids: $boardId) { items_page(query_params: { rules: [{ column_id: \"board_relation38\", compare_value: $contactIds, operator: any_of }] }) { items { id name column_values(ids: [\"board_relation38\"]) { id type ... on BoardRelationValue { linked_item_ids display_value } } } } } }",
+                      "variables": {
+                        "boardId": 5024661649,
+                        "contactIds": "@json(concat('[', join(body('Parse_JSON_AI_Matcher_Results')?['matched_contact_ids'], ','), ']'))"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Set_Matching_Reason": [
+                      "Succeeded"
+                    ]
+                  },
+                  "runtimeConfiguration": {
+                    "contentTransfer": {
+                      "transferMode": "Chunked"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "d2fd3330-bdb8-4262-bd01-b2a1b05010a1"
+                  }
+                },
+                "Select_Client_Profile_IDs": {
+                  "type": "Select",
+                  "inputs": {
+                    "from": "@body('Get_Related_Client_Profiles')?['data']?['boards']?[0]?['items_page']?['items']",
+                    "select": "@item()?['id']"
+                  },
+                  "runAfter": {
+                    "Get_Related_Client_Profiles": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Parse_JSON_AI_Matcher_Results": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Filter_Contacts_List": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_AI_Matcher_Prompt": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AIMatcherPrompt",
+                "type": "string",
+                "value": "You need to decide which contact or contacts from the candidate list are most likely related to the overflow email.\n\nContext:\nReal Savvy Financial Advice (AKA RSFA) receives many emails. This email was placed in Overflow because no known external email address matched an existing registered contact email. Therefore, do not rely on sender/recipient email addresses alone. The match should usually come from clear external client names, preferred names, trusts/companies, subject, or email body content.\n\nVery important:\nRSFA internal team members and internal references must NOT be used as evidence for a client match.\n\nIgnore these RSFA team names as client evidence:\n- Rod\n- Rod Schubert\n- Kathleen\n- Kathleen Schubert\n- Jet\n- Jet Douglas\n- Seth\n- Seth Rackham\n- Team\n- RSFA Team\n- Adviser\n- Adviser team\n\nIgnore any email address using the rsfa.co.nz domain, including but not limited to rod@rsfa.co.nz, kathleen@rsfa.co.nz, jet@rsfa.co.nz, seth@rsfa.co.nz, support@rsfa.co.nz, lending@rsfa.co.nz, sp@rsfa.co.nz, tech@rsfa.co.nz, and insurance@rsfa.co.nz.\n\nDo not match a candidate only because their first name or preferred name is Rod, Kathleen, Jet, Seth, or another RSFA team reference.\n\nExamples:\n- If the subject says “to Rod and Team”, this refers to RSFA staff, not to a client named Rod.\n- Do not match Rod Crocker just because the email mentions “Rod”.\n- Do not match Damon Schubert just because a surname or internal RSFA-related name appears weakly.\n- If the email mentions external names like “Maddie and Dilini”, only match candidates whose actual name, preferred name, trust, or company clearly corresponds to Maddie or Dilini. Do not choose another candidate just because they were included in the candidate list.\n\nImportant rules:\n1. You must only select contacts from the provided candidate_contacts array.\n2. Return between 0 and 3 contact IDs.\n3. Return numeric IDs, not strings.\n4. If there is no strong or reasonably clear match, return an empty matched_contact_ids array.\n5. Do not invent contacts, names, IDs, or facts.\n6. Be conservative. It is better to return no match than to suggest the wrong client.\n7. A full name match is much stronger than a first-name-only, preferred-name-only, or last-name-only match.\n8. First-name-only matches are weak and should usually be rejected unless the email context makes the client identity very clear.\n9. Never select a contact based only on a first name that is also an RSFA team name.\n10. A match in the subject is stronger than a match only in the body preview, but only if the matched name is an external client/customer name.\n11. A match in the body preview can be useful only if it clearly refers to the client/contact.\n12. Matching a preferred_name is useful, but weaker than matching the full legal/contact name.\n13. Matching a trust or company name is useful when it clearly appears in the email.\n14. Ignore generic provider/broker/bank/insurer sender addresses as direct client evidence unless the subject/body clearly names the client.\n15. Do not choose a contact just because the email is from a bank, broker, insurer, software provider, newsletter, or generic service.\n16. If the subject/body contains clear customer/client names, prefer candidates whose names match those customer/client names.\n17. If the subject/body contains external names but none of the provided candidates match those names, return no match.\n18. If two or three contacts appear to belong to the same client context and are clearly mentioned, you may return multiple IDs.\n19. The matching_reason must be short, specific, and mention the evidence used.\n20. If returning no match, explain briefly why, for example: “The email mentions Rod as an RSFA team member, but no provided candidate clearly matches the external client names.”\n\nCandidate contacts:\n%CANDIDATECONTACTS%\n\nEmail Details:\n%EMAILDETAILS%\n\nReturn only valid JSON matching the required schema."
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Respond_to_a_Power_App_or_flow": {
+          "type": "Response",
+          "kind": "PowerApp",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "matchingreason": {
+                  "title": "MatchingReason",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "matchedids": {
+                  "title": "MatchedIDs",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "matchingreason": "@{variables('MatchingReason')}",
+              "matchedids": "@{variables('MatchedIDs')}"
+            }
+          },
+          "runAfter": {
+            "Any_Potential_Contact_Found": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Matching_Reason": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "MatchingReason",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Contacts_Array": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Matched_IDs": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "MatchedIDs",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Matching_Reason": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

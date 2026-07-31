@@ -1,0 +1,274 @@
+{
+  "properties": {
+    "connectionReferences": {},
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "triggerAuthenticationType": "All",
+            "schema": {}
+          },
+          "metadata": {}
+        }
+      },
+      "actions": {
+        "Related_Client_Profile_not_Empty": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@empty(triggerBody()?['event']?['value']?['linkedPulseIds'])",
+                  "@false"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Get_Item_from_Overflow_Emails_Board": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "Bearer REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "Content-Type": "application/json"
+                },
+                "body": {
+                  "query": "query { items(ids: [@{triggerBody()?['event']?['pulseId']}]) { id name column_values { id text } } }"
+                }
+              },
+              "runtimeConfiguration": {
+                "contentTransfer": {
+                  "transferMode": "Chunked"
+                }
+              }
+            },
+            "Filter_array_-_Email_From": {
+              "type": "Query",
+              "inputs": {
+                "from": "@first(body('Get_Item_from_Overflow_Emails_Board')?['data']?['items'])?['column_values']",
+                "where": "@equals(item()?['id'],'text_mkwsg70z')"
+              },
+              "runAfter": {
+                "Get_Item_from_Overflow_Emails_Board": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_array_-_Email_To": {
+              "type": "Query",
+              "inputs": {
+                "from": "@first(body('Get_Item_from_Overflow_Emails_Board')?['data']?['items'])?['column_values']",
+                "where": "@equals(item()?['id'],'text_mkws5jq9')"
+              },
+              "runAfter": {
+                "Filter_array_-_Email_From": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_array_-_Message_ID": {
+              "type": "Query",
+              "inputs": {
+                "from": "@first(body('Get_Item_from_Overflow_Emails_Board')?['data']?['items'])?['column_values']",
+                "where": "@equals(item()?['id'],'text_mkwxmxhr')"
+              },
+              "runAfter": {
+                "There_Are_Multiple_Emails": [
+                  "SUCCEEDED"
+                ]
+              }
+            },
+            "Get_RSFA_Email": {
+              "type": "Compose",
+              "inputs": "@toLower(\r\n  if(\r\n    contains(toLower(coalesce(first(body('Filter_array_-_Email_From'))?['text'], '')), 'rsfa.co.nz'),\r\n    first(body('Filter_array_-_Email_From'))?['text'],\r\n    if(\r\n      contains(toLower(coalesce(first(body('Filter_array_-_Email_To'))?['text'], '')), 'rsfa.co.nz'),\r\n      first(body('Filter_array_-_Email_To'))?['text'],\r\n      if(\r\n        contains(toLower(coalesce(first(body('Filter_array_-_Email_CC'))?['text'], '')), 'rsfa.co.nz'),\r\n        first(body('Filter_array_-_Email_CC'))?['text'],\r\n        if(\r\n          contains(toLower(coalesce(first(body('Filter_array_-_Email_BCC'))?['text'], '')), 'rsfa.co.nz'),\r\n          first(body('Filter_array_-_Email_BCC'))?['text'],\r\n          first(body('Filter_array_-_Email_To'))?['text']\r\n        )\r\n      )\r\n    )\r\n  )\r\n)\r\n",
+              "runAfter": {
+                "Filter_array_-_Email_BCC": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Critical_Fields_not_Empty": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@empty(first(body('Filter_array_-_Message_ID'))?['text'])",
+                      "@false"
+                    ]
+                  },
+                  {
+                    "equals": [
+                      "@empty(outputs('Get_RSFA_Email'))",
+                      "@false"
+                    ]
+                  },
+                  {
+                    "equals": [
+                      "@empty(string(first(triggerBody()?['event']?['value']?['linkedPulseIds'])?['linkedPulseId']))",
+                      "@false"
+                    ]
+                  },
+                  {
+                    "endsWith": [
+                      "@outputs('Get_RSFA_Email')",
+                      "rsfa.co.nz"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Run_Main_SP_Email_Filing": {
+                  "type": "Workflow",
+                  "inputs": {
+                    "host": {
+                      "workflowReferenceName": "f6906da4-c8ed-ef11-9341-6045bd3ce9ae"
+                    },
+                    "body": {
+                      "text": "@first(body('Filter_array_-_Message_ID'))?['text']",
+                      "text_1": "@variables('RSFAEmailConnection')",
+                      "text_2": "@string(first(triggerBody()?['event']?['value']?['linkedPulseIds'])?['linkedPulseId'])"
+                    }
+                  },
+                  "limit": {
+                    "timeout": "PT7M"
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "Filter_array_-_Message_ID": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_array_-_Email_CC": {
+              "type": "Query",
+              "inputs": {
+                "from": "@first(body('Get_Item_from_Overflow_Emails_Board')?['data']?['items'])?['column_values']",
+                "where": "@equals(item()?['id'],'text_mkysexv9')"
+              },
+              "runAfter": {
+                "Filter_array_-_Email_To": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Filter_array_-_Email_BCC": {
+              "type": "Query",
+              "inputs": {
+                "from": "@first(body('Get_Item_from_Overflow_Emails_Board')?['data']?['items'])?['column_values']",
+                "where": "@equals(item()?['id'],'text_mkysc05n')"
+              },
+              "runAfter": {
+                "Filter_array_-_Email_CC": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "There_Are_Multiple_Emails": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "contains": [
+                      "@outputs('Get_RSFA_Email')",
+                      ","
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Split_RSFA_Email_If_Multiple": {
+                  "type": "Compose",
+                  "inputs": "@split(replace(replace(outputs('Get_RSFA_Email'), '\"', ''), ' ', ''), ',')"
+                },
+                "Filter_RSFA_Address": {
+                  "type": "Query",
+                  "inputs": {
+                    "from": "@outputs('Split_RSFA_Email_If_Multiple')",
+                    "where": "@endsWith(toLower(item()),'rsfa.co.nz')"
+                  },
+                  "runAfter": {
+                    "Split_RSFA_Email_If_Multiple": [
+                      "SUCCEEDED"
+                    ]
+                  }
+                },
+                "Set_variable_RSFA_Email_Multiple": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "RSFAEmailConnection",
+                    "value": "@toLower(\r\n  if(\r\n    greater(length(body('Filter_RSFA_Address')), 0),\r\n    first(body('Filter_RSFA_Address')),\r\n    first(outputs('Split_RSFA_Email_If_Multiple'))\r\n  )\r\n)\r\n"
+                  },
+                  "runAfter": {
+                    "Filter_RSFA_Address": [
+                      "SUCCEEDED"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Set_variable_RSFA_Email_Single": {
+                    "type": "SetVariable",
+                    "inputs": {
+                      "name": "RSFAEmailConnection",
+                      "value": "@outputs('Get_RSFA_Email')"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Get_RSFA_Email": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Initialize_RSFA_Email_Connection": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Initialize_RSFA_Email_Connection": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "RSFAEmailConnection",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {}
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

@@ -1,0 +1,204 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365-1": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_sharedoffice365_591c0"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "type": "Recurrence",
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Week",
+            "schedule": {
+              "weekDays": [
+                "Friday"
+              ],
+              "hours": [
+                "23"
+              ],
+              "minutes": [
+                0
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Apply_to_each_Email": {
+          "type": "Foreach",
+          "foreach": "@outputs('Get_emails_(V3)_By_SearchQuery')?['body/value']",
+          "actions": {
+            "Try_Reprocessing_Email": {
+              "type": "Scope",
+              "actions": {
+                "Run_Main_Outlook_Inbox_Email_Filling": {
+                  "type": "Workflow",
+                  "inputs": {
+                    "host": {
+                      "workflowReferenceName": "f6906da4-c8ed-ef11-9341-6045bd3ce9ae"
+                    },
+                    "body": {
+                      "text": "@items('Apply_to_each_Email')?['ID']",
+                      "text_1": "tech@rsfa.co.nz"
+                    }
+                  },
+                  "limit": {
+                    "timeout": "PT5M"
+                  },
+                  "metadata": {
+                    "operationMetadataId": "e94db0ad-7cbd-47b6-bc66-5e7b42c47d97"
+                  }
+                }
+              }
+            },
+            "Move_email_to_Processed_Failed_Items": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "messageId": "@items('Apply_to_each_Email')?['ID']",
+                  "folderPath": "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAQqFvXFAAA="
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "MoveV2",
+                  "connectionName": "shared_office365-1"
+                }
+              },
+              "runAfter": {
+                "Try_Reprocessing_Email": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAQqFvXFAAA=": "Processed Failed Items"
+              }
+            },
+            "Move_email_to_Permanent_Failed_Items": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "messageId": "@items('Apply_to_each_Email')?['ID']",
+                  "folderPath": "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAQ2ZdAHAAA="
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "MoveV2",
+                  "connectionName": "shared_office365-1"
+                }
+              },
+              "runAfter": {
+                "Try_Reprocessing_Email": [
+                  "Failed",
+                  "TimedOut"
+                ]
+              },
+              "metadata": {
+                "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAQqFvXFAAA=": "Processed Failed Items",
+                "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAQ2ZdAHAAA=": "Permanent Failed Items"
+              }
+            }
+          },
+          "runAfter": {
+            "Get_emails_(V3)_By_SearchQuery": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 5
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "b302bf70-7cd7-4af1-ab17-cf9fe2d3a5c6"
+          }
+        },
+        "Initialize_Failed_Items_Email_Connection": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FailedItemsEmailConnection",
+                "type": "string",
+                "value": "tech@rsfa.co.nz"
+              }
+            ]
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "5342d22c-76a5-478b-9dec-6c2d9d685df5"
+          }
+        },
+        "Initialize_variable_Failed_Comment": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FailedComment",
+                "type": "string",
+                "value": "Failed Item Email Filling"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Failed_Items_Email_Connection": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "c1e7ede8-408a-485e-ac20-9e9b594cb570"
+          }
+        },
+        "Get_emails_(V3)_By_SearchQuery": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "folderPath": "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAOIbRwuAAA=",
+              "fetchOnlyUnread": false,
+              "includeAttachments": true,
+              "top": 999
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "GetEmailsV3",
+              "connectionName": "shared_office365-1"
+            }
+          },
+          "runAfter": {
+            "Initialize_variable_Failed_Comment": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAALobVSGAAA=": "Failed Items - Email Filling",
+            "operationMetadataId": "31b3e691-2677-4cfc-aac4-deedd92118d0",
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAALobVSHAAA=": "Failed Items - Email Filling",
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAAOIbRwuAAA=": "Failed Items - Email Filing"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

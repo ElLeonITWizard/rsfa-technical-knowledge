@@ -1,0 +1,345 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_Outlook_Jet_RSFA"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_new_email_arrives_(V3)": {
+          "type": "OpenApiConnectionNotification",
+          "inputs": {
+            "parameters": {
+              "includeAttachments": true,
+              "importance": "Any",
+              "fetchOnlyWithAttachment": false,
+              "folderPath": "Id::AAMkADhlMTE2ODU2LWUwNTQtNDA5Mi04YmZkLWRkOGI0YTZmOWIzYQAuAAAAAAB0p8mj18G7SaXHNwaBQfzjAQB0QDbxvoyvTpbud9oQM3A3AAAAAAEJAAA="
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "OnNewEmailV3",
+              "connectionName": "shared_office365"
+            }
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "metadata": {
+            "Id::AAMkADhlMTE2ODU2LWUwNTQtNDA5Mi04YmZkLWRkOGI0YTZmOWIzYQAuAAAAAAB0p8mj18G7SaXHNwaBQfzjAQB0QDbxvoyvTpbud9oQM3A3AAAAAAEJAAA=": "Sent Items"
+          }
+        }
+      },
+      "actions": {
+        "Catch_Send_Fail_Email": {
+          "type": "Scope",
+          "actions": {
+            "Forward_Failed_Email_to_Tech_Inbox_2": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "message_id": "@triggerOutputs()?['body/id']",
+                  "body/ToRecipients": "@variables('FailedAddress')",
+                  "body/Comment": "@variables('FailedComment')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "ForwardEmail_V2",
+                  "connectionName": "shared_office365"
+                }
+              }
+            },
+            "Set_Failed_Flag_True_02": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "FailedFlag",
+                "value": true
+              },
+              "runAfter": {
+                "Forward_Failed_Email_to_Tech_Inbox_2": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Processable_Email": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        },
+        "Initialize_variable_Failed_Item_Address": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FailedAddress",
+                "type": "string",
+                "value": "tech@rsfa.co.nz;fails_ai_emails-aaaau3vcmr2rjlzgpujc4v6rj4@grid-rsfa-realadvice.org.slack.com"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Initialize_variable_Comment": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FailedComment",
+                "type": "string",
+                "value": "Failed Item Email Filling"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_Failed_Item_Address": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_variable_Mail_Connection": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "MailConnection",
+                "type": "string",
+                "value": "jet@rsfa.co.nz"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_Comment": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Processable_Email": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "not": {
+                  "contains": [
+                    "@triggerOutputs()?['body/toRecipients']",
+                    "tech@rsfa.co.nz"
+                  ]
+                }
+              }
+            ]
+          },
+          "actions": {
+            "Try_Run_Main_Filling_Flow": {
+              "type": "Scope",
+              "actions": {
+                "Run_a_Main_Email_Filling_Flow": {
+                  "type": "Workflow",
+                  "inputs": {
+                    "host": {
+                      "workflowReferenceName": "f6906da4-c8ed-ef11-9341-6045bd3ce9ae"
+                    },
+                    "body": {
+                      "text": "@triggerOutputs()?['body/id']",
+                      "text_1": "@variables('MailConnection')"
+                    }
+                  },
+                  "limit": {
+                    "timeout": "PT15M"
+                  }
+                },
+                "Run_a_Child_Flow_Failed": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "startsWith": [
+                          "@body('Run_a_Main_Email_Filling_Flow')?['status']",
+                          "Failed"
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Forward_Failed_Email_to_Tech_Inbox": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "message_id": "@triggerOutputs()?['body/id']",
+                          "body/ToRecipients": "@variables('FailedAddress')",
+                          "body/Comment": "@variables('FailedComment')"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                          "operationId": "ForwardEmail_V2",
+                          "connectionName": "shared_office365"
+                        }
+                      }
+                    },
+                    "Set_Failed_Flag_True": {
+                      "type": "SetVariable",
+                      "inputs": {
+                        "name": "FailedFlag",
+                        "value": true
+                      },
+                      "runAfter": {
+                        "Forward_Failed_Email_to_Tech_Inbox": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {
+                    "Run_a_Main_Email_Filling_Flow": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Initialize_Failed_Flag": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Failed_Flag": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FailedFlag",
+                "type": "boolean",
+                "value": false
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_Mail_Connection": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Flow_Has_Failed": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@variables('FailedFlag')",
+                  "@true"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Delay": {
+              "type": "Wait",
+              "inputs": {
+                "interval": {
+                  "count": 5,
+                  "unit": "Second"
+                }
+              }
+            },
+            "Get_Failed_Items_Sent_Emails": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "importance": "Any",
+                  "fetchOnlyWithAttachment": false,
+                  "folderPath": "Id::AAMkADhlMTE2ODU2LWUwNTQtNDA5Mi04YmZkLWRkOGI0YTZmOWIzYQAuAAAAAAB0p8mj18G7SaXHNwaBQfzjAQB0QDbxvoyvTpbud9oQM3A3AAAAAAEJAAA=",
+                  "fetchOnlyUnread": false,
+                  "searchQuery": "body:@{variables('FailedComment')}",
+                  "top": 10
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "GetEmailsV3",
+                  "connectionName": "shared_office365"
+                }
+              },
+              "runAfter": {
+                "Delay": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "Id::AAMkADAwOGQxMzg1LWI3MTQtNDI2MS1hNzZiLWM0ODRjMDJkZDgwMQAuAAAAAAB-6aZm6gZuS6eGUa5Fpp--AQC8KvZT9kHdTYJ_CW0P9PU3AAAAAAEJAAA=": "Sent Items",
+                "Id::AAMkADhlMTE2ODU2LWUwNTQtNDA5Mi04YmZkLWRkOGI0YTZmOWIzYQAuAAAAAAB0p8mj18G7SaXHNwaBQfzjAQB0QDbxvoyvTpbud9oQM3A3AAAAAAEJAAA=": "Sent Items"
+              }
+            },
+            "Apply_to_each_Failed_Sent_Email": {
+              "type": "Foreach",
+              "foreach": "@outputs('Get_Failed_Items_Sent_Emails')?['body/value']",
+              "actions": {
+                "Delete_Failed_Sent_Email": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "messageId": "@items('Apply_to_each_Failed_Sent_Email')?['id']"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                      "operationId": "DeleteEmail_V2",
+                      "connectionName": "shared_office365"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Get_Failed_Items_Sent_Emails": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Catch_Send_Fail_Email": [
+              "Succeeded",
+              "TimedOut",
+              "Skipped",
+              "Failed"
+            ],
+            "Processable_Email": [
+              "Succeeded",
+              "TimedOut",
+              "Skipped",
+              "Failed"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

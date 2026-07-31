@@ -1,0 +1,2099 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_office365": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "rsfa_sharedoffice365_91c50"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "rsfa_sharedsharepointonline_8fd5d"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_slack": {
+        "api": {
+          "name": "shared_slack"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "rsfa_sharedslack_c50e1"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_new_email_arrives_(V3)": {
+          "type": "OpenApiConnectionNotification",
+          "inputs": {
+            "parameters": {
+              "includeAttachments": true,
+              "importance": "Any",
+              "fetchOnlyWithAttachment": false,
+              "folderPath": "Id::AQMkAGNhZjA2ZWMxLTYzZDAtNDliMC1iZWFmLTUxYjg5MzQ0ADUxM2UALgAAAzOtNXE-6npNtoeJ7XlVxAQBACqSXuc1qadJl6JobNgLcYsAAAIBDAAAAA=="
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "OnNewEmailV3",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 2
+            }
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "metadata": {
+            "operationMetadataId": "f24d6b29-01ee-484c-b36b-1a67135c4619",
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAABvfORNAAA=": "Colligo Test Folder July 2023",
+            "Id::AQMkADAyMgA3YjU0My03NwFkLTRjZWQtYTFhOC1mNTY1NDdmZTFmNTEALgAAA4ZAVWgnPt9PuolwDSdi8YEBAHRQ6y1GIQxBpV71jzOv4ikAAAIBCQAAAA==": "Sent Items",
+            "Id::AQMkADAyMgA3YjU0My03NwFkLTRjZWQtYTFhOC1mNTY1NDdmZTFmNTEALgAAA4ZAVWgnPt9PuolwDSdi8YEBAHRQ6y1GIQxBpV71jzOv4ikAAAIBDAAAAA==": "Inbox",
+            "Id::AAMkADAyMjdiNTQzLTc3N2QtNGNlZC1hMWE4LWY1NjU0N2ZlMWY1MQAuAAAAAACGQFVoJz7fT7qJcA0nYvGBAQB0UOstRiEMQaVe9Y8zr_IpAABvfON0AAA=": "Date Test",
+            "Id::AAMkADViZTdkMWQxLTdjNGQtNGU0OS05MjhiLWRjYzRmNzQ4N2VjZQAuAAAAAACkL3jmSkopT6bHoju8barZAQAFubL08LIaRZeaRvSBrKyFAAAAAAEMAAA=": "Inbox",
+            "Id::AQMkAGNhZjA2ZWMxLTYzZDAtNDliMC1iZWFmLTUxYjg5MzQ0ADUxM2UALgAAAzOtNXE-6npNtoeJ7XlVxAQBACqSXuc1qadJl6JobNgLcYsAAAIBDAAAAA==": "Inbox"
+          }
+        }
+      },
+      "actions": {
+        "Save_Obtained_Contact": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PrimaryContactLookUpEmpty",
+                "type": "string",
+                "value": "@string(body('Primary_Contact_LookUp_on_Monday.com'))"
+              }
+            ]
+          },
+          "runAfter": {
+            "Primary_Contact_LookUp_on_Monday.com": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "1bfd3930-2d0c-48a2-a222-bca023a34f5f"
+          }
+        },
+        "Get_Client_ID": {
+          "type": "Http",
+          "inputs": {
+            "uri": "https://us-central1-strange-calling-402307.cloudfunctions.net/rsfa-id",
+            "method": "POST",
+            "body": "@{triggerOutputs()?['body/subject']}@{body('Query_Contact_Board_on_Monday.com_2')}@{body('Query_Contact_Board_on_Monday.com')}"
+          },
+          "runAfter": {
+            "Contact_does_not_Contain_Name": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "cd81e6b6-20ce-4d4f-91de-aa532dd213b9"
+          }
+        },
+        "Primary_Contact_LookUp_on_Monday.com": {
+          "type": "Http",
+          "inputs": {
+            "uri": "https://api.monday.com/v2",
+            "method": "POST",
+            "headers": {
+              "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+              "API-Version": "2023-10"
+            },
+            "body": {
+              "query": "query { items_page_by_column_values(limit: 1, board_id: 1813301098, columns: [{ column_id: \"email\", column_values: [@{variables('AllEmails')}]}]) { items { id name } } }"
+            }
+          },
+          "runAfter": {
+            "Initialize_AllEmails": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "bea1add2-73cd-4305-94db-da14a099c1a2"
+          }
+        },
+        "Concat_and_Clean_All_Emails": {
+          "type": "Compose",
+          "inputs": "@concat(if(not(empty(triggerOutputs()?['body/from'])), concat('\"', triggerOutputs()?['body/from'], '\"'), ''), if(not(empty(triggerOutputs()?['body/toRecipients'])), concat(if(not(empty(triggerOutputs()?['body/from'])), ', ', ''), '\"', join(split(triggerOutputs()?['body/toRecipients'], ';'), '\", \"'), '\"'), ''), if(not(empty(triggerOutputs()?['body/ccRecipients'])), concat(if(or(not(empty(triggerOutputs()?['body/from'])), not(empty(triggerOutputs()?['body/toRecipients']))), ', ', ''), '\"', join(split(triggerOutputs()?['body/ccRecipients'], ';'), '\", \"'), '\"'), ''), if(not(empty(triggerOutputs()?['body/bccRecipients'])), concat(if(or(not(empty(triggerOutputs()?['body/from'])), not(empty(triggerOutputs()?['body/toRecipients'])), not(empty(triggerOutputs()?['body/ccRecipients']))), ', ', ''), '\"', join(split(triggerOutputs()?['body/bccRecipients'], ';'), '\", \"'), '\"'), ''))\r\n",
+          "runAfter": {
+            "CleanSubject": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "866d21f2-17b1-4d17-a3b7-1e80c0f59f47"
+          }
+        },
+        "From_Name": {
+          "type": "Compose",
+          "inputs": "@body('Get_Email_Details')['From']['emailAddress']['name']",
+          "runAfter": {
+            "BCC_Name": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "f4fa84ea-22be-4e0c-aedf-5576a3c8ed7b"
+          }
+        },
+        "BCC_Name": {
+          "type": "Compose",
+          "inputs": "@join(body('Select_BCC'), '; ')",
+          "runAfter": {
+            "Select_BCC": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "f14ad368-e881-479f-baea-8d3a091a4d9f"
+          }
+        },
+        "Select_BCC": {
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Get_Email_Details')?['bccRecipients']",
+            "select": "@item()?['EmailAddress']?['Name']"
+          },
+          "runAfter": {
+            "CC_Name": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "23d49826-8d12-4caa-bb68-5dcd2cc48c88"
+          }
+        },
+        "CC_Name": {
+          "type": "Compose",
+          "inputs": "@join(body('Select_CC'), '; ')",
+          "runAfter": {
+            "Select_CC": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "dc59520a-bcad-447a-9c20-015b4c42747c"
+          }
+        },
+        "Select_CC": {
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Get_Email_Details')?['ccRecipients']",
+            "select": "@item()?['EmailAddress']?['Name']"
+          },
+          "runAfter": {
+            "Recipient_": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "57c43470-c616-4333-8072-2ce9d60ff976"
+          }
+        },
+        "Recipient_": {
+          "type": "Compose",
+          "inputs": "@join(body('Select_Recipient'), '; ')",
+          "runAfter": {
+            "Select_Recipient": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "766b1dd8-0c98-4314-86d2-ab1cd43d53c4"
+          }
+        },
+        "Select_Recipient": {
+          "type": "Select",
+          "inputs": {
+            "from": "@body('Get_Email_Details')?['toRecipients']",
+            "select": "@item()?['EmailAddress']?['Name']"
+          },
+          "runAfter": {
+            "Convert_time_zone_to_NZ": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "cda6e58d-f49e-46de-8bad-16392443fc67"
+          }
+        },
+        "Convert_time_zone_to_NZ": {
+          "type": "Expression",
+          "kind": "ConvertTimeZone",
+          "inputs": {
+            "baseTime": "@triggerOutputs()?['body/receivedDateTime']",
+            "sourceTimeZone": "UTC-11",
+            "destinationTimeZone": "New Zealand Standard Time",
+            "formatString": "dd.MM.yyyy hh_mm tt"
+          },
+          "runAfter": {
+            "Get_Email_Details": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "a3ca25f0-ae55-4bed-8d83-ee8d9c664920"
+          }
+        },
+        "Contact_does_not_Contain_Name": {
+          "type": "If",
+          "expression": {
+            "not": {
+              "contains": [
+                "@variables('PrimaryContactLookUpEmpty')",
+                "name"
+              ]
+            }
+          },
+          "actions": {
+            "Alternative_Contact_LookUp_on_Monday.com": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10"
+                },
+                "body": {
+                  "query": "query { items_page_by_column_values(limit: 1, board_id: 1813301098, columns: [{ column_id: \"email0\", column_values: [@{variables('AllEmails')}]}]) { items { id name } } }"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "bea1add2-73cd-4305-94db-da14a099c1a2"
+              }
+            },
+            "Contact_does_not_Contain_Name_2": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "not": {
+                      "contains": [
+                        "@outputs('Convert_Output_to_String')",
+                        "name"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {},
+              "else": {
+                "actions": {
+                  "Get_Contact_Details": {
+                    "type": "Compose",
+                    "inputs": "@body('Alternative_Contact_LookUp_on_Monday.com')",
+                    "metadata": {
+                      "operationMetadataId": "9805a4cd-af3d-42ba-8d33-9e3b72f4cb1f"
+                    }
+                  },
+                  "Parse_JSON_Contact_Details_2": {
+                    "type": "ParseJson",
+                    "inputs": {
+                      "content": "@outputs('Get_Contact_Details')",
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "object",
+                            "properties": {
+                              "items_page_by_column_values": {
+                                "type": "object",
+                                "properties": {
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "name"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "account_id": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Get_Contact_Details": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "f977ad47-5d09-481f-888c-118eca004f47"
+                    }
+                  },
+                  "Get_Profile_UniqueID_2": {
+                    "type": "Compose",
+                    "inputs": "@outputs('Parse_JSON_Contact_Details_2')['body']['data']['items_page_by_column_values']['items'][0]['id']",
+                    "runAfter": {
+                      "Parse_JSON_Contact_Details_2": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "0c41a882-96a2-4be2-803e-231cbacacf57"
+                    }
+                  },
+                  "Query_Contact_Board_on_Monday.com": {
+                    "type": "Http",
+                    "inputs": {
+                      "uri": "https://api.monday.com/v2",
+                      "method": "POST",
+                      "headers": {
+                        "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN"
+                      },
+                      "body": {
+                        "query": "query { items(ids: @{outputs('Get_Profile_UniqueID_2')}) { id column_values(ids: \"board_relation39\") { value text } } }"
+                      }
+                    },
+                    "runAfter": {
+                      "Get_Profile_UniqueID_2": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "a1bc7956-d581-416c-a316-9e04b32fbc12"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Convert_Output_to_String": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "5895e363-7cdf-41c2-8c6a-0eaa1ad67962"
+              }
+            },
+            "Convert_Output_to_String": {
+              "type": "Compose",
+              "inputs": "@string(body('Alternative_Contact_LookUp_on_Monday.com'))",
+              "runAfter": {
+                "Alternative_Contact_LookUp_on_Monday.com": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "3ace0bf0-4bd7-45f7-b528-93913f5c51b8"
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Contact_Details": {
+                "type": "Compose",
+                "inputs": "@body('Primary_Contact_LookUp_on_Monday.com')",
+                "metadata": {
+                  "operationMetadataId": "dac02aed-f844-4af1-908b-a2fb49807f81"
+                }
+              },
+              "Parse_JSON_Contact_Details": {
+                "type": "ParseJson",
+                "inputs": {
+                  "content": "@outputs('Contact_Details')",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "items_page_by_column_values": {
+                            "type": "object",
+                            "properties": {
+                              "items": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "id",
+                                    "name"
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "account_id": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Contact_Details": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "0506d508-5a18-4e6e-a7a5-1a099aeaecde"
+                }
+              },
+              "Get_Profile_UniqueID_": {
+                "type": "Compose",
+                "inputs": "@outputs('Parse_JSON_Contact_Details')['body']['data']['items_page_by_column_values']['items'][0]['id']",
+                "runAfter": {
+                  "Parse_JSON_Contact_Details": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "6e902ba7-c3bf-47a0-af03-375de7a9fede"
+                }
+              },
+              "Query_Contact_Board_on_Monday.com_2": {
+                "type": "Http",
+                "inputs": {
+                  "uri": "https://api.monday.com/v2",
+                  "method": "POST",
+                  "headers": {
+                    "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN"
+                  },
+                  "body": {
+                    "query": "query { items(ids: @{outputs('Get_Profile_UniqueID_')}) { id column_values(ids: \"board_relation39\") { value text } } }"
+                  }
+                },
+                "runAfter": {
+                  "Get_Profile_UniqueID_": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "a1bc7956-d581-416c-a316-9e04b32fbc12"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Save_Obtained_Contact": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "eebe7e16-df22-47bd-a992-85b02526e15e"
+          }
+        },
+        "Initialize_Attachment_Condition": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AttachmentCondition",
+                "type": "boolean"
+              }
+            ]
+          },
+          "runAfter": {
+            "Get_Client_ID": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "0753cb17-050e-4a5d-bd37-cd22f79d1451"
+          }
+        },
+        "Initialize_AllEmails": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AllEmails",
+                "type": "string",
+                "value": "@outputs('Concat_and_Clean_All_Emails')"
+              }
+            ]
+          },
+          "runAfter": {
+            "Concat_and_Clean_All_Emails": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b224edef-aea8-42a8-bb77-d2b255d879c7"
+          }
+        },
+        "Exports_Email": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "messageId": "@triggerOutputs()?['body/id']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "ExportEmail_V2",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {
+            "Delay": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ff648eb8-cadb-4722-9088-bb2c3ed41b8e"
+          }
+        },
+        "Get_Created_Email_File": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+              "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+              "$filter": "FileLeafRef eq '@{outputs('Clean_From_Name')}_@{outputs('CleanSubject')}_@{body('Convert_time_zone_to_NZ')}.eml'"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "GetFileItems",
+              "connectionName": "shared_sharepointonline"
+            }
+          },
+          "runAfter": {
+            "Initialize_Attachment_Condition": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "paginationPolicy": {
+              "minimumItemCount": 1
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "aa78f3d4-2a18-452f-be05-73f1e8add116"
+          }
+        },
+        "Get_Number_of_Email_Files_Obtained": {
+          "type": "Compose",
+          "inputs": "@length(outputs('Get_Created_Email_File')?['body/value'])",
+          "runAfter": {
+            "Get_Created_Email_File": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "775556b7-14a7-4c8f-b843-a9106fe5e8b4"
+          }
+        },
+        "Any_File_Found": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "greaterOrEquals": [
+                  "@outputs('Get_Number_of_Email_Files_Obtained')",
+                  1
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "ID_Not_Found": {
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "equals": [
+                        "@body('Get_Client_ID')",
+                        "nonexistent"
+                      ]
+                    }
+                  ]
+                },
+                "actions": {
+                  "Update_Email_File_Properties": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                        "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                        "id": "@outputs('File_Email_to_Rod_Kathleen_ST_Folder')?['body/ItemId']",
+                        "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                        "item/Sender": "@outputs('From_Name')",
+                        "item/Cc": "@outputs('CC_Name')",
+                        "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                        "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                        "item/To": "@outputs('Recipient_')",
+                        "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                        "item/Subject": "@triggerOutputs()?['body/subject']",
+                        "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                        "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                        "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                        "item/Status/Value": "Received",
+                        "item/Mailbox/Value": "rod@rsfa.co.nz",
+                        "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "operationId": "PatchFileItem",
+                        "connectionName": "shared_sharepointonline"
+                      }
+                    },
+                    "runAfter": {
+                      "Try_File_Email": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                    }
+                  },
+                  "Apply_to_each_Attachment": {
+                    "type": "Foreach",
+                    "foreach": "@triggerOutputs()?['body/attachments']",
+                    "actions": {
+                      "Is_it_an_Image": {
+                        "type": "If",
+                        "expression": {
+                          "or": [
+                            {
+                              "startsWith": [
+                                "@items('Apply_to_each_Attachment')?['name']",
+                                "image0"
+                              ]
+                            },
+                            {
+                              "and": [
+                                {
+                                  "less": [
+                                    "@item()?['size']",
+                                    25000
+                                  ]
+                                },
+                                {
+                                  "or": [
+                                    {
+                                      "endsWith": [
+                                        "@item()?['name']",
+                                        "png"
+                                      ]
+                                    },
+                                    {
+                                      "endsWith": [
+                                        "@item()?['name']",
+                                        "jpg"
+                                      ]
+                                    },
+                                    {
+                                      "endsWith": [
+                                        "@item()?['name']",
+                                        "ica"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "Update_Email_File_Properties_2": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                "id": "@outputs('File_Email_to_Rod_Kathleen_ST_Folder')?['body/ItemId']",
+                                "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                                "item/Sender": "@outputs('From_Name')",
+                                "item/Cc": "@outputs('CC_Name')",
+                                "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                                "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                                "item/To": "@outputs('Recipient_')",
+                                "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                                "item/Subject": "@triggerOutputs()?['body/subject']",
+                                "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                                "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                                "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                                "item/Status/Value": "Received",
+                                "item/Mailbox/Value": "rod@rsfa.co.nz",
+                                "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                "operationId": "PatchFileItem",
+                                "connectionName": "shared_sharepointonline"
+                              }
+                            },
+                            "metadata": {
+                              "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                            }
+                          }
+                        },
+                        "else": {
+                          "actions": {
+                            "Update_Email_File_Properties_(Attachment_Value_YES)": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                  "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                  "id": "@outputs('File_Email_to_Rod_Kathleen_ST_Folder')?['body/ItemId']",
+                                  "item/Attachment/Value": "Yes",
+                                  "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                                  "item/Sender": "@outputs('From_Name')",
+                                  "item/Cc": "@outputs('CC_Name')",
+                                  "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                                  "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                                  "item/To": "@outputs('Recipient_')",
+                                  "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                                  "item/Subject": "@triggerOutputs()?['body/subject']",
+                                  "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                                  "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                                  "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                                  "item/Status/Value": "Received",
+                                  "item/Mailbox/Value": "rod@rsfa.co.nz",
+                                  "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                  "operationId": "PatchFileItem",
+                                  "connectionName": "shared_sharepointonline"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                              }
+                            }
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "ae64a4bf-e977-49ec-a500-3c98a7dac8a0"
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Update_Email_File_Properties": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "7b2a1408-b793-4105-867b-856fb71d2ce7"
+                    }
+                  },
+                  "Try_File_Email": {
+                    "type": "Scope",
+                    "description": "The file is created, but it still fails, so we use a catch",
+                    "actions": {
+                      "File_Email_to_Rod_Kathleen_ST_Folder": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                            "folderPath": "/Client files/Emails to sort/Rod_Kathleen_ST inboxes",
+                            "name": "@{outputs('Clean_From_Name')}_@{outputs('CleanSubject')}_@{body('Convert_time_zone_to_NZ')}.eml",
+                            "body": "@body('Exports_Email')"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "operationId": "CreateFile",
+                            "connectionName": "shared_sharepointonline"
+                          }
+                        },
+                        "runtimeConfiguration": {
+                          "contentTransfer": {
+                            "transferMode": "Chunked"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "25d832ae-60fe-4d7f-94af-d5dd78a36486"
+                        }
+                      }
+                    }
+                  },
+                  "Catch_File_Email": {
+                    "type": "Scope",
+                    "description": "try searching for it by another means after 10 seconds and continue doing what it should if it hadn't failed",
+                    "actions": {
+                      "Delay_10s": {
+                        "type": "Wait",
+                        "inputs": {
+                          "interval": {
+                            "count": 10,
+                            "unit": "Second"
+                          }
+                        }
+                      },
+                      "Get_file_metadata_using_path": {
+                        "type": "OpenApiConnection",
+                        "description": "",
+                        "inputs": {
+                          "parameters": {
+                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                            "path": "@concat('/Client files/Emails to sort/Rod_Kathleen_ST inboxes/', outputs('Clean_From_Name'),'_',outputs('CleanSubject'),'_',body('Convert_time_zone_to_NZ'),'.eml')"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "operationId": "GetFileMetadataByPath",
+                            "connectionName": "shared_sharepointonline"
+                          }
+                        },
+                        "runAfter": {
+                          "Delay_10s": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Compose_FixToStringID": {
+                        "type": "Compose",
+                        "inputs": "@string(outputs('Get_file_metadata_using_path')?['body/ItemId'])",
+                        "runAfter": {
+                          "Get_file_metadata_using_path": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Compose_NewID_WhituotWhiteSpace": {
+                        "type": "Compose",
+                        "inputs": "@trim(outputs('Compose_FixToStringID'))",
+                        "runAfter": {
+                          "Compose_FixToStringID": [
+                            "Succeeded"
+                          ]
+                        }
+                      },
+                      "Retry_Update_Email_File_Properties": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                            "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                            "id": "@outputs('Compose_NewID_WhituotWhiteSpace')",
+                            "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                            "item/Sender": "@outputs('From_Name')",
+                            "item/Cc": "@outputs('CC_Name')",
+                            "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                            "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                            "item/To": "@outputs('Recipient_')",
+                            "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                            "item/Subject": "@triggerOutputs()?['body/subject']",
+                            "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                            "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                            "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                            "item/Status/Value": "Received",
+                            "item/Mailbox/Value": "rod@rsfa.co.nz",
+                            "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "operationId": "PatchFileItem",
+                            "connectionName": "shared_sharepointonline"
+                          }
+                        },
+                        "runAfter": {
+                          "Compose_NewID_WhituotWhiteSpace": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                        }
+                      },
+                      "Retry_Apply_to_each_Attachment": {
+                        "type": "Foreach",
+                        "foreach": "@triggerOutputs()?['body/attachments']",
+                        "actions": {
+                          "Retry_Is_it_an_Image": {
+                            "type": "If",
+                            "expression": {
+                              "or": [
+                                {
+                                  "startsWith": [
+                                    "@items('Retry_Apply_to_each_Attachment')?['name']",
+                                    "image0"
+                                  ]
+                                },
+                                {
+                                  "and": [
+                                    {
+                                      "less": [
+                                        "@items('Retry_Apply_to_each_Attachment')?['size']",
+                                        25000
+                                      ]
+                                    },
+                                    {
+                                      "or": [
+                                        {
+                                          "endsWith": [
+                                            "@items('Retry_Apply_to_each_Attachment')?['name']",
+                                            "png"
+                                          ]
+                                        },
+                                        {
+                                          "endsWith": [
+                                            "@items('Retry_Apply_to_each_Attachment')?['name']",
+                                            "jpg"
+                                          ]
+                                        },
+                                        {
+                                          "endsWith": [
+                                            "@items('Retry_Apply_to_each_Attachment')?['name']",
+                                            "ica"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            "actions": {
+                              "Update_Email_File_Properties_1": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                    "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                    "id": "@outputs('Compose_NewID_WhituotWhiteSpace')",
+                                    "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                                    "item/Sender": "@outputs('From_Name')",
+                                    "item/Cc": "@outputs('CC_Name')",
+                                    "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                                    "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                                    "item/To": "@outputs('Recipient_')",
+                                    "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                                    "item/Subject": "@triggerOutputs()?['body/subject']",
+                                    "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                                    "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                                    "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                                    "item/Status/Value": "Received",
+                                    "item/Mailbox/Value": "rod@rsfa.co.nz",
+                                    "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "operationId": "PatchFileItem",
+                                    "connectionName": "shared_sharepointonline"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                                }
+                              }
+                            },
+                            "else": {
+                              "actions": {
+                                "Retry_Update_Email_File_Properties_(Attachment_Value_YES)": {
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "parameters": {
+                                      "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                      "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                      "id": "@outputs('Compose_NewID_WhituotWhiteSpace')",
+                                      "item/Attachment/Value": "Yes",
+                                      "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                                      "item/Sender": "@outputs('From_Name')",
+                                      "item/Cc": "@outputs('CC_Name')",
+                                      "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                                      "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                                      "item/To": "@outputs('Recipient_')",
+                                      "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                                      "item/Subject": "@triggerOutputs()?['body/subject']",
+                                      "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                                      "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                                      "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                                      "item/Status/Value": "Received",
+                                      "item/Mailbox/Value": "rod@rsfa.co.nz",
+                                      "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                                    },
+                                    "host": {
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                      "operationId": "PatchFileItem",
+                                      "connectionName": "shared_sharepointonline"
+                                    }
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                                  }
+                                }
+                              }
+                            },
+                            "metadata": {
+                              "operationMetadataId": "ae64a4bf-e977-49ec-a500-3c98a7dac8a0"
+                            }
+                          }
+                        },
+                        "runAfter": {
+                          "Retry_Update_Email_File_Properties": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "7b2a1408-b793-4105-867b-856fb71d2ce7"
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Try_File_Email": [
+                        "TimedOut",
+                        "Failed"
+                      ]
+                    }
+                  },
+                  "Terminate_Success": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Succeeded"
+                    },
+                    "runAfter": {
+                      "Catch_File_Email": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "ac4c443b-4ca2-4310-b7ce-908cb311cc28"
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "Get_ClientID": {
+                      "type": "Compose",
+                      "inputs": "@body('Get_Client_ID')",
+                      "metadata": {
+                        "operationMetadataId": "803395e2-e844-471e-9c31-5f496ed6138f"
+                      }
+                    },
+                    "Get_Client_Folder": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                          "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                          "$filter": "@concat('substringof(''', outputs('Get_ClientID'), ''', FileLeafRef)')",
+                          "folderPath": "/Client files",
+                          "viewScopeOption": "Default"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "operationId": "GetFileItems",
+                          "connectionName": "shared_sharepointonline"
+                        }
+                      },
+                      "runAfter": {
+                        "Get_ClientID": [
+                          "Succeeded"
+                        ]
+                      },
+                      "runtimeConfiguration": {
+                        "paginationPolicy": {
+                          "minimumItemCount": 5000
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "36ffbc8e-7d4b-420f-ae4e-5cbd07676e14"
+                      }
+                    },
+                    "Apply_to_each_Folder_Obtained": {
+                      "type": "Foreach",
+                      "foreach": "@outputs('Get_Client_Folder')?['body/value']",
+                      "actions": {
+                        "Get_Client_Folder_Path": {
+                          "type": "Compose",
+                          "inputs": "@items('Apply_to_each_Folder_Obtained')?['{FullPath}']",
+                          "metadata": {
+                            "operationMetadataId": "1d0ff607-20da-4da9-b556-38e56e5bb559"
+                          }
+                        },
+                        "Update_Email_File_Properties_3": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                              "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                              "id": "@outputs('File_Email_on_Client_Folder')?['body/ItemId']",
+                              "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                              "item/Sender": "@outputs('From_Name')",
+                              "item/Cc": "@outputs('CC_Name')",
+                              "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                              "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                              "item/To": "@outputs('Recipient_')",
+                              "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                              "item/Subject": "@triggerOutputs()?['body/subject']",
+                              "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                              "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                              "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                              "item/Status/Value": "Received",
+                              "item/Mailbox/Value": "rod@rsfa.co.nz",
+                              "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                              "operationId": "PatchFileItem",
+                              "connectionName": "shared_sharepointonline"
+                            }
+                          },
+                          "runAfter": {
+                            "F_Try_File_Email": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                          }
+                        },
+                        "Apply_to_each_Attachment_2": {
+                          "type": "Foreach",
+                          "foreach": "@triggerOutputs()?['body/attachments']",
+                          "actions": {
+                            "Is_it_an_Inline_Image": {
+                              "type": "If",
+                              "description": "Sometimes there are inline objects included in the attachments, PA cannot work with those so we skip them",
+                              "expression": {
+                                "or": [
+                                  {
+                                    "startsWith": [
+                                      "@items('Apply_to_each_Attachment_2')?['name']",
+                                      "image0"
+                                    ]
+                                  },
+                                  {
+                                    "and": [
+                                      {
+                                        "less": [
+                                          "@items('Apply_to_each_Attachment_2')?['size']",
+                                          25000
+                                        ]
+                                      },
+                                      {
+                                        "or": [
+                                          {
+                                            "endsWith": [
+                                              "@items('Apply_to_each_Attachment_2')?['name']",
+                                              "png"
+                                            ]
+                                          },
+                                          {
+                                            "endsWith": [
+                                              "@items('Apply_to_each_Attachment_2')?['name']",
+                                              "jpg"
+                                            ]
+                                          },
+                                          {
+                                            "endsWith": [
+                                              "@items('Apply_to_each_Attachment_2')?['name']",
+                                              "ica"
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "actions": {},
+                              "else": {
+                                "actions": {
+                                  "Get_Attachment_(V2)_2": {
+                                    "type": "OpenApiConnection",
+                                    "inputs": {
+                                      "parameters": {
+                                        "messageId": "@triggerOutputs()?['body/id']",
+                                        "attachmentId": "@items('Apply_to_each_Attachment_2')?['id']"
+                                      },
+                                      "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                                        "operationId": "GetAttachment_V2",
+                                        "connectionName": "shared_office365"
+                                      }
+                                    },
+                                    "metadata": {
+                                      "operationMetadataId": "dd2c011f-2e0f-403c-b793-885afb971587"
+                                    }
+                                  },
+                                  "Clean_Attachment_Name": {
+                                    "type": "Compose",
+                                    "inputs": "@replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(outputs('Get_Attachment_(V2)_2')?['body/name'], '&', ''), '#', ''), '%', ''), '*', ''), '{', ''), '}', ''), ':', ''), '<', ''), '>', ''), '?', ''), '/', ''), '|', ''), '\"', ''), '''', '')",
+                                    "runAfter": {
+                                      "Update_Email_File_Properties_(Attachment_Value_YES)_2": [
+                                        "SUCCEEDED"
+                                      ]
+                                    },
+                                    "metadata": {
+                                      "operationMetadataId": "ba84e799-0b6e-49a5-b6f1-4c467811cb2a"
+                                    }
+                                  },
+                                  "Update_Email_File_Properties_(Attachment_Value_YES)_2": {
+                                    "type": "OpenApiConnection",
+                                    "inputs": {
+                                      "parameters": {
+                                        "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                        "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                        "id": "@outputs('File_Email_on_Client_Folder')?['body/ItemId']",
+                                        "item/Attachment/Value": "Yes",
+                                        "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                                      },
+                                      "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                        "operationId": "PatchFileItem",
+                                        "connectionName": "shared_sharepointonline"
+                                      }
+                                    },
+                                    "runAfter": {
+                                      "Get_Attachment_(V2)_2": [
+                                        "SUCCEEDED"
+                                      ]
+                                    },
+                                    "metadata": {
+                                      "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                                    }
+                                  },
+                                  "Get_created_attachment_file_from_SharePoint": {
+                                    "type": "OpenApiConnection",
+                                    "inputs": {
+                                      "parameters": {
+                                        "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                        "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                        "$filter": "FileLeafRef eq '@{outputs('Clean_Attachment_Name')}'"
+                                      },
+                                      "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                        "operationId": "GetFileItems",
+                                        "connectionName": "shared_sharepointonline"
+                                      }
+                                    },
+                                    "runAfter": {
+                                      "Clean_Attachment_Name": [
+                                        "SUCCEEDED"
+                                      ]
+                                    },
+                                    "runtimeConfiguration": {
+                                      "paginationPolicy": {
+                                        "minimumItemCount": 1
+                                      }
+                                    },
+                                    "metadata": {
+                                      "operationMetadataId": "c96103b8-8bbc-48c7-a861-e4a9192ecb82"
+                                    }
+                                  },
+                                  "Get_Number_of_Files_Obtained": {
+                                    "type": "Compose",
+                                    "inputs": "@length(outputs('Get_created_attachment_file_from_SharePoint')?['body/value'])",
+                                    "runAfter": {
+                                      "Get_created_attachment_file_from_SharePoint": [
+                                        "SUCCEEDED"
+                                      ]
+                                    },
+                                    "metadata": {
+                                      "operationMetadataId": "97d3c38d-8db1-42c4-9ac6-18db55ae110f"
+                                    }
+                                  },
+                                  "Any_File_Obtained": {
+                                    "type": "If",
+                                    "expression": {
+                                      "and": [
+                                        {
+                                          "greaterOrEquals": [
+                                            "@outputs('Get_Number_of_Files_Obtained')",
+                                            1
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    "actions": {},
+                                    "else": {
+                                      "actions": {
+                                        "Create_Attachment_File_on_Client_Folder": {
+                                          "type": "OpenApiConnection",
+                                          "inputs": {
+                                            "parameters": {
+                                              "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                              "folderPath": "@{outputs('Get_Client_Folder_Path')}/g. Email Attachments",
+                                              "name": "@outputs('Get_Attachment_(V2)_2')?['body/name']",
+                                              "body": "@outputs('Get_Attachment_(V2)_2')?['body/contentBytes']"
+                                            },
+                                            "host": {
+                                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                              "operationId": "CreateFile",
+                                              "connectionName": "shared_sharepointonline"
+                                            }
+                                          },
+                                          "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                              "transferMode": "Chunked"
+                                            }
+                                          },
+                                          "metadata": {
+                                            "operationMetadataId": "099b0876-ad58-4da9-b9ad-ed7639c4dfe0"
+                                          }
+                                        },
+                                        "Update_Link_on_File": {
+                                          "type": "OpenApiConnection",
+                                          "inputs": {
+                                            "parameters": {
+                                              "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                              "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                              "id": "@outputs('Create_Attachment_File_on_Client_Folder')?['body/ItemId']",
+                                              "item/Test1": "@{outputs('Update_Email_File_Properties_3')?['body/{Link}']}?Web=1",
+                                              "item/ConversationId": "",
+                                              "item/Bcc_x0020_Email": "",
+                                              "item/Cc_x0020_Email": ""
+                                            },
+                                            "host": {
+                                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                              "operationId": "PatchFileItem",
+                                              "connectionName": "shared_sharepointonline"
+                                            }
+                                          },
+                                          "runAfter": {
+                                            "Create_Attachment_File_on_Client_Folder": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "metadata": {
+                                            "operationMetadataId": "a574b56e-0b2e-44cf-8791-21a7fb6e0b8e"
+                                          }
+                                        },
+                                        "Set_Attachment_Condition_to_True": {
+                                          "type": "SetVariable",
+                                          "inputs": {
+                                            "name": "AttachmentCondition",
+                                            "value": true
+                                          },
+                                          "runAfter": {
+                                            "Update_Link_on_File": [
+                                              "Succeeded"
+                                            ]
+                                          },
+                                          "metadata": {
+                                            "operationMetadataId": "c68a3d39-bc8b-4be8-b0a7-424135c49c44"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "runAfter": {
+                                      "Get_Number_of_Files_Obtained": [
+                                        "SUCCEEDED"
+                                      ]
+                                    },
+                                    "metadata": {
+                                      "operationMetadataId": "920e1814-43dd-4c4e-a219-fd87c19622d8"
+                                    }
+                                  }
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "ae64a4bf-e977-49ec-a500-3c98a7dac8a0"
+                              }
+                            }
+                          },
+                          "runAfter": {
+                            "Update_Email_File_Properties_3": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "7b2a1408-b793-4105-867b-856fb71d2ce7"
+                          }
+                        },
+                        "F_Try_File_Email": {
+                          "type": "Scope",
+                          "description": "The file is created, but it still fails, so we use a catch",
+                          "actions": {
+                            "File_Email_on_Client_Folder": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                  "folderPath": "@{outputs('Get_Client_Folder_Path')}/f. Email Communication",
+                                  "name": "@{outputs('Clean_From_Name')}_@{outputs('CleanSubject')}_@{body('Convert_time_zone_to_NZ')}.eml",
+                                  "body": "@body('Exports_Email')"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                  "operationId": "CreateFile",
+                                  "connectionName": "shared_sharepointonline"
+                                }
+                              },
+                              "runtimeConfiguration": {
+                                "contentTransfer": {
+                                  "transferMode": "Chunked"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "25d832ae-60fe-4d7f-94af-d5dd78a36486"
+                              }
+                            }
+                          },
+                          "runAfter": {
+                            "Get_Client_Folder_Path": [
+                              "Succeeded"
+                            ]
+                          }
+                        },
+                        "F_Catch_File_Email": {
+                          "type": "Scope",
+                          "description": "try searching for it by another means after 10 seconds and continue doing what it should if it hadn't failed",
+                          "actions": {
+                            "F_Delay_10s": {
+                              "type": "Wait",
+                              "inputs": {
+                                "interval": {
+                                  "count": 10,
+                                  "unit": "Second"
+                                }
+                              }
+                            },
+                            "F_Get_file_metadata_using_path": {
+                              "type": "OpenApiConnection",
+                              "description": "",
+                              "inputs": {
+                                "parameters": {
+                                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                  "path": "@concat('/Client files/Emails to sort/Rod_Kathleen_ST inboxes/', outputs('Clean_From_Name'),'_',outputs('CleanSubject'),'_',body('Convert_time_zone_to_NZ'),'.eml')"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                  "operationId": "GetFileMetadataByPath",
+                                  "connectionName": "shared_sharepointonline"
+                                }
+                              },
+                              "runAfter": {
+                                "F_Delay_10s": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "F_Compose_FixToStringID": {
+                              "type": "Compose",
+                              "inputs": "@string(outputs('F_Get_file_metadata_using_path')?['body/ItemId'])",
+                              "runAfter": {
+                                "F_Get_file_metadata_using_path": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "F_Compose_NewID_WhituotWhiteSpace": {
+                              "type": "Compose",
+                              "inputs": "@trim(outputs('F_Compose_FixToStringID'))",
+                              "runAfter": {
+                                "F_Compose_FixToStringID": [
+                                  "Succeeded"
+                                ]
+                              }
+                            },
+                            "F_Retry_Update_Email_File_Properties": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                  "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                  "id": "@outputs('F_Compose_NewID_WhituotWhiteSpace')",
+                                  "item/Received": "@triggerOutputs()?['body/receivedDateTime']",
+                                  "item/Sender": "@outputs('From_Name')",
+                                  "item/Cc": "@outputs('CC_Name')",
+                                  "item/ConversationId": "@triggerOutputs()?['body/conversationId']",
+                                  "item/From_x002d_Address": "@triggerOutputs()?['body/from']",
+                                  "item/To": "@outputs('Recipient_')",
+                                  "item/To_x0020__x0028_Email_x0029_": "@triggerOutputs()?['body/toRecipients']",
+                                  "item/Subject": "@triggerOutputs()?['body/subject']",
+                                  "item/Bcc_x0020_Name": "@outputs('BCC_Name')",
+                                  "item/Bcc_x0020_Email": "@triggerOutputs()?['body/bccRecipients']",
+                                  "item/Cc_x0020_Email": "@triggerOutputs()?['body/ccRecipients']",
+                                  "item/Status/Value": "Received",
+                                  "item/Mailbox/Value": "rod@rsfa.co.nz",
+                                  "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                  "operationId": "PatchFileItem",
+                                  "connectionName": "shared_sharepointonline"
+                                }
+                              },
+                              "runAfter": {
+                                "F_Compose_NewID_WhituotWhiteSpace": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                              }
+                            },
+                            "F_Apply_to_each_Attachment_2": {
+                              "type": "Foreach",
+                              "foreach": "@triggerOutputs()?['body/attachments']",
+                              "actions": {
+                                "F_Is_it_an_Inline_Image": {
+                                  "type": "If",
+                                  "description": "Sometimes there are inline objects included in the attachments, PA cannot work with those so we skip them",
+                                  "expression": {
+                                    "or": [
+                                      {
+                                        "startsWith": [
+                                          "@items('F_Apply_to_each_Attachment_2')?['name']",
+                                          "image0"
+                                        ]
+                                      },
+                                      {
+                                        "and": [
+                                          {
+                                            "less": [
+                                              "@items('F_Apply_to_each_Attachment_2')?['size']",
+                                              25000
+                                            ]
+                                          },
+                                          {
+                                            "or": [
+                                              {
+                                                "endsWith": [
+                                                  "@items('F_Apply_to_each_Attachment_2')?['name']",
+                                                  "png"
+                                                ]
+                                              },
+                                              {
+                                                "endsWith": [
+                                                  "@items('F_Apply_to_each_Attachment_2')?['name']",
+                                                  "jpg"
+                                                ]
+                                              },
+                                              {
+                                                "endsWith": [
+                                                  "@items('F_Apply_to_each_Attachment_2')?['name']",
+                                                  "ica"
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "actions": {},
+                                  "else": {
+                                    "actions": {
+                                      "F_Get_Attachment_(V2)_2": {
+                                        "type": "OpenApiConnection",
+                                        "inputs": {
+                                          "parameters": {
+                                            "messageId": "@triggerOutputs()?['body/id']",
+                                            "attachmentId": "@items('F_Apply_to_each_Attachment_2')?['id']"
+                                          },
+                                          "host": {
+                                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                                            "operationId": "GetAttachment_V2",
+                                            "connectionName": "shared_office365"
+                                          }
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "dd2c011f-2e0f-403c-b793-885afb971587"
+                                        }
+                                      },
+                                      "F_Update_Email_File_Properties_(Attachment_Value_YES)_2": {
+                                        "type": "OpenApiConnection",
+                                        "inputs": {
+                                          "parameters": {
+                                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                            "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                            "id": "@outputs('F_Compose_NewID_WhituotWhiteSpace')",
+                                            "item/Attachment/Value": "Yes",
+                                            "item/{ContentType}/Id": "0x0101006C4D943C6228FA4B8EBAB403EDF3F33400D51AFEA793A70A428AAE616B4227F0C2"
+                                          },
+                                          "host": {
+                                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                            "operationId": "PatchFileItem",
+                                            "connectionName": "shared_sharepointonline"
+                                          }
+                                        },
+                                        "runAfter": {
+                                          "F_Get_Attachment_(V2)_2": [
+                                            "SUCCEEDED"
+                                          ]
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "b1621d53-abe5-49c4-927f-7a69d2d2d906"
+                                        }
+                                      },
+                                      "F_Clean_Attachment_Name": {
+                                        "type": "Compose",
+                                        "inputs": "@replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(outputs('F_Get_Attachment_(V2)_2')?['body/name'], '&', ''), '#', ''), '%', ''), '*', ''), '{', ''), '}', ''), ':', ''), '<', ''), '>', ''), '?', ''), '/', ''), '|', ''), '\"', ''), '''', '')",
+                                        "runAfter": {
+                                          "F_Update_Email_File_Properties_(Attachment_Value_YES)_2": [
+                                            "SUCCEEDED"
+                                          ]
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "ba84e799-0b6e-49a5-b6f1-4c467811cb2a"
+                                        }
+                                      },
+                                      "F_Get_created_attachment_file_from_SharePoint": {
+                                        "type": "OpenApiConnection",
+                                        "inputs": {
+                                          "parameters": {
+                                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                            "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                            "$filter": "FileLeafRef eq '@{outputs('F_Clean_Attachment_Name')}'"
+                                          },
+                                          "host": {
+                                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                            "operationId": "GetFileItems",
+                                            "connectionName": "shared_sharepointonline"
+                                          }
+                                        },
+                                        "runAfter": {
+                                          "F_Clean_Attachment_Name": [
+                                            "SUCCEEDED"
+                                          ]
+                                        },
+                                        "runtimeConfiguration": {
+                                          "paginationPolicy": {
+                                            "minimumItemCount": 1
+                                          }
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "c96103b8-8bbc-48c7-a861-e4a9192ecb82"
+                                        }
+                                      },
+                                      "F_Get_Number_of_Files_Obtained": {
+                                        "type": "Compose",
+                                        "inputs": "@length(outputs('F_Get_created_attachment_file_from_SharePoint')?['body/value'])",
+                                        "runAfter": {
+                                          "F_Get_created_attachment_file_from_SharePoint": [
+                                            "SUCCEEDED"
+                                          ]
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "97d3c38d-8db1-42c4-9ac6-18db55ae110f"
+                                        }
+                                      },
+                                      "F_Any_File_Obtained": {
+                                        "type": "If",
+                                        "expression": {
+                                          "and": [
+                                            {
+                                              "greaterOrEquals": [
+                                                "@outputs('F_Get_Number_of_Files_Obtained')",
+                                                1
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        "actions": {},
+                                        "else": {
+                                          "actions": {
+                                            "F_Create_Attachment_File_on_Client_Folder": {
+                                              "type": "OpenApiConnection",
+                                              "inputs": {
+                                                "parameters": {
+                                                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                                  "folderPath": "@{outputs('Get_Client_Folder_Path')}/g. Email Attachments",
+                                                  "name": "@outputs('F_Get_Attachment_(V2)_2')?['body/name']",
+                                                  "body": "@outputs('F_Get_Attachment_(V2)_2')?['body/contentBytes']"
+                                                },
+                                                "host": {
+                                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                                  "operationId": "CreateFile",
+                                                  "connectionName": "shared_sharepointonline"
+                                                }
+                                              },
+                                              "runtimeConfiguration": {
+                                                "contentTransfer": {
+                                                  "transferMode": "Chunked"
+                                                }
+                                              },
+                                              "metadata": {
+                                                "operationMetadataId": "099b0876-ad58-4da9-b9ad-ed7639c4dfe0"
+                                              }
+                                            },
+                                            "F_Update_Link_on_File": {
+                                              "type": "OpenApiConnection",
+                                              "inputs": {
+                                                "parameters": {
+                                                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam",
+                                                  "table": "b0565cd5-ff86-46ce-8c7c-3769398e4d49",
+                                                  "id": "@outputs('F_Create_Attachment_File_on_Client_Folder')?['body/ItemId']",
+                                                  "item/Test1": "@{outputs('F_Retry_Update_Email_File_Properties')?['body/{Link}']}?Web=1",
+                                                  "item/ConversationId": "",
+                                                  "item/Bcc_x0020_Email": "",
+                                                  "item/Cc_x0020_Email": ""
+                                                },
+                                                "host": {
+                                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                                  "operationId": "PatchFileItem",
+                                                  "connectionName": "shared_sharepointonline"
+                                                }
+                                              },
+                                              "runAfter": {
+                                                "F_Create_Attachment_File_on_Client_Folder": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "metadata": {
+                                                "operationMetadataId": "a574b56e-0b2e-44cf-8791-21a7fb6e0b8e"
+                                              }
+                                            },
+                                            "F_Set_Attachment_Condition_to_True": {
+                                              "type": "SetVariable",
+                                              "inputs": {
+                                                "name": "AttachmentCondition",
+                                                "value": true
+                                              },
+                                              "runAfter": {
+                                                "F_Update_Link_on_File": [
+                                                  "Succeeded"
+                                                ]
+                                              },
+                                              "metadata": {
+                                                "operationMetadataId": "c68a3d39-bc8b-4be8-b0a7-424135c49c44"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "runAfter": {
+                                          "F_Get_Number_of_Files_Obtained": [
+                                            "SUCCEEDED"
+                                          ]
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "920e1814-43dd-4c4e-a219-fd87c19622d8"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "runAfter": {},
+                                  "metadata": {
+                                    "operationMetadataId": "ae64a4bf-e977-49ec-a500-3c98a7dac8a0"
+                                  }
+                                }
+                              },
+                              "runAfter": {
+                                "F_Retry_Update_Email_File_Properties": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "7b2a1408-b793-4105-867b-856fb71d2ce7"
+                              }
+                            },
+                            "F_File_Properties_Updated": {
+                              "type": "SetVariable",
+                              "description": "It will get here only if the catch block was completed successfully",
+                              "inputs": {
+                                "name": "FilePropertiesUpdated",
+                                "value": true
+                              },
+                              "runAfter": {
+                                "F_Apply_to_each_Attachment_2": [
+                                  "Succeeded"
+                                ]
+                              }
+                            }
+                          },
+                          "runAfter": {
+                            "F_Try_File_Email": [
+                              "TimedOut",
+                              "Failed"
+                            ]
+                          }
+                        },
+                        "File_Properties_Updated": {
+                          "type": "SetVariable",
+                          "inputs": {
+                            "name": "FilePropertiesUpdated",
+                            "value": true
+                          },
+                          "runAfter": {
+                            "Apply_to_each_Attachment_2": [
+                              "Succeeded"
+                            ]
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Get_Client_Folder": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "83c2a9a4-3843-40ba-b30d-cfee0ed65337"
+                      }
+                    },
+                    "Were_File_Properties_Updated": {
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@variables('FilePropertiesUpdated')",
+                              "@true"
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "For_each_Client_Folder": {
+                          "type": "Foreach",
+                          "foreach": "@outputs('Get_Client_Folder')?['body/value']",
+                          "actions": {
+                            "ClientFullPath": {
+                              "type": "Compose",
+                              "inputs": "@items('For_each_Client_Folder')?['{FullPath}']",
+                              "metadata": {
+                                "operationMetadataId": "019bc367-7c68-40e7-878f-023066de2468"
+                              }
+                            },
+                            "ProfileName": {
+                              "type": "Compose",
+                              "inputs": "@first(split(last(split(items('For_each_Client_Folder')?['{FullPath}'], '/')), '_'))\r\n",
+                              "runAfter": {
+                                "ClientFullPath": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "0c3eef89-4e3b-45d5-8955-a73d92e57f04"
+                              }
+                            },
+                            "Attachment_Condition_is_True": {
+                              "type": "If",
+                              "expression": {
+                                "and": [
+                                  {
+                                    "equals": [
+                                      "@variables('AttachmentCondition')",
+                                      true
+                                    ]
+                                  }
+                                ]
+                              },
+                              "actions": {
+                                "Post_message_on_SharePoint": {
+                                  "type": "OpenApiConnection",
+                                  "inputs": {
+                                    "parameters": {
+                                      "message/channel": "support_team_tasks",
+                                      "message/text": "<https://rodschubertfinancialadvice.sharepoint.com/sites/RSFATeam/@{outputs('ClientProfileLink')}/g.%20Email%20Attachments|@{outputs('ProfileName')} has sent us new documents, please rename and file them.>",
+                                      "message/username": "SharePoint Email Attachments Notification"
+                                    },
+                                    "host": {
+                                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack",
+                                      "operationId": "PostMessage_V2",
+                                      "connectionName": "shared_slack"
+                                    }
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "f5b823ef-4b7b-4a69-ae52-b182159cc0e3"
+                                  }
+                                }
+                              },
+                              "else": {
+                                "actions": {}
+                              },
+                              "runAfter": {
+                                "ClientProfileLink": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "e43b1d5c-78f5-4f1d-84ad-4114a43cf1d1"
+                              }
+                            },
+                            "ClientProfileLink": {
+                              "type": "Compose",
+                              "inputs": "@replace(outputs('ClientFullPath'), ' ', '%20')\r\n",
+                              "runAfter": {
+                                "ProfileName": [
+                                  "Succeeded"
+                                ]
+                              },
+                              "metadata": {
+                                "operationMetadataId": "1c75156d-658c-4476-8dbd-a447d1b5527e"
+                              }
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "fd1b50ad-2ce7-43b6-ab8c-eaaa9e5c1390"
+                          }
+                        },
+                        "F_Terminate_Success": {
+                          "type": "Terminate",
+                          "inputs": {
+                            "runStatus": "Succeeded"
+                          },
+                          "runAfter": {
+                            "For_each_Client_Folder": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "ac4c443b-4ca2-4310-b7ce-908cb311cc28"
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Terminate_Failed": {
+                            "type": "Terminate",
+                            "inputs": {
+                              "runStatus": "Failed"
+                            },
+                            "metadata": {
+                              "operationMetadataId": "ac4c443b-4ca2-4310-b7ce-908cb311cc28"
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Apply_to_each_Folder_Obtained": [
+                          "Succeeded",
+                          "Failed"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "metadata": {
+                  "operationMetadataId": "bf357f90-f76b-42e2-ba5a-9789a7338a02"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_File_Properties_Updated": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e0501a72-666a-4108-a145-93a80eddc218"
+          }
+        },
+        "Clean_From_Name": {
+          "type": "Compose",
+          "inputs": "@replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(outputs('From_Name'), '&', ''), '#', ''), '%', ''), '*', ''), '{', ''), '}', ''), ':', ''), '<', ''), '>', ''), '?', ''), '/', ''), '|', ''), '\"', ''), '''', '')\r\n",
+          "runAfter": {
+            "From_Name": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "823abe7f-8cd3-40f2-b115-e6db8c3dedcd"
+          }
+        },
+        "Delay": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 20,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "a7126417-b443-40de-b094-0be5c5f15370"
+          }
+        },
+        "Get_Email_Details": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "Uri": "https://graph.microsoft.com/v1.0/me/messages/@{triggerOutputs()?['body/id']}",
+              "Method": "GET",
+              "ContentType": "application/json"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "operationId": "HttpRequest",
+              "connectionName": "shared_office365"
+            }
+          },
+          "runAfter": {
+            "Exports_Email": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7fcbcb8b-5ee4-4767-9992-0cb81d2d6acc"
+          }
+        },
+        "Subject": {
+          "type": "Compose",
+          "inputs": "@triggerOutputs()?['body/subject']",
+          "runAfter": {
+            "Clean_From_Name": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "8a21ae07-a7ca-43d9-badf-b4dd845294eb"
+          }
+        },
+        "CleanSubject": {
+          "type": "Compose",
+          "inputs": "@replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(outputs('Subject'), '&', ''), '#', ''), '%', ''), '*', ''), '{', ''), '}', ''), ':', ''), '<', ''), '>', ''), '?', ''), '/', ''), '|', ''), '\"', ''), '''', '')\r\n",
+          "runAfter": {
+            "Subject": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "28191fa0-688f-4b5e-b4e5-5689f47cf4bd"
+          }
+        },
+        "Initialize_File_Properties_Updated": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "FilePropertiesUpdated",
+                "type": "boolean",
+                "value": false
+              }
+            ]
+          },
+          "runAfter": {
+            "Get_Number_of_Email_Files_Obtained": [
+              "Succeeded"
+            ]
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

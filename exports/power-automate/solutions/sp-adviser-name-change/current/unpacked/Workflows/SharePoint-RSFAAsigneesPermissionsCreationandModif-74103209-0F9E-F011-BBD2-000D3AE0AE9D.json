@@ -1,0 +1,872 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline-1": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_sharedsharepointonline_23323"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_sharedoffice365_4938b"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Http",
+          "inputs": {
+            "triggerAuthenticationType": "All",
+            "schema": {}
+          },
+          "metadata": {}
+        }
+      },
+      "actions": {
+        "Initialize_Subfolders_Array": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Subfolders",
+                "type": "array"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Notification_Email_Address_": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "04dd148e-616c-4e85-9417-cd8c8607fc66"
+          }
+        },
+        "Try_Assign_Permissions_on_SharePoint": {
+          "type": "Scope",
+          "actions": {
+            "Get_Client_Folder": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                  "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                  "$filter": "@concat('substringof(''', string(triggerBody()?['event']?['pulseId']), ''', FileLeafRef)')",
+                  "folderPath": "/Documents",
+                  "viewScopeOption": "Default"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "operationId": "GetFileItems",
+                  "connectionName": "shared_sharepointonline-1"
+                }
+              },
+              "runtimeConfiguration": {
+                "paginationPolicy": {
+                  "minimumItemCount": 5000
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "36ffbc8e-7d4b-420f-ae4e-5cbd07676e14"
+              }
+            },
+            "Apply_to_each_Folder_Obtained": {
+              "type": "Foreach",
+              "foreach": "@outputs('Get_Client_Folder')?['body/value']",
+              "actions": {
+                "Folder_ID": {
+                  "type": "Compose",
+                  "inputs": "@item()?['id']"
+                },
+                "Any_Adviser_to_be_Removed_02": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(coalesce(outputs('Join_Adviser_Removal_Emails'),''))",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Apply_to_each_Adviser_Removal_Email": {
+                      "type": "Foreach",
+                      "foreach": "@variables('AdviserRemovalEmails')",
+                      "actions": {
+                        "Get_SP_User_ID": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                              "parameters/method": "POST",
+                              "parameters/uri": "/_api/web/siteusers/getbyemail('@{items('Apply_to_each_Adviser_Removal_Email')}')\n"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                              "operationId": "HttpRequest",
+                              "connectionName": "shared_sharepointonline-1"
+                            }
+                          }
+                        },
+                        "Remove_Access_from_Client_Folder": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                              "parameters/method": "DELETE",
+                              "parameters/uri": "/_api/web/lists/getbytitle('Documents')/items(@{outputs('Folder_ID')})/roleassignments/getbyprincipalid(@{body('Get_SP_User_ID')?['d']?['Id']})"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                              "operationId": "HttpRequest",
+                              "connectionName": "shared_sharepointonline-1"
+                            }
+                          },
+                          "runAfter": {
+                            "Get_SP_User_ID": [
+                              "Succeeded"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {
+                    "Folder_ID": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Any_Adviser_to_be_Added": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(coalesce(outputs('Join_Adviser_Addition_Emails'),''))",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Grant_access_to_the_folder": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                          "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                          "id": "@item()?['id']",
+                          "parameter/recipients": "@outputs('Join_Adviser_Addition_Emails')",
+                          "parameter/roleValue": "role:1073741827"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                          "operationId": "GrantAccess",
+                          "connectionName": "shared_sharepointonline-1"
+                        }
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {
+                    "Any_Adviser_to_be_Removed_02": [
+                      "Succeeded",
+                      "TimedOut",
+                      "Failed"
+                    ]
+                  }
+                }
+              },
+              "runAfter": {
+                "Get_Client_Folder": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Get_Removal_RSFA_Asignees": [
+              "Succeeded",
+              "TIMEDOUT",
+              "FAILED",
+              "SKIPPED"
+            ]
+          }
+        },
+        "Catch_Create_Folders_on_SP": {
+          "type": "Scope",
+          "actions": {
+            "Filter_Error_Action_01": {
+              "type": "Query",
+              "inputs": {
+                "from": "@result('Try_Assign_Permissions_on_SharePoint')",
+                "where": "@or(equals(item()?['Status'],'Failed'), equals(item()?['Status'],'TimedOut'))"
+              },
+              "metadata": {
+                "operationMetadataId": "17373608-e382-41c4-8407-57886b509d44"
+              }
+            },
+            "Send_Termination_Email_-_Create_Folders_on_SP": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "emailMessage/To": "@variables('NotificationEmailAddress')",
+                  "emailMessage/Subject": "Error on @{workflow()?['tags']?['flowDisplayName']} Flow Execution",
+                  "emailMessage/Body": "\n<div style=\"background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto;\">\n<div style=\"background-color: #d9534f; color: white; padding: 15px; text-align: center; font-size: 18px; border-radius: 8px 8px 0 0;\">\n⚠️ Error on Flow Execution\n</div>\n<div style=\"padding: 15px; color: #333;\">\n<p>Dear User,</p>\n<p>An error has been detected on <strong>@{workflow()?['tags']?['flowDisplayName']}</strong> flow execution.</p>\n<p>Error Details:</p>\n<div style=\"background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px;\">\n@{concat(first(body('Filter_Error_Action_01'))?['Name'], ': ', first(body('Filter_Error_Action_01'))?['error']?['message'])}\n</div>\n<p>You can access the corresponding flow execution through the link below:</p>\n<a href=\"@{concat('https://us.flow.microsoft.com/manage/environments/',workflow().tags.environmentName,'/flows/',workflow().name,'/runs/',workflow().run.name)}\" style=\"display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px;\">See Execution</a>\n</div>\n<div style=\"font-size: 12px; color: #777; text-align: center; margin-top: 20px;\">\n<p>This is an automatic generated message from Power Automate. You do not need to reply.</p>\n</div>\n</div>\n",
+                  "emailMessage/Importance": "High"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365"
+                }
+              },
+              "runAfter": {
+                "Filter_Error_Action_01": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7ed1c00e-1d3b-403c-87f0-fcf7b33352c4"
+              }
+            },
+            "Terminate_Process_01": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed",
+                "runError": {
+                  "code": "SE 001",
+                  "message": "SE - Unable to Create Folders on SharePoint"
+                }
+              },
+              "runAfter": {
+                "Send_Termination_Email_-_Create_Folders_on_SP": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "1485e789-6e06-46d1-a95a-8b2826534007"
+              }
+            }
+          },
+          "runAfter": {
+            "Try_Assign_Permissions_on_SharePoint": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        },
+        "Initialize_Notification_Email_Address_": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "NotificationEmailAddress",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {}
+        },
+        "Delay_10s": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": 10,
+              "unit": "Second"
+            }
+          },
+          "runAfter": {
+            "Parse_JSON_Client_Information": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Parse_JSON_Client_Information": {
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@triggerBody()",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "event": {
+                  "type": "object",
+                  "properties": {
+                    "app": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "triggerTime": {
+                      "type": "string"
+                    },
+                    "subscriptionId": {
+                      "type": "integer"
+                    },
+                    "userId": {
+                      "type": "integer"
+                    },
+                    "originalTriggerUuid": {},
+                    "boardId": {
+                      "type": "integer"
+                    },
+                    "pulseId": {
+                      "type": "integer"
+                    },
+                    "pulseName": {
+                      "type": "string"
+                    },
+                    "groupId": {
+                      "type": "string"
+                    },
+                    "groupName": {
+                      "type": "string"
+                    },
+                    "groupColor": {
+                      "type": "string"
+                    },
+                    "isTopGroup": {
+                      "type": "boolean"
+                    },
+                    "columnValues": {
+                      "type": "object",
+                      "properties": {}
+                    },
+                    "triggerUuid": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Adviser_Removal_Emails": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "22b52b3c-0ef2-4125-bace-59e0b94fc4fb"
+          }
+        },
+        "Get_Monday.com_New_Profile": {
+          "type": "Scope",
+          "description": "When the New Profile Name button is hit, it doesn't give you enough time to change the name of the profile before triggering the flow. That's why there's a delay and we get the profile info again. ",
+          "actions": {
+            "Profile_LookUp_on_Monday.com": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10"
+                },
+                "body": {
+                  "query": "query { items_page_by_column_values(limit: 1, board_id: 5024661649, columns: [{ column_id: \"item_id\", column_values: [\"@{string(triggerBody()?['event']?['pulseId'])}\"]}]) { items { id name column_values(ids:[\"people\"]) { id text value  } } } }"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "bea1add2-73cd-4305-94db-da14a099c1a2"
+              }
+            },
+            "New_Profile_Name": {
+              "type": "Compose",
+              "inputs": "@body('Profile_LookUp_on_Monday.com')?['data']?['items_page_by_column_values']?['items'][0]?['name']",
+              "runAfter": {
+                "Profile_LookUp_on_Monday.com": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Delay_10s": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_Addition_RSFA_Asignees": {
+          "type": "Scope",
+          "actions": {
+            "RSFA_Asignees_LookUp_on_Monday.com": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10",
+                  "Content-Type": "application/json"
+                },
+                "body": "@outputs('Set_RSFA_Asignees_LookUp_Query_')"
+              },
+              "runAfter": {
+                "Set_RSFA_Asignees_LookUp_Query_": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "bea1add2-73cd-4305-94db-da14a099c1a2"
+              }
+            },
+            "Format_Persons_and_Teams_as_JSON": {
+              "type": "Compose",
+              "inputs": "@json(outputs('Extract_RSFA_Asignees_from_Request_Output'))",
+              "runAfter": {
+                "Extract_RSFA_Asignees_from_Request_Output": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Extract_RSFA_Asignees_from_Request_Output": {
+              "type": "Compose",
+              "inputs": "@body('Profile_LookUp_on_Monday.com')?['data']?['items_page_by_column_values']?['items'][0]?['column_values'][0]?['value']"
+            },
+            "Parse_JSON_Persons_and_Teams": {
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@outputs('Format_Persons_and_Teams_as_JSON')",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "changed_at": {
+                      "type": "string"
+                    },
+                    "personsAndTeams": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "kind": {
+                            "type": "string"
+                          }
+                        },
+                        "required": []
+                      }
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Format_Persons_and_Teams_as_JSON": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Set_RSFA_Asignees_LookUp_Query_": {
+              "type": "Compose",
+              "inputs": "@concat(\r\n  '{\"query\":\"query { ',\r\n  if(\r\n    greater(length(body('Select_Persons_IDs')), 0),\r\n    concat(\r\n      'users(ids: [',\r\n      replace(replace(replace(replace(replace(string(body('Select_Persons_IDs')), '{\"id\":', ''), '}', ''), '{', ''), '[', ''), ']', ''),\r\n      ']) { id name email }'\r\n    ),\r\n    ''\r\n  ),\r\n  if(\r\n    and(\r\n      greater(length(body('Select_Persons_IDs')), 0),\r\n      greater(length(body('Select_Teams_IDs')), 0)\r\n    ),\r\n    ' ',\r\n    ''\r\n  ),\r\n  if(\r\n    greater(length(body('Select_Teams_IDs')), 0),\r\n    concat(\r\n      'teams(ids: [',\r\n      replace(replace(replace(replace(replace(string(body('Select_Teams_IDs')), '{\"id\":', ''), '}', ''), '{', ''), '[', ''), ']', ''),\r\n      ']) { id name users { id name email } }'\r\n    ),\r\n    ''\r\n  ),\r\n  ' }\"}'\r\n)",
+              "runAfter": {
+                "Select_Persons_IDs": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Set_Teams_Array": {
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Parse_JSON_Persons_and_Teams')?['personsAndTeams']",
+                "where": "@equals(item()['kind'],'team')"
+              },
+              "runAfter": {
+                "Parse_JSON_Persons_and_Teams": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Set_Persons_Array": {
+              "type": "Query",
+              "inputs": {
+                "from": "@body('Parse_JSON_Persons_and_Teams')?['personsAndTeams']",
+                "where": "@equals(item()['kind'],'person')"
+              },
+              "runAfter": {
+                "Select_Teams_IDs": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_Teams_IDs": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Set_Teams_Array')",
+                "select": {
+                  "id": "@item()?['id']"
+                }
+              },
+              "runAfter": {
+                "Set_Teams_Array": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Select_Persons_IDs": {
+              "type": "Select",
+              "inputs": {
+                "from": "@body('Set_Persons_Array')",
+                "select": {
+                  "id": "@item()?['id']"
+                }
+              },
+              "runAfter": {
+                "Set_Persons_Array": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Join_Adviser_Addition_Emails": {
+              "type": "Compose",
+              "inputs": "@join(union(variables('AdviserAdditionEmails'), variables('AdviserAdditionEmails')), ';')",
+              "runAfter": {
+                "Apply_to_each_Team": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Apply_to_each_Team": {
+              "type": "Foreach",
+              "foreach": "@coalesce(body('RSFA_Asignees_LookUp_on_Monday.com')?['data']?['teams'], json('[]'))",
+              "actions": {
+                "Apply_to_each_Team_User": {
+                  "type": "Foreach",
+                  "foreach": "@items('Apply_to_each_Team')?['users']",
+                  "actions": {
+                    "Append_to_Adviser_Emails_(Teams)": {
+                      "type": "AppendToArrayVariable",
+                      "inputs": {
+                        "name": "AdviserAdditionEmails",
+                        "value": "@items('Apply_to_each_Team_User')?['email']"
+                      }
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Apply_to_each_Person_Email": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Apply_to_each_Person_Email": {
+              "type": "Foreach",
+              "foreach": "@coalesce(body('RSFA_Asignees_LookUp_on_Monday.com')?['data']?['users'], json('[]'))",
+              "actions": {
+                "Append_to_Adviser_Emails": {
+                  "type": "AppendToArrayVariable",
+                  "inputs": {
+                    "name": "AdviserAdditionEmails",
+                    "value": "@items('Apply_to_each_Person_Email')?['email']"
+                  }
+                }
+              },
+              "runAfter": {
+                "RSFA_Asignees_LookUp_on_Monday.com": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Get_Monday.com_New_Profile": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Adviser_Addition_Emails": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AdviserAdditionEmails",
+                "type": "array"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Subfolders_Array": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Get_Removal_RSFA_Asignees": {
+          "type": "Scope",
+          "actions": {
+            "There_were_Previous_Values": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "greater": [
+                      "@length(coalesce(body('Parse_JSON_Client_Information')?['event']?['previousValue']?['personsAndTeams'],''))",
+                      0
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Map_Current_Values_IDs": {
+                  "type": "Select",
+                  "inputs": {
+                    "from": "@body('Parse_JSON_Client_Information')?['event']?['value']?['personsAndTeams']",
+                    "select": "@concat(item()?['id'],'|',item()?['kind'])"
+                  }
+                },
+                "Map_Previous_Values_IDs": {
+                  "type": "Select",
+                  "inputs": {
+                    "from": "@body('Parse_JSON_Client_Information')?['event']?['previousValue']?['personsAndTeams']",
+                    "select": "@concat(item()?['id'],'|',item()?['kind'])"
+                  },
+                  "runAfter": {
+                    "Map_Current_Values_IDs": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Filter_not_present_in_Previous_Values": {
+                  "type": "Query",
+                  "inputs": {
+                    "from": "@body('Map_Previous_Values_IDs')",
+                    "where": "@not(contains(body('Map_Current_Values_IDs'),item()))"
+                  },
+                  "runAfter": {
+                    "Map_Previous_Values_IDs": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "Any_Adviser_to_be_Removed": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(body('Filter_not_present_in_Previous_Values'))",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Filter_Removed_Persons": {
+                      "type": "Query",
+                      "inputs": {
+                        "from": "@body('Filter_not_present_in_Previous_Values')",
+                        "where": "@contains(item(),'person')"
+                      }
+                    },
+                    "Get_Persons_IDs": {
+                      "type": "Select",
+                      "inputs": {
+                        "from": "@body('Filter_Removed_Persons')",
+                        "select": "@substring(item(), 0, indexOf(item(),'|'))"
+                      },
+                      "runAfter": {
+                        "Filter_Removed_Persons": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Filter_Removed_Teams": {
+                      "type": "Query",
+                      "inputs": {
+                        "from": "@body('Filter_not_present_in_Previous_Values')",
+                        "where": "@contains(item(),'teams')"
+                      },
+                      "runAfter": {
+                        "Join_Removed_Persons_IDs": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Get_Teams_IDs": {
+                      "type": "Select",
+                      "inputs": {
+                        "from": "@body('Filter_Removed_Persons')",
+                        "select": "@substring(item(), 0, indexOf(item(),'|'))"
+                      },
+                      "runAfter": {
+                        "Filter_Removed_Teams": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "RSFA_Removed_Asignees_LookUp_on_Monday.com": {
+                      "type": "Http",
+                      "inputs": {
+                        "uri": "https://api.monday.com/v2",
+                        "method": "POST",
+                        "headers": {
+                          "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                          "API-Version": "2023-10",
+                          "Content-Type": "application/json"
+                        },
+                        "body": "@outputs('Set_Removed_RSFA_Asignees_LookUp_Query')"
+                      },
+                      "runAfter": {
+                        "Set_Removed_RSFA_Asignees_LookUp_Query": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "bea1add2-73cd-4305-94db-da14a099c1a2"
+                      }
+                    },
+                    "Set_Removed_RSFA_Asignees_LookUp_Query": {
+                      "type": "Compose",
+                      "inputs": "@concat(\r\n  '{\"query\":\"query { ',\r\n  if(\r\n    greater(length(outputs('Join_Removed_Persons_IDs')), 0),\r\n    concat(\r\n      'users(ids: [',outputs('Join_Removed_Persons_IDs'),\r\n      ']) { id name email }'\r\n    ),\r\n    ''\r\n  ),\r\n  if(\r\n    and(\r\n      greater(length(outputs('Join_Removed_Persons_IDs')), 0),\r\n      greater(length(outputs('Join_Removed_Teams_IDs')), 0)\r\n    ),\r\n    ' ',\r\n    ''\r\n  ),\r\n  if(\r\n    greater(length(outputs('Join_Removed_Teams_IDs')), 0),\r\n    concat(\r\n      'teams(ids: [',\r\n      outputs('Join_Removed_Teams_IDs'),\r\n      ']) { id name users { id name email } }'\r\n    ),\r\n    ''\r\n  ),\r\n  ' }\"}'\r\n)",
+                      "runAfter": {
+                        "Join_Removed_Teams_IDs": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Apply_to_each_Removed_Person_Email": {
+                      "type": "Foreach",
+                      "foreach": "@coalesce(body('RSFA_Removed_Asignees_LookUp_on_Monday.com')?['data']?['users'], json('[]'))",
+                      "actions": {
+                        "Append_to_Adviser_Removal_Emails": {
+                          "type": "AppendToArrayVariable",
+                          "inputs": {
+                            "name": "AdviserRemovalEmails",
+                            "value": "@items('Apply_to_each_Removed_Person_Email')?['email']"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "RSFA_Removed_Asignees_LookUp_on_Monday.com": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Apply_to_each_Removed_Team": {
+                      "type": "Foreach",
+                      "foreach": "@coalesce(body('RSFA_Removed_Asignees_LookUp_on_Monday.com')?['data']?['teams'], json('[]'))",
+                      "actions": {
+                        "Apply_to_each_Removed_Team_User": {
+                          "type": "Foreach",
+                          "foreach": "@items('Apply_to_each_Removed_Team')?['users']",
+                          "actions": {
+                            "Append_to_Adviser_Removal_Emails_(Teams)": {
+                              "type": "AppendToArrayVariable",
+                              "inputs": {
+                                "name": "AdviserRemovalEmails",
+                                "value": "@items('Apply_to_each_Removed_Team_User')?['email']"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Apply_to_each_Removed_Person_Email": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Join_Adviser_Removal_Emails": {
+                      "type": "Compose",
+                      "inputs": "@join(union(variables('AdviserRemovalEmails'), variables('AdviserRemovalEmails')), ';')",
+                      "runAfter": {
+                        "Apply_to_each_Removed_Team": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Join_Removed_Persons_IDs": {
+                      "type": "Compose",
+                      "inputs": "@join(body('Get_Persons_IDs'), ', ')",
+                      "runAfter": {
+                        "Get_Persons_IDs": [
+                          "Succeeded"
+                        ]
+                      }
+                    },
+                    "Join_Removed_Teams_IDs": {
+                      "type": "Compose",
+                      "inputs": "@join(body('Get_Teams_IDs'), ', ')",
+                      "runAfter": {
+                        "Get_Teams_IDs": [
+                          "Succeeded"
+                        ]
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {
+                    "Filter_not_present_in_Previous_Values": [
+                      "Succeeded"
+                    ]
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              }
+            }
+          },
+          "runAfter": {
+            "Get_Addition_RSFA_Asignees": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_Adviser_Removal_Emails": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AdviserRemovalEmails",
+                "type": "array"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_Adviser_Addition_Emails": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
