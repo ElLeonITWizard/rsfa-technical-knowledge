@@ -15,3 +15,7 @@
 
 # Export logs
 **/*.log
+
+# Power Automate source exports containing embedded credentials
+exports/power-automate/source-zips/
+exports/power-automate/solutions/*/current/unmanaged.zip

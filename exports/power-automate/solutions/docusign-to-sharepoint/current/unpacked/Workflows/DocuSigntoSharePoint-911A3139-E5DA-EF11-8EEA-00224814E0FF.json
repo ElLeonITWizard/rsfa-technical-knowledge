@@ -1,0 +1,1130 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_docusign": {
+        "api": {
+          "name": "shared_docusign"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "rsfa_shareddocusign_c7609"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_office365-1": {
+        "api": {
+          "name": "shared_office365"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "new_sharedoffice365_89be1"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "rsfa_sharedsharepointonline_8fd5d"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_slack": {
+        "api": {
+          "name": "shared_slack"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr3e8_Slack_RSFA"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_an_envelope_status_changes_(Connect)_(V3)": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "accountId": "56dc384d-8f2b-4eaf-8e5a-c981e49bd39b",
+              "body/name": "PowerAutomate",
+              "body/envelopeEvents": "envelope-completed"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_docusign",
+              "operationId": "CreateHookEnvelopeV3",
+              "connectionName": "shared_docusign"
+            }
+          }
+        }
+      },
+      "actions": {
+        "Catch_Monday.com_Search_Error": {
+          "type": "Scope",
+          "actions": {
+            "Filter_Error_Action": {
+              "type": "Query",
+              "inputs": {
+                "from": "@result('Try_Monday.com_Search')",
+                "where": "@or(equals(item()?['Status'],'Failed'), equals(item()?['Status'],'TimedOut'))"
+              },
+              "metadata": {
+                "operationMetadataId": "17373608-e382-41c4-8407-57886b509d44"
+              }
+            },
+            "Terminate_Process": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed"
+              },
+              "runAfter": {
+                "Send_Termination_Email": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "1485e789-6e06-46d1-a95a-8b2826534007"
+              }
+            },
+            "Send_Termination_Email": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "emailMessage/To": "@variables('NotificationEmailAddress')",
+                  "emailMessage/Subject": "Error on @{workflow()?['tags']?['flowDisplayName']} Flow Execution",
+                  "emailMessage/Body": "\n<div style=\"background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto;\">\n<div style=\"background-color: #d9534f; color: white; padding: 15px; text-align: center; font-size: 18px; border-radius: 8px 8px 0 0;\">\n⚠️ Error on Flow Execution\n</div>\n<div style=\"padding: 15px; color: #333;\">\n<p>Dear User,</p>\n<p>An error has been detected on <strong>@{workflow()?['tags']?['flowDisplayName']}</strong> flow execution.</p>\n<p>Error Details:</p>\n<div style=\"background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px;\">\n@{concat(first(body('Filter_Error_Action'))?['Name'], ': ', first(body('Filter_Error_Action'))?['error']?['message'])}\n</div>\n<p>You can access the corresponding flow execution through the link below:</p>\n<a href=\"@{concat('https://us.flow.microsoft.com/manage/environments/',workflow().tags.environmentName,'/flows/',workflow().name,'/runs/',workflow().run.name)}\" style=\"display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px;\">See Execution</a>\n</div>\n<div style=\"font-size: 12px; color: #777; text-align: center; margin-top: 20px;\">\n<p>This is an automatic generated message from Power Automate. You do not need to reply.</p>\n</div>\n</div>\n",
+                  "emailMessage/Importance": "High"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365-1"
+                }
+              },
+              "runAfter": {
+                "Filter_Error_Action": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7ed1c00e-1d3b-403c-87f0-fcf7b33352c4"
+              }
+            }
+          },
+          "runAfter": {
+            "Try_Monday.com_Search": [
+              "TimedOut",
+              "Failed"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "bbb1688b-4881-4585-9964-eeeeba4bb9db"
+          }
+        },
+        "Initialize_Notification_Email_Address_": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "NotificationEmailAddress",
+                "type": "string",
+                "value": "tech@rsfa.co.nz"
+              }
+            ]
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "581410dc-6ba8-4fd3-bcba-640585f24f1d"
+          }
+        },
+        "Catch_Upload_Docs_to_SP_Error": {
+          "type": "Scope",
+          "actions": {
+            "Filter_Error_Action_02": {
+              "type": "Query",
+              "inputs": {
+                "from": "@result('Try_Upload_Docs_to_SP')",
+                "where": "@or(equals(item()?['Status'],'Failed'), equals(item()?['Status'],'TimedOut'))"
+              },
+              "metadata": {
+                "operationMetadataId": "17373608-e382-41c4-8407-57886b509d44"
+              }
+            },
+            "Terminate_Process_02": {
+              "type": "Terminate",
+              "inputs": {
+                "runStatus": "Failed"
+              },
+              "runAfter": {
+                "Send_Termination_Email_02": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "1485e789-6e06-46d1-a95a-8b2826534007"
+              }
+            },
+            "Send_Termination_Email_02": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "emailMessage/To": "@variables('NotificationEmailAddress')",
+                  "emailMessage/Subject": "Error on @{workflow()?['tags']?['flowDisplayName']} Flow Execution",
+                  "emailMessage/Body": "\n<div style=\"background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); max-width: 600px; margin: auto;\">\n<div style=\"background-color: #d9534f; color: white; padding: 15px; text-align: center; font-size: 18px; border-radius: 8px 8px 0 0;\">\n⚠️ Error on Flow Execution\n</div>\n<div style=\"padding: 15px; color: #333;\">\n<p>Dear User,</p>\n<p>An error has been detected on <strong>@{workflow()?['tags']?['flowDisplayName']}</strong> flow execution.</p>\n<p>Error Details:</p>\n<div style=\"background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 14px;\">\n@{concat(first(body('Filter_Error_Action_02'))?['Name'], ': ', first(body('Filter_Error_Action_02'))?['error']?['message'])}\n</div>\n<p>You can access the corresponding flow execution through the link below:</p>\n<a href=\"@{concat('https://us.flow.microsoft.com/manage/environments/',workflow().tags.environmentName,'/flows/',workflow().name,'/runs/',workflow().run.name)}\" style=\"display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 15px;\">See Execution</a>\n</div>\n<div style=\"font-size: 12px; color: #777; text-align: center; margin-top: 20px;\">\n<p>This is an automatic generated message from Power Automate. You do not need to reply.</p>\n</div>\n</div>\n",
+                  "emailMessage/Importance": "High"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+                  "operationId": "SendEmailV2",
+                  "connectionName": "shared_office365-1"
+                }
+              },
+              "runAfter": {
+                "Filter_Error_Action_02": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "7ed1c00e-1d3b-403c-87f0-fcf7b33352c4"
+              }
+            }
+          },
+          "runAfter": {
+            "Try_Upload_Docs_to_SP": [
+              "Failed",
+              "TimedOut"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "bbb1688b-4881-4585-9964-eeeeba4bb9db"
+          }
+        },
+        "Try_Upload_Docs_to_SP": {
+          "type": "Scope",
+          "actions": {
+            "ID_Not_Found": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@body('Get_Client_ID')",
+                      "nonexistent"
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Get_Documents_from_Envelope_01": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "accountId": "56dc384d-8f2b-4eaf-8e5a-c981e49bd39b",
+                      "envelopeId": "@triggerOutputs()?['body/data/envelopeSummary/envelopeId']",
+                      "certificate": true
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_docusign",
+                      "operationId": "GetDocuments",
+                      "connectionName": "shared_docusign"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "f4fe7e25-e835-4e23-946a-987a29a5417c"
+                  }
+                },
+                "Any_Duplicate_Found": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(outputs('Look_for_Duplicates_in_SP-TEST')?['body/value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {},
+                  "else": {
+                    "actions": {
+                      "File_Docs_in_Received_Documents_to_File_Folder": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                            "folderPath": "/Documents/Received Documents to File",
+                            "name": "@outputs('Compose_File_Name')",
+                            "body": "@body('Get_Documents_from_Envelope_01')"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "operationId": "CreateFile",
+                            "connectionName": "shared_sharepointonline"
+                          }
+                        },
+                        "runtimeConfiguration": {
+                          "contentTransfer": {
+                            "transferMode": "Chunked"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "25d832ae-60fe-4d7f-94af-d5dd78a36486"
+                        }
+                      },
+                      "Post_message_on_Slack_Channel_01": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "message/channel": "_support_team",
+                            "message/text": "<https://rodschubertfinancialadvice.sharepoint.com/:f:/r/sites/RealSavvyClients/Documents/Received%20Documents%20to%20File |  returned signed documents, please check in Monday to see why this email address is not attached to a client profile via participants properly. Don't forget to rename and file the documents after.>",
+                            "message/username": "DocuSign Notification"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack",
+                            "operationId": "PostMessage_V2",
+                            "connectionName": "shared_slack"
+                          }
+                        },
+                        "runAfter": {
+                          "File_Docs_in_Received_Documents_to_File_Folder": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "3d5323b0-2331-418b-9e72-56400d2947c5"
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Look_for_Duplicates_in_SP-TEST": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "6aad6398-436f-46ea-ab1f-9aed417f6181"
+                  }
+                },
+                "Look_for_Duplicates_in_SP-TEST": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                      "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                      "$filter": "FileLeafRef eq '@{outputs('Compose_File_Name')}'",
+                      "viewScopeOption": "RecursiveAll"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                      "operationId": "GetFileItems",
+                      "connectionName": "shared_sharepointonline"
+                    }
+                  },
+                  "runAfter": {
+                    "Get_Documents_from_Envelope_01": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "18f1013b-7c6c-47d3-934f-b35aca5f7ec0"
+                  }
+                }
+              },
+              "else": {
+                "actions": {
+                  "Get_ClientID": {
+                    "type": "Compose",
+                    "inputs": "@body('Get_Client_ID')",
+                    "metadata": {
+                      "operationMetadataId": "803395e2-e844-471e-9c31-5f496ed6138f"
+                    }
+                  },
+                  "Get_Client_Folder": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                        "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                        "$filter": "@concat('substringof(''', outputs('Get_ClientID'), ''', FileLeafRef)')",
+                        "folderPath": "/Documents",
+                        "viewScopeOption": "Default"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "operationId": "GetFileItems",
+                        "connectionName": "shared_sharepointonline"
+                      }
+                    },
+                    "runAfter": {
+                      "Get_ClientID": [
+                        "Succeeded"
+                      ]
+                    },
+                    "runtimeConfiguration": {
+                      "paginationPolicy": {
+                        "minimumItemCount": 5000
+                      }
+                    },
+                    "metadata": {
+                      "operationMetadataId": "36ffbc8e-7d4b-420f-ae4e-5cbd07676e14"
+                    }
+                  },
+                  "Apply_to_each_Folder_Obtained": {
+                    "type": "Foreach",
+                    "foreach": "@outputs('Get_Client_Folder')?['body/value']",
+                    "actions": {
+                      "Get_Client_Folder_Path": {
+                        "type": "Compose",
+                        "inputs": "@items('Apply_to_each_Folder_Obtained')?['{FullPath}']",
+                        "metadata": {
+                          "operationMetadataId": "afa1add1-3479-4f80-b1c7-fab821da1b55"
+                        }
+                      },
+                      "Get_Documents_from_Envelope_02": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "accountId": "56dc384d-8f2b-4eaf-8e5a-c981e49bd39b",
+                            "envelopeId": "@triggerOutputs()?['body/data/envelopeSummary/envelopeId']",
+                            "certificate": true
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_docusign",
+                            "operationId": "GetDocuments",
+                            "connectionName": "shared_docusign"
+                          }
+                        },
+                        "runAfter": {
+                          "Get_Client_Profile_Link": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "f4fe7e25-e835-4e23-946a-987a29a5417c"
+                        }
+                      },
+                      "Get_Client_Profile_Name": {
+                        "type": "Compose",
+                        "inputs": "@first(split(last(split(items('Apply_to_each_Folder_Obtained')?['{FullPath}'], '/')), '_'))",
+                        "runAfter": {
+                          "Get_Client_Folder_Path": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "0c3eef89-4e3b-45d5-8955-a73d92e57f04"
+                        }
+                      },
+                      "Get_Client_Profile_Link": {
+                        "type": "Compose",
+                        "inputs": "@replace(outputs('Get_Client_Folder_Path'), ' ', '%20')",
+                        "runAfter": {
+                          "Get_Client_Profile_Name": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "1c75156d-658c-4476-8dbd-a447d1b5527e"
+                        }
+                      },
+                      "Check_If_File_Exists": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                            "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                            "$filter": "FileLeafRef eq '@{outputs('Compose_File_Name')}'",
+                            "folderPath": "@{outputs('Get_Client_Folder_Path')}/h. FileInvite and Docusign"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "operationId": "GetFileItems",
+                            "connectionName": "shared_sharepointonline"
+                          }
+                        },
+                        "runAfter": {
+                          "Get_Documents_from_Envelope_02": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "48dfea72-5a59-4d7d-afb3-9897d91c55ea"
+                        }
+                      },
+                      "No_Duplicate_File_Found": {
+                        "type": "If",
+                        "expression": {
+                          "and": [
+                            {
+                              "equals": [
+                                "@length(outputs('Check_If_File_Exists')?['body/value'])",
+                                0
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "Post_message_on_Slack_Channel_02": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "message/channel": "_support_team",
+                                "message/text": "<https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients/@{outputs('Get_Client_Profile_Link')}/h.%20FileInvite%20and%20Docusign | @{outputs('Get_Client_Profile_Name')} returned signed documents, please rename and file.>",
+                                "message/username": "DocuSign Notification"
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_slack",
+                                "operationId": "PostMessage_V2",
+                                "connectionName": "shared_slack"
+                              }
+                            },
+                            "runAfter": {
+                              "Try_File_Docs_in_Client_Folder": [
+                                "Succeeded",
+                                "Skipped",
+                                "TimedOut",
+                                "Failed"
+                              ],
+                              "Catch_File_Docs_in_Client_Folder": [
+                                "Succeeded",
+                                "Skipped"
+                              ]
+                            },
+                            "metadata": {
+                              "operationMetadataId": "3d5323b0-2331-418b-9e72-56400d2947c5"
+                            }
+                          },
+                          "Try_File_Docs_in_Client_Folder": {
+                            "type": "Scope",
+                            "actions": {
+                              "File_Docs_in_Client_Folder": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                                    "folderPath": "@{outputs('Get_Client_Folder_Path')}/h. FileInvite and Docusign",
+                                    "name": "@outputs('Compose_AI_Generated_File_Name')",
+                                    "body": "@body('Get_Documents_from_Envelope_02')"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "operationId": "CreateFile",
+                                    "connectionName": "shared_sharepointonline"
+                                  }
+                                },
+                                "runAfter": {
+                                  "Compose_AI_Generated_File_Name": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "runtimeConfiguration": {
+                                  "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "25d832ae-60fe-4d7f-94af-d5dd78a36486"
+                                }
+                              },
+                              "GPT_PDF_Renaming": {
+                                "type": "Http",
+                                "inputs": {
+                                  "uri": "https://api.openai.com/v1/responses",
+                                  "method": "POST",
+                                  "headers": {
+                                    "Authorization": "Bearer REDACTED-SEE-1PASSWORD-OPENAI-API-KEY",
+                                    "Content-Type": "application/json"
+                                  },
+                                  "body": {
+                                    "model": "gpt-4o-mini",
+                                    "input": [
+                                      {
+                                        "role": "user",
+                                        "content": [
+                                          {
+                                            "type": "input_file",
+                                            "filename": "@{outputs('Compose_File_Name')}",
+                                            "file_data": "data:application/pdf;base64,@{base64(body('Get_Documents_from_Envelope_02'))}"
+                                          },
+                                          {
+                                            "type": "input_text",
+                                            "text": "@{variables('AIRenamingPrompt')}"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                },
+                                "limit": {
+                                  "timeout": "PT2M"
+                                },
+                                "runtimeConfiguration": {
+                                  "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                  }
+                                }
+                              },
+                              "Parse_JSON_PDF": {
+                                "type": "ParseJson",
+                                "inputs": {
+                                  "content": "@body('GPT_PDF_Renaming')",
+                                  "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "string"
+                                      },
+                                      "object": {
+                                        "type": "string"
+                                      },
+                                      "created_at": {
+                                        "type": "integer"
+                                      },
+                                      "status": {
+                                        "type": "string"
+                                      },
+                                      "model": {
+                                        "type": "string"
+                                      },
+                                      "output": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "content": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "text": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "text"
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "required": [
+                                            "content"
+                                          ]
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "output"
+                                    ]
+                                  }
+                                },
+                                "runAfter": {
+                                  "GPT_PDF_Renaming": [
+                                    "Succeeded"
+                                  ]
+                                }
+                              },
+                              "Compose_AI_Generated_File_Name": {
+                                "type": "Compose",
+                                "inputs": "@concat(body('Parse_JSON_PDF')?['output']?[0]?['content']?[0]?['text'],'.pdf')",
+                                "runAfter": {
+                                  "Parse_JSON_PDF": [
+                                    "Succeeded"
+                                  ]
+                                }
+                              },
+                              "Upload_File_to_Monday": {
+                                "type": "Http",
+                                "inputs": {
+                                  "uri": "https://uploadfiletomonday-477110054601.europe-west1.run.app",
+                                  "method": "POST",
+                                  "body": {
+                                    "token": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                                    "item_id": "@outputs('Get_ClientID')",
+                                    "column_id": "file_mkv6zqmx",
+                                    "filename": "@{outputs('Compose_AI_Generated_File_Name')}.pdf",
+                                    "file_base64": "@{base64(body('Get_Documents_from_Envelope_02'))}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "File_Docs_in_Client_Folder": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "runtimeConfiguration": {
+                                  "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                  }
+                                }
+                              }
+                            },
+                            "metadata": {
+                              "operationMetadataId": "2e22baf0-98c2-4d4b-b492-1124f0a3d255"
+                            }
+                          },
+                          "Catch_File_Docs_in_Client_Folder": {
+                            "type": "Scope",
+                            "actions": {
+                              "Delay_10s": {
+                                "type": "Wait",
+                                "inputs": {
+                                  "interval": {
+                                    "count": 10,
+                                    "unit": "Second"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "66571f48-c83e-4d69-ac7b-af556a965f18"
+                                }
+                              },
+                              "Retry_File_Docs_in_Client_Folder": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                                    "folderPath": "@{outputs('Get_Client_Folder_Path')}/h. FileInvite and Docusign",
+                                    "name": "@outputs('Compose_File_Name')",
+                                    "body": "@body('Get_Documents_from_Envelope_02')"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "operationId": "CreateFile",
+                                    "connectionName": "shared_sharepointonline"
+                                  }
+                                },
+                                "runAfter": {
+                                  "Delay_10s": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "runtimeConfiguration": {
+                                  "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "25d832ae-60fe-4d7f-94af-d5dd78a36486"
+                                }
+                              },
+                              "Retry_Upload_File_to_Monday": {
+                                "type": "Http",
+                                "inputs": {
+                                  "uri": "https://uploadfiletomonday-477110054601.europe-west1.run.app",
+                                  "method": "POST",
+                                  "body": {
+                                    "token": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                                    "item_id": "@outputs('Get_ClientID')",
+                                    "column_id": "file_mkv6zqmx",
+                                    "filename": "@{outputs('Compose_File_Name')}.pdf",
+                                    "file_base64": "@{base64(body('Get_Documents_from_Envelope_02'))}"
+                                  }
+                                },
+                                "runAfter": {
+                                  "Retry_File_Docs_in_Client_Folder": [
+                                    "Succeeded"
+                                  ]
+                                },
+                                "runtimeConfiguration": {
+                                  "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                  }
+                                }
+                              }
+                            },
+                            "runAfter": {
+                              "Try_File_Docs_in_Client_Folder": [
+                                "TimedOut",
+                                "Failed"
+                              ]
+                            },
+                            "metadata": {
+                              "operationMetadataId": "94ea7ec4-1174-4811-8f9f-a42f502c2077"
+                            }
+                          }
+                        },
+                        "else": {
+                          "actions": {}
+                        },
+                        "runAfter": {
+                          "Check_If_File_Exists": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "146911a6-697b-4442-aad0-5172411c88c8"
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Look_for_Duplicates_in_SP-TEST-copy": [
+                        "Succeeded",
+                        "Failed"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "df69f2f2-bd4a-45d8-974d-52143f99b305"
+                    }
+                  },
+                  "Terminate_Success": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Succeeded"
+                    },
+                    "runAfter": {
+                      "Apply_to_each_Folder_Obtained": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "01c05ff1-06f1-44e5-8db3-82f494004f46"
+                    }
+                  },
+                  "Look_for_Duplicates_in_SP-TEST-copy": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "dataset": "https://rodschubertfinancialadvice.sharepoint.com/sites/RealSavvyClients",
+                        "table": "021a912a-571a-43ab-8575-5f9326ae8bfb",
+                        "$filter": "FileLeafRef eq '@{outputs('Compose_File_Name')}'",
+                        "viewScopeOption": "RecursiveAll"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "operationId": "GetFileItems",
+                        "connectionName": "shared_sharepointonline"
+                      }
+                    },
+                    "runAfter": {
+                      "Get_Client_Folder": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "18f1013b-7c6c-47d3-934f-b35aca5f7ec0"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Compose_File_Name": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "f96158c8-9a87-4359-85f2-4f8d077268e0"
+              }
+            },
+            "Compose_File_Name": {
+              "type": "Compose",
+              "inputs": "@concat(\n  replace(\n    replace(\n      replace(\n        replace(\n          replace(\n            replace(triggerOutputs()?['body/data/envelopeSummary/emailSubject'], '|', '_'),\n          '#', '_'),\n        '''', ' '),\n      '*', '_'),\n    '/', '_'),\n  ':', '_'),\n'.pdf')\n"
+            }
+          },
+          "runAfter": {
+            "Try_Monday.com_Search": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "ac59fcb8-adfb-4d9f-a8cc-26e2b09bc100"
+          }
+        },
+        "Initialize_variable_Primary_Contact_Look_Up_Empty": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "PrimaryContactLookUpEmpty",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Concat_Signers_Emails": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "439bd30b-026a-40d3-bc1b-d33cea8c26a2"
+          }
+        },
+        "Select_Signers_Emails": {
+          "type": "Select",
+          "inputs": {
+            "from": "@triggerOutputs()?['body/data/envelopeSummary/recipients/signers']\r\n",
+            "select": "@item()?['email']"
+          },
+          "runAfter": {
+            "Initialize_Notification_Email_Address_": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Concat_Signers_Emails": {
+          "type": "Compose",
+          "inputs": "@concat(\r\n  '\"',\r\n  join(body('Select_Signers_Emails'), '\",\"'),\r\n  '\"'\r\n)\r\n",
+          "runAfter": {
+            "Select_Signers_Emails": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_AI_Renaming_Prompt": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "AIRenamingPrompt",
+                "type": "string",
+                "value": "You are an assistant that generates descriptive and structured file names based on the content of a document. The goal is to produce a robust, human-readable file name that clearly communicates what the document is about. Follow these rules strictly: 1) Use underscores (_) to separate each section. 2) Capitalize the first letter of each word (Title Case). 3) Naming structure must always follow this order from left to right: [ClientLastNamesAndInitials]_[CompanyInvolved]_[WhatTheDocumentIs]_[ReferenceOrAccountNumberIfAny]_[DateRelatedToDocumentIn_MonthYearFormat]. 4) If there are two client last names, include both without initials. If only one, include last name and initials where possible. 5) If a company is mentioned, include it. 6) Clearly describe what the document is about (e.g., Insurance Renewal Schedule, Loan Approval, Mortgage Application, etc.). 7) If a reference or policy number is found, include it using the format Policy123456 or Ref78910. 8) For the date, extract the most relevant issue or effective date (month and year), formatted as e.g., April24. 9) Use clear, human-readable wording—longer names are acceptable if they add clarity. 10) If the content cannot be read, return a generic descriptive name based on the file type. Return only the file name without file extension or extra text. Example output: MelmanSchubert_Nib_Insurance Renewal Schedule_Policy123456_April24\n"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_variable_Primary_Contact_Look_Up_Empty": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Try_Monday.com_Search": {
+          "type": "Scope",
+          "actions": {
+            "Get_Client_ID": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://us-central1-strange-calling-402307.cloudfunctions.net/rsfa-id",
+                "method": "POST",
+                "body": " @{variables('LinkedPulseIds')}"
+              },
+              "runAfter": {
+                "Contact_does_not_Contain_Name": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "cd81e6b6-20ce-4d4f-91de-aa532dd213b9"
+              }
+            },
+            "Set_variable_PrimaryContactLookUpEmpty": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "PrimaryContactLookUpEmpty",
+                "value": "@string(body('Contact_LookUp_on_Monday.com'))"
+              },
+              "runAfter": {
+                "Contact_LookUp_on_Monday.com": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "faa9f49b-9983-4b8b-ba76-d05d530697f4"
+              }
+            },
+            "Contact_LookUp_on_Monday.com": {
+              "type": "Http",
+              "inputs": {
+                "uri": "https://api.monday.com/v2",
+                "method": "POST",
+                "headers": {
+                  "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                  "API-Version": "2023-10"
+                },
+                "body": {
+                  "query": "query { boards(ids: 2074688484) { items_page(limit: 1, query_params: { operator: or, rules: [ { column_id: \"contact_email\", compare_value: [@{outputs('Concat_Signers_Emails')}], operator: any_of }, { column_id: \"email_mkxd41p7\", compare_value: [@{outputs('Concat_Signers_Emails')}], operator: any_of }, { column_id: \"email_mkxdantz\", compare_value: [@{outputs('Concat_Signers_Emails')}], operator: any_of } ] }) { items { id name } } } }"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "bea1add2-73cd-4305-94db-da14a099c1a2"
+              }
+            },
+            "Contact_does_not_Contain_Name": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "not": {
+                      "contains": [
+                        "@variables('PrimaryContactLookUpEmpty')",
+                        "name"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "actions": {},
+              "else": {
+                "actions": {
+                  "Contact_Details": {
+                    "type": "Compose",
+                    "inputs": "@body('Contact_LookUp_on_Monday.com')",
+                    "metadata": {
+                      "operationMetadataId": "dac02aed-f844-4af1-908b-a2fb49807f81"
+                    }
+                  },
+                  "Parse_JSON_Contact_Details": {
+                    "type": "ParseJson",
+                    "inputs": {
+                      "content": "@outputs('Contact_Details')",
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "data": {
+                            "type": "object",
+                            "properties": {
+                              "items_page_by_column_values": {
+                                "type": "object",
+                                "properties": {
+                                  "items": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "id": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "id",
+                                        "name"
+                                      ]
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "account_id": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "Contact_Details": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "0506d508-5a18-4e6e-a7a5-1a099aeaecde"
+                    }
+                  },
+                  "Get_Profile_UniqueID": {
+                    "type": "Compose",
+                    "inputs": "@outputs('Parse_JSON_Contact_Details')['body']['data']['boards'][0]['items_page']['items'][0]['id']",
+                    "runAfter": {
+                      "Parse_JSON_Contact_Details": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "6e902ba7-c3bf-47a0-af03-375de7a9fede"
+                    }
+                  },
+                  "Query_Contact_Board_on_Monday.com": {
+                    "type": "Http",
+                    "inputs": {
+                      "uri": "https://api.monday.com/v2",
+                      "method": "POST",
+                      "headers": {
+                        "Authorization": "REDACTED-SEE-1PASSWORD-MONDAY-API-TOKEN",
+                        "API-Version": "2023-10"
+                      },
+                      "body": {
+                        "query": "query { items(ids: [@{outputs('Get_Profile_UniqueID')}]) { id column_values(ids: [\"board_relation_mkxpzyfq\"]) { id ... on BoardRelationValue { display_value linked_item_ids linked_items { id name } } } } }"
+                      }
+                    },
+                    "runAfter": {
+                      "Get_Profile_UniqueID": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "a1bc7956-d581-416c-a316-9e04b32fbc12"
+                    }
+                  },
+                  "LinkedPulseIds_Found": {
+                    "type": "If",
+                    "expression": {
+                      "and": [
+                        {
+                          "equals": [
+                            "@empty(body('Query_Contact_Board_on_Monday.com')?['data']?['items'])",
+                            "@false"
+                          ]
+                        }
+                      ]
+                    },
+                    "actions": {
+                      "Set_LinkedPulseIds": {
+                        "type": "SetVariable",
+                        "inputs": {
+                          "name": "LinkedPulseIds",
+                          "value": "@first(first(first(body('Query_Contact_Board_on_Monday.com')?['data']?['items'])?['column_values'])?['linked_item_ids'])"
+                        }
+                      }
+                    },
+                    "else": {
+                      "actions": {}
+                    },
+                    "runAfter": {
+                      "Query_Contact_Board_on_Monday.com": [
+                        "Succeeded"
+                      ]
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Set_variable_PrimaryContactLookUpEmpty": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "eebe7e16-df22-47bd-a992-85b02526e15e"
+              }
+            }
+          },
+          "runAfter": {
+            "Initialize_Linked_Pulse_Ids": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "72aac359-7386-4018-aef1-1b2565372b14"
+          }
+        },
+        "Initialize_Linked_Pulse_Ids": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "LinkedPulseIds",
+                "type": "string"
+              }
+            ]
+          },
+          "runAfter": {
+            "Initialize_AI_Renaming_Prompt": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
