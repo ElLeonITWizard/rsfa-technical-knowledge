@@ -6,8 +6,8 @@ owner: RSFA
 workspace_id: "2308685"
 workspace_name: Real Savvy_CRM
 source_export_date: 2026-07-30
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 ---
 
 # RSFA Monday Boards Registry
@@ -33,7 +33,7 @@ This registry is an index. Complete column IDs, status labels, mirror mappings a
 
 ## 2. Source and scope
 
-The source export contained:
+The source export (2026-07-30) contained:
 
 - **100 boards**.
 - **100 boards marked active by Monday**.
@@ -41,7 +41,11 @@ The source export contained:
 - **32 explicit subitem boards**.
 - Workspace: `Real Savvy_CRM` (`2308685`).
 
+Plus **1 board confirmed live on 2026-09-05** (`Power Automate Runs`, `5030408927`, created after the export) and at least one other board created after the export that is not yet in this registry (`⚡ Power Automate Runs` aside, a live schema check on 2026-09-05 also surfaced board-level facts for several other boards below — see the per-board notes in §5). See §5.
+
 A Monday board marked `active` may still be historical, experimental, unused or planned for retirement. Functional status in this registry therefore considers both Monday state and known RSFA context.
+
+**Note (2026-09-05):** `Power Automate Runs` (`5030408927`) was independently confirmed live via the Monday MCP connector: `public` access, board folder id `6749452` (folder name not yet resolved), 13,217 items, updated as recently as 2026-09-05. The board counts in this section still reflect the 2026-07-30 export snapshot for the other 99 boards and have not been re-verified live — treat them as stale by at least this one board.
 
 ---
 
@@ -59,7 +63,7 @@ A Monday board marked `active` may still be historical, experimental, unused or 
 | Experimental | 1 | Testing, proof-of-concept or work-in-progress boards. |
 | Form Intake | 4 | Boards receiving data from Superforms or Monday Forms. |
 | Historical / Legacy | 11 | Boards retained for historical reference or migration. |
-| Integration / Automation | 5 | Boards or workflows supporting system integrations. |
+| Integration / Automation | 6 | Boards or workflows supporting system integrations. Includes `Power Automate Runs` (`5030408927`), added 2026-08-04 and not part of the 2026-07-30 export count. |
 | Operations | 5 | General operational process boards. |
 | Pipeline | 3 | Active advice or implementation work progressing through stages. |
 | Project / Task | 6 | Project and technical task tracking. |
@@ -148,15 +152,15 @@ A Monday board marked `active` may still be historical, experimental, unused or 
 | `5029313286` | [📬 Overflow Emails - Rod/Kathleen](https://rsfa-squad.monday.com/boards/5029313286) | Operations Boards | Active | public | Communications | High | 17 | Stores unmatched emails for Rod and Kathleen pending classification or Client Profile assignment. | `knowledge/schemas/monday/5029313286-overflow-emails-rod-kathleen.md` |
 | `5029313272` | [📬 Overflow Emails - Seth](https://rsfa-squad.monday.com/boards/5029313272) | Operations Boards | Active | public | Communications | High | 17 | Stores unmatched emails for Seth pending classification or Client Profile assignment. | `knowledge/schemas/monday/5029313272-overflow-emails-seth.md` |
 | `5029053386` | [🗄️ Monday Activity Log Archive](https://rsfa-squad.monday.com/boards/5029053386) | Operations Boards | Active | public | Backup / Audit | High | 16 | Long-term archive of important Monday activity-log events and raw audit data. | `knowledge/schemas/monday/5029053386-monday-activity-log-archive.md` |
-| `5024672364` | [✅️ Existing Mortgages](https://rsfa-squad.monday.com/boards/5024672364) | Pipelines/Existing Business | Active | private | Existing Business | Critical | 34 | Stores active or completed lending records, fixed-rate expiries, reminders and renewal lifecycle information. | `knowledge/schemas/monday/5024672364-existing-mortgages.md` |
-| `5025483251` | [✍ Mortgage App/SOP](https://rsfa-squad.monday.com/boards/5025483251) | Pipelines/Existing Business | Active | share | Form Intake | Critical | 492 | Stores Mortgage Application submissions from Superforms and supports SOP and Masterboard processing. | `knowledge/schemas/monday/5025483251-mortgage-app-sop.md` |
+| `5024672364` | [✅️ Existing Mortgages](https://rsfa-squad.monday.com/boards/5024672364) | Pipelines/Existing Business | Active | private | Existing Business | Critical | 36 | Stores active or completed lending records, fixed-rate expiries, reminders and renewal lifecycle information. **Confirmed live 2026-09-05:** now includes `AffordX Status` (status: Working on it / Checked / **Rod to Check**), `AffordX Relation` (text) and `Item Sync In AffordX` (link) — added to support the AffordX → Existing Mortgages sync automation, see `knowledge/automations/make/AUTO-AFFORDX-001-mortgage-application-sync.md` §10a. | `knowledge/schemas/monday/5024672364-existing-mortgages.md` |
+| `5025483251` | [✍ Mortgage App/SOP](https://rsfa-squad.monday.com/boards/5025483251) | Pipelines/Existing Business | Active | share | Form Intake | Critical | 498 | Stores Mortgage Application submissions from Superforms and supports SOP and Masterboard processing. **Confirmed live 2026-09-05** (column count re-verified, 492 → 498 since the 2026-07-30 export): new/changed columns include `Amount Current Rent` + `Current Rent Frequency` (Household Expenses), `What is/are your intention(s) with this finance application?` (Applicant's Intention), an expanded `Purchase Property ...` field set (Price, Type, Purpose, Associated Costs, Corporate Fees, Home Insurance Costs, Property Manager %, Borrow Amount, Bank Security Hold 01/02, KiwiSaver Deposit), `Properties Looking to Refinance` / refinance-reason and Top Up fields, and new per-applicant `... Postal Address` / `... Time Living in Current Address` / `... Time on Employment` columns alongside older `(OLD)`-suffixed address/tenure columns that were not removed. Full 498-column detail was not re-exported into a schema file this pass — see `knowledge/automations/make/AUTO-BRANDED-SOP-001-branded-sop-generation.md` §12 for how these feed SOP generation. | `knowledge/schemas/monday/5025483251-mortgage-app-sop.md` |
 | `5026093057` | [✍️ ROMA/Stage3: Mortgages](https://rsfa-squad.monday.com/boards/5026093057) | Pipelines/Existing Business | Active | public | Form Intake | High | 33 | Collects missing or later-stage mortgage information not captured in the initial Mortgage Application. | `knowledge/schemas/monday/5026093057-roma-stage3-mortgages.md` |
 | `5024672437` | [✔️ Existing Insurance](https://rsfa-squad.monday.com/boards/5024672437) | Pipelines/Existing Business | Active | private | Existing Business | Critical | 25 | Stores in-force insurance records, anniversary dates, renewal status and policy ownership. | `knowledge/schemas/monday/5024672437-existing-insurance.md` |
 | `5025365501` | [❓️Insurance Questionnaire](https://rsfa-squad.monday.com/boards/5025365501) | Pipelines/Existing Business | Active | public | Form Intake | High | 76 | Form-submission board connected to a client or advice process. | `knowledge/schemas/monday/5025365501-insurance-questionnaire.md` |
 | `5025201920` | [➕Insurance Deals Pipeline](https://rsfa-squad.monday.com/boards/5025201920) | Pipelines/Existing Business | Active | public | Pipeline | Critical | 24 | Tracks active insurance opportunities through proposal, placement and movement to Existing Insurance. | `knowledge/schemas/monday/5025201920-insurance-deals-pipeline.md` |
 | `1817664233` | [🇸🇽 𝐆𝐑𝐎𝐔𝐏 SCHEME \| Agvance](https://rsfa-squad.monday.com/boards/1817664233) | Pipelines/Existing Business | Active | private | Operations | Medium | 16 | Operational Monday board; detailed business purpose requires verification. | `knowledge/schemas/monday/1817664233-scheme-agvance.md` |
 | `5028320840` | [🏠 Ppty/Security Addresses](https://rsfa-squad.monday.com/boards/5028320840) | Pipelines/Existing Business | Active | private | Operations | Medium | 7 | Operational Monday board; detailed business purpose requires verification. | `knowledge/schemas/monday/5028320840-ppty-security-addresses.md` |
-| `5025365497` | [🏧 AffordX: Bank Statements](https://rsfa-squad.monday.com/boards/5025365497) | Pipelines/Existing Business | Active | public | Integration / Automation | High | 12 | Tracks AffordX bank-statement submissions and related mortgage-processing information. | `knowledge/schemas/monday/5025365497-affordx-bank-statements.md` |
+| `5025365497` | [🏧 AffordX: Bank Statements](https://rsfa-squad.monday.com/boards/5025365497) | Pipelines/Existing Business | Active | public | Integration / Automation | High | 11 | Tracks AffordX bank-statement submissions and related mortgage-processing information. **Confirmed live 2026-09-05:** subitems (per loan) now carry `Existing Mortgages Syncing` (status: Sync / Don't Sync / Pending Decision — the guardrail that gates which loan is the sync source of truth) and `Item Sync In Existing Mortgages` (board relation to `5024672364`), plus detailed loan fields (Product Name, Repayment Next Amount/Date, Repayment Frequency, Interest Type & Rate, Interest/IO Expiry Dates, Original Drawdown Date, Original Loan Amount, Total Year Term, Remaining Time, Maturity Date). See `knowledge/automations/make/AUTO-AFFORDX-001-mortgage-application-sync.md` §10a. | `knowledge/schemas/monday/5025365497-affordx-bank-statements.md` |
 | `5026459551` | [🐖 KiwiSaver Questionnaire](https://rsfa-squad.monday.com/boards/5026459551) | Pipelines/Existing Business | Active | public | Form Intake | High | 54 | Form-submission board connected to a client or advice process. | `knowledge/schemas/monday/5026459551-kiwisaver-questionnaire.md` |
 | `5027911372` | [👩‍💼F&G Insurance Tracking](https://rsfa-squad.monday.com/boards/5027911372) | Pipelines/Existing Business | Active | public | Operations | Medium | 9 | Operational Monday board; detailed business purpose requires verification. | `knowledge/schemas/monday/5027911372-f-g-insurance-tracking.md` |
 | `5025201889` | [💲Mortgage Pipeline](https://rsfa-squad.monday.com/boards/5025201889) | Pipelines/Existing Business | Active | public | Pipeline | Critical | 50 | Tracks active mortgage opportunities from lead through settlement, completion and movement to Existing Mortgages. | `knowledge/schemas/monday/5025201889-mortgage-pipeline.md` |
@@ -182,8 +186,9 @@ A Monday board marked `active` may still be historical, experimental, unused or 
 | `5029524384` | [🖊️ DocuSeal Submissions (WIP)](https://rsfa-squad.monday.com/boards/5029524384) | Rod_Projects & Tasks | Experimental | public | Experimental | Low | 11 | Experimental board for a potential DocuSeal implementation. | `knowledge/schemas/monday/5029524384-docuseal-submissions-wip.md` |
 | `5005075773` | [🦁 Leo IT Tasks](https://rsfa-squad.monday.com/boards/5005075773) | Rod_Projects & Tasks | Active | public | Project / Task | Medium | 14 | Project, implementation or recurring-task tracking board. | `knowledge/schemas/monday/5005075773-leo-it-tasks.md` |
 | `1956265298` | [Automations](https://rsfa-squad.monday.com/boards/1956265298) | Workflows | Active | public | Integration / Automation | High | 8 | Operational catalogue of Power Automate flows, Make scenarios and related status or reference links. | `knowledge/schemas/monday/1956265298-automations.md` |
-| `5025430003` | [Leads App 2 Creation + CP Name](https://rsfa-squad.monday.com/boards/5025430003) | Workflows | Active | public | Integration / Automation | High | 4 | Monday Workflow that creates a second Lead for two-applicant forms and supports Client Profile naming. | `knowledge/schemas/monday/5025430003-leads-app-2-creation-cp-name.md` |
-| `5025429617` | [Move to Pipeline Workflow (New)](https://rsfa-squad.monday.com/boards/5025429617) | Workflows | Active | public | Integration / Automation | High | 4 | Monday Workflow that creates Mortgage, Insurance or KiwiSaver pipeline records from the Leads Pipeline Status. | `knowledge/schemas/monday/5025429617-move-to-pipeline-workflow-new.md` |
+| `5025430003` | [Leads App 2 Creation + CP Name](https://rsfa-squad.monday.com/boards/5025430003) | Workflows | Active (board), **deprecated** (function) | public | Integration / Automation | High | 4 | Monday Workflow board — previously created a second Lead for two-applicant forms and supported Client Profile naming. **Confirmed live 2026-09-05: board unchanged since 2025-12-06** (4 generic columns, 5 items); per RSFA, deactivated outright with no replacement — a two-applicant submission now produces a single Lead item. See `knowledge/automations/monday/AUTO-MONDAY-WF-002-second-applicant.md` and `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`. | `knowledge/schemas/monday/5025430003-leads-app-2-creation-cp-name.md` |
+| `5025429617` | [Move to Pipeline Workflow (New)](https://rsfa-squad.monday.com/boards/5025429617) | Workflows | Active (board), **superseded** (function) | public | Integration / Automation | High | 4 | Monday Workflow board — creates Mortgage, Insurance or KiwiSaver pipeline records from the Leads Pipeline Status. **Confirmed live 2026-09-05: board itself unchanged since 2025-12-04** (4 generic columns, 5 items); per RSFA, its function is now superseded by Make scenario `M.com: Move to Pipeline (Sep 2026)` (`9756260`) as part of the Leads Board Revamp — not independently confirmed disabled. See `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md`. | `knowledge/schemas/monday/5025429617-move-to-pipeline-workflow-new.md` |
+| `5030408927` | [⚡ Power Automate Runs](https://rsfa-squad.monday.com/boards/5030408927) | Folder id `6749452` (name TODO: verify) | Active | public | Integration / Automation | High | 10 | **Confirmed live 2026-09-05.** Logs each Power Automate flow execution: `Solution` (dropdown — SP Email Filing, DocuSign to SharePoint, SP Adviser Name Change, SP Client Folder Creation & Renaming, Email Backup Generator, N/A — designed to cover every PA solution, not only Email Filing), `Flow Name`, `Power Automate Run URL`, `Status` (Running/Succeeded/Reprocessed/Cancelled/Failed), `Started At`, `Finished At`, `Processing Details` (long text/JSON), `Parent Runs` (self-relation to the calling parent's item), `Item ID`, and `Developer Notes` (confirmed live, not previously documented). 13,217 items as of 2026-09-05 — volume consistent with only the Email Filing (`AUTO-EMAIL-001`) flow family being connected in practice today, though the board is structurally ready for other solutions. Single group `Active Runs`. | `knowledge/schemas/monday/5030408927-power-automate-runs.md` (not yet created — see `knowledge/09_DOCUMENT_REGISTRY.md` known gaps) |
 
 ---
 
@@ -402,7 +407,7 @@ flowchart LR
 - **Access type:** share
 - **Category:** Form Intake
 - **Criticality:** Critical
-- **Column count:** 492
+- **Column count:** 498 (confirmed live 2026-09-05, up from 492 in the 2026-07-30 export)
 - **Purpose:** Stores Mortgage Application submissions from Superforms and supports SOP and Masterboard processing.
 - **Key columns:** `Related Contacts`, `Adviser`, `Ready for SOP`, `SF Update Link`, `PDF Apps`, `1st App Date of Birth`, `Files 1st App Proof of Residency`, `1st App Proof of Residency`
 - **Related boards detected in schema:** `Contacts`, `Subitems of ✍ Mortgage App/SOP`
@@ -410,7 +415,8 @@ flowchart LR
 - **Operational notes:**
   - The board receives Mortgage Application data through Superforms.
   - Its data is mapped into Masterboard: End Forms.
-  - It also supports branded SOP generation.
+  - It feeds the now-production Branded SOP generation automation (`AUTO-BRANDED-SOP-001`).
+  - **Confirmed live 2026-09-05 — Superform/board changes since 2026-07-30:** `Amount Current Rent` + `Current Rent Frequency` added under Household Expenses; a per-application `Applicant's Intention` question (`What is/are your intention(s) with this finance application?`); an expanded Purchase Property field set with conditional-logic-style associated-cost fields; refinance/top-up specific fields (`Properties Looking to Refinance`, `Refinance Reasons`, `Top Up Lending Increase Purpose`, `Top Up Amount`); and a restructured Postal Address / address-tenure / employment-tenure column set per applicant, with the prior `(OLD)` columns retained rather than deleted. Not independently confirmed which exact intention values (Refix/Refinance/Sell/Top Up) route to which of these — see the automation doc for what could and could not be confirmed from the column list alone.
 
 ### `5026093057` — ✍️ ROMA/Stage3: Mortgages
 
@@ -737,30 +743,34 @@ flowchart LR
 - **URL:** https://rsfa-squad.monday.com/boards/5025429617
 - **Folder:** Workflows
 - **Monday state:** active
-- **Registry status:** Active
+- **Registry status:** Active (board), **deprecated** (function, per RSFA 2026-09-05 — see `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`)
 - **Access type:** public
 - **Category:** Integration / Automation
 - **Criticality:** High
 - **Column count:** 4
-- **Purpose:** Monday Workflow that creates Mortgage, Insurance or KiwiSaver pipeline records from the Leads Pipeline Status.
+- **Purpose:** Monday Workflow that previously created Mortgage, Insurance or KiwiSaver pipeline records from the Leads Pipeline Status; superseded by Make scenario `9756260`.
 - **Key columns:** `Status`, `Person`, `Date`
 - **Related boards detected in schema:** None detected in the export
 - **Full schema:** `knowledge/schemas/monday/5025429617-move-to-pipeline-workflow-new.md`
+- **Operational notes:**
+  - **Confirmed live 2026-09-05:** board unchanged since 2025-12-04, consistent with (not proof of) the function having moved elsewhere.
 
 ### `5025430003` — Leads App 2 Creation + CP Name
 
 - **URL:** https://rsfa-squad.monday.com/boards/5025430003
 - **Folder:** Workflows
 - **Monday state:** active
-- **Registry status:** Active
+- **Registry status:** Active (board), **deprecated** (function, per RSFA 2026-09-05 — see `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`)
 - **Access type:** public
 - **Category:** Integration / Automation
 - **Criticality:** High
 - **Column count:** 4
-- **Purpose:** Monday Workflow that creates a second Lead for two-applicant forms and supports Client Profile naming.
+- **Purpose:** Monday Workflow that previously created a second Lead for two-applicant forms and supported Client Profile naming; per RSFA, deactivated outright with no replacement — a two-applicant submission now produces a single Lead item.
 - **Key columns:** `Status`, `Person`, `Date`
 - **Related boards detected in schema:** None detected in the export
 - **Full schema:** `knowledge/schemas/monday/5025430003-leads-app-2-creation-cp-name.md`
+- **Operational notes:**
+  - **Confirmed live 2026-09-05:** board unchanged since 2025-12-06, consistent with (not proof of) deactivation.
 
 ### `5030207135` — System Health Monitor
 

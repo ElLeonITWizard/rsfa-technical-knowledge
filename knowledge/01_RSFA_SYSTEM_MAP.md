@@ -8,8 +8,8 @@ scope:
   - Integrations
   - Data flows
   - Operational dependencies
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 ---
 
 # RSFA System Map
@@ -351,9 +351,8 @@ is strongly connected to Outlook, SharePoint or Microsoft 365.
 
 #### Monday native automations and workflows
 
-Monday native automations and workflows are part of RSFA's automation layer.
-
-They are used for:
+Monday native automations (simple per-board "when X, do Y" recipes) are part of
+RSFA's automation layer and remain in active use for:
 
 - Status-based routing.
 - Item movement.
@@ -363,6 +362,16 @@ They are used for:
 - Notifications.
 - Assignment.
 - Workflow progression.
+
+**Monday's Workflow-builder feature specifically (multi-step Workflows, distinct
+from simple per-board Automations above) is, per RSFA (2026-09-05), no longer
+used.** Both of RSFA's known Workflow-builder automations —
+`AUTO-MONDAY-WF-001` (Move to Pipeline) and `AUTO-MONDAY-WF-002` (Leads App 2
+Creation + CP Name) — have been deprecated: the former replaced by a Make
+scenario, the latter deactivated outright with no replacement. RSFA's stated
+direction is to keep automation logic in Make.com, Power Automate, or minor
+per-board Monday Automations instead. See
+`knowledge/decisions/ADR-001-deprecate-monday-workflows.md`.
 
 These automations must be documented alongside Make.com and Power Automate
 dependencies because they may trigger or affect external workflows.
@@ -467,7 +476,12 @@ GetGuru is a legacy system.
 RSFA intends to retire it.
 
 Information still stored in GetGuru must be identified and migrated before
-decommissioning.
+decommissioning. **Per RSFA (2026-09-05):** an initial export/reorganisation of
+GetGuru's content has been completed (cards and Word documents, including
+images, mostly preserved; a Master Index and a security guide produced), as
+migration source material for the new RSFA Knowledge Centre (§4.5). This is not
+evidence that GetGuru is decommissioned, nor that its content has actually been
+migrated into published Knowledge Centre articles — see §4.5.
 
 #### Planolitix
 
@@ -550,6 +564,33 @@ The technical knowledge base is intended to consolidate:
 - Source references.
 
 The knowledge base should complement live-system access rather than replace it.
+
+This is a separate system from the **RSFA Knowledge Centre** below — this
+repository is the developer/technical knowledge base; the Knowledge Centre is
+the staff-facing intranet.
+
+#### RSFA Knowledge Centre
+
+**Confirmed live 2026-09-05.** A custom React application at
+`https://app.rsfa.co.nz/kb`, intended as RSFA's central staff knowledge
+base/intranet — replacing GetGuru. Rod leads content and direction; Rupert
+leads the technical build. A folder taxonomy already exists (Lending,
+Insurance, Client Process, Compliance & Templates, Systems & Tools, Company
+Info and subfolders), confirmed via the Real Savvy Knowledge Centre MCP
+connector, but content population is very early: only **1 published article**
+exists across the whole structure. The GetGuru export (above) is intended as
+migration source material. An MCP connection exists for AI access
+(search/draft/review); do not treat the Knowledge Centre as content-complete,
+and see `knowledge/02_SYSTEMS_REGISTRY.md` SYS-KC-001 for the pilot-MCP-endpoint
+verification caveat.
+
+#### RSFA Copilot Agent (POC)
+
+**Confirmed from provided evidence, 2026-09-05 — not independently verified
+live.** An initial proof of concept exploring read-only AI access to RSFA
+knowledge and operational systems (SharePoint, the Knowledge Centre,
+Monday.com). Explicitly a POC, not a production or business-critical system —
+see `knowledge/02_SYSTEMS_REGISTRY.md` SYS-COPILOT-001.
 
 ---
 
@@ -744,6 +785,7 @@ It tracks:
 - Settlement date.
 - Renewal notification status.
 - Archive reason.
+- **Confirmed live 2026-09-05:** `AffordX Status` (Working on it / Checked / Rod to Check), `AffordX Relation` and `Item Sync In AffordX` — added to support the AffordX → Existing Mortgages sync automation (`AUTO-AFFORDX-001` §10a).
 
 Existing Mortgages drives follow-up processes such as Fixed Rate Expiry
 notifications.
@@ -875,6 +917,29 @@ The KiwiSaver Questionnaire uses Superforms.
 
 The Leads Form currently uses Monday Forms and writes to the Leads board.
 
+**Leads Board Revamp — core completed 2026-09-04, per RSFA (Confirmed from
+provided evidence; the Make-side change independently Confirmed from live
+system, 2026-09-05):** three SuperForm-based Internal Forms now exist for
+Leads, Contacts, and Trusts & Companies, pinned as views on their respective
+boards. A new Lead checks/creates/links Contacts, Client Profile and, where
+applicable, a Trust/Company. `Pipeline Status` changes now automatically
+create/link the corresponding Mortgage, Insurance or KiwiSaver pipeline record
+via the new Make scenario `M.com: Move to Pipeline (Sep 2026)` (`9756260`,
+confirmed live), which per RSFA replaces the previous native Monday Workflow
+`AUTO-MONDAY-WF-001` (now deprecated, retained for history). Per RSFA, the
+other native Monday Workflow in this family, `AUTO-MONDAY-WF-002` (Leads App 2
+Creation + CP Name), has also been deactivated — with **no replacement** — so a
+two-applicant Leads Form submission now produces a single Lead item rather than
+a second linked one. Both deprecations are part of a broader decision that RSFA
+no longer builds Monday Workflow-builder automations, preferring Make.com,
+Power Automate, or minor per-board Monday Automations instead — see
+`knowledge/decisions/ADR-001-deprecate-monday-workflows.md`. Open refinements
+— an external-facing Leads Form, Contact Creation Form behaviour without an
+existing Client Profile, a possible fourth Internal Form, Leads board
+column-connection review, Seth's permissions, and a Slack notification for
+external leads — are **not** part of the completed core; see
+`knowledge/automations/make/AUTO-LEADS-001-lead-client-profile-creation.md` §10a.
+
 ---
 
 ## 10. Email filing and overflow flow
@@ -927,10 +992,10 @@ The Main Outlook Email Filing flow currently monitors sent and received emails f
 - Seth.
 - Jet.
 - Support.
+- `it-support@rsfa.co.nz` (per RSFA report, 2026-08-04 — exact new flow name not yet confirmed against an export or the registry).
 
 Planned additions include:
 
-- `it-support@rsfa.co.nz`.
 - `leo@rsfa.co.nz`.
 
 Jet-related handling is expected to be removed when Jet leaves RSFA.
@@ -968,8 +1033,19 @@ The Jet overflow board is expected to be removed when Jet leaves RSFA.
 
 ### Observability improvement
 
-RSFA intends to create a dedicated board for logging all client-specific processed
-emails because Power Automate run history is not sufficient for long-term tracking.
+A dedicated Monday.com board — `⚡ Power Automate Runs` (`5030408927`) — logs each
+Power Automate flow execution (status, start/finish time, run URL, processing
+detail, developer notes, and a relation back to the calling parent flow),
+addressing the previous gap where Power Automate's native run history (28-day
+window) was not sufficient for long-term tracking. **Confirmed from live system
+(2026-09-05)** via the Monday MCP connector: the board is active, public, has
+13,217 items, and its `Solution` field is structured to cover every Power
+Automate solution (SP Email Filing, DocuSign to SharePoint, SP Adviser Name
+Change, SP Client Folder Creation & Renaming, Email Backup Generator, N/A) —
+but item volume is consistent with only the Email Filing flow family actually
+being connected in practice today; a partial rollout, not full coverage across
+all Power Automate flows. See
+`knowledge/automations/power-automate/AUTO-EMAIL-001-client-email-filing.md` §16.
 
 ---
 
@@ -1166,7 +1242,8 @@ It is used as an Automation Hub for:
 
 Used for technical communication and support.
 
-It may also become part of monitored email workflows.
+Per RSFA report (2026-08-04), it is now part of the monitored Main Outlook Email
+Filing mailboxes — not yet independently verified live.
 
 ### `leo@rsfa.co.nz`
 
@@ -1217,9 +1294,22 @@ part of RSFA's automation architecture.
 
 ### Rod's knowledge base
 
-Rod is developing or evaluating a personalised knowledge base.
+Superseded by the confirmed **RSFA Knowledge Centre** — see §4.5 and
+`knowledge/02_SYSTEMS_REGISTRY.md` SYS-KC-001. It remains a separate system
+from this technical knowledge repository (staff-facing intranet vs.
+developer/technical documentation).
 
-Its relationship to this technical knowledge repository is not yet defined.
+### Monday Testing Workspace
+
+**Per RSFA (2026-09-05), Confirmed from provided evidence — not independently
+located live.** RSFA has created, or intends to create, a dedicated Monday
+workspace for development/testing, isolated from production boards, mirroring
+production structure, using synthetic (non-real) data, with particular care
+around Connect Boards / Mirror columns. The need surfaced after discovering
+that duplicating `✅️ Existing Mortgages` could retain a live connection back
+to the real `Client Profiles` board. A live workspace search for "RSFA" on
+2026-09-05 returned only the production `Real Savvy_CRM` workspace (`2308685`)
+— the testing workspace's exact name/ID is unconfirmed. TODO: verify directly.
 
 ---
 
@@ -1261,10 +1351,12 @@ Its relationship to this technical knowledge repository is not yet defined.
 | AffordX | Analysis, tracking and meeting summaries | Active or expanding |
 | DocuSign | Electronic signatures | Active |
 | DocuSeal | Potential future replacement | Experimental only |
-| GetGuru | Legacy knowledge or process system | Planned retirement |
+| GetGuru | Legacy knowledge or process system | Planned retirement (export/reorg to Knowledge Centre completed, migration not) |
 | Planolitix | Legacy system | Planned retirement |
 | Claude | AI support and future agents | Active and expanding |
 | ChatGPT | AI consultation and Company Knowledge | Active and expanding |
+| RSFA Knowledge Centre | Staff knowledge base / intranet | Active and expanding, content population very early |
+| RSFA Copilot Agent | Read-only AI access POC | Experimental (POC) |
 | Microsoft Bookings | Potential scheduling platform | Under consideration |
 
 ---
@@ -1290,8 +1382,13 @@ The following areas require further documentation:
 - Information remaining in GetGuru.
 - Information remaining in Planolitix.
 - Migration plan for legacy systems.
-- Long-term email execution logging architecture.
+- Long-term email execution logging architecture — partially addressed via the `Power Automate Runs` Monday board (`5030408927`), confirmed live 2026-09-05; still only the Email Filing flow family in practice, not yet a full Power Automate rollout.
 - Future AI agent permissions and tool access.
+- Exact name/ID of the Monday Testing Workspace (§16) — not confirmed live.
+- Whether `https://rsfa-agent-plugin-pilot.vercel.app/api/mcp` is still the Knowledge Centre's current production MCP endpoint, or only a historical pilot (responded 405 to GET on 2026-09-05, consistent with being live, but not confirmed as production).
+- Exact scope/configuration of the RSFA Copilot Agent POC beyond its existence.
+- Timeline and extent of GetGuru → Knowledge Centre content migration (only 1 article published as of 2026-09-05).
+- How Client Profile naming and per-applicant Contact/Client Profile creation now work for a two-applicant Lead since `AUTO-MONDAY-WF-002` was deactivated with no replacement (single Lead item now represents both applicants) — see `knowledge/automations/make/AUTO-LEADS-001-lead-client-profile-creation.md` §10a.
 
 ---
 

@@ -25,9 +25,15 @@ related_scenarios:
     id: "6468551"
   - name: "AffordX Subflow Client Creation (Sep 2025)"
     id: "7292131"
+  - name: "Subflow Application Creation Monday-AffordX (Apr 2026)"
+    id: "9067654"
+  - name: "M.com: AffordX item Need Sync to Existing Mortgages (Aug 2026)"
+    id: "9721689"
+  - name: "M.com: Subflow AffordX to Existing Mortgages Sync (Aug 2026)"
+    id: "9662353"
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 documentation_status: partial
 ---
 
@@ -53,11 +59,19 @@ AffordX supports bank-statement analysis, application tracking and meeting summa
 ### Excluded
 
 - Bank-statement analysis itself, or AffordX's meeting summary/transcription features (separate, undocumented AffordX capabilities per `knowledge/01_RSFA_SYSTEM_MAP.md` §4.4 known gaps).
-- The 🏧 AffordX: Bank Statements Monday board (board ID `5025365497`) is a related but functionally separate tracking board — not confirmed as part of this automation's direct scope.
+
+### Included as of 2026-09-05 — AffordX → Existing Mortgages sync
+
+- The 🏧 AffordX: Bank Statements Monday board (`5025365497`) **is confirmed in scope**, superseding the earlier "not confirmed" note: it is the source board for a second, newer sync direction — see §10a. This corrects the earlier exclusion, which predates this sync's discovery.
+- Syncing a loan from an AffordX Bank Statements subitem into the ✅️ Existing Mortgages board (`5024672364`), gated by an explicit adviser-controlled guardrail column (`Existing Mortgages Syncing`).
 
 ## 4. Current status
 
-Active. `High` criticality. One confirmed target-scenario gap: `AffordX to M.com Applications Sync (Aug 2025)` calls a scenario referenced as `Subflow Application Creation Monday-AffordX (Apr 2026)` (ID `9067654`) which **does not exist** in the current `Valid scenarios/working` Make folder — per `knowledge/03_AUTOMATION_REGISTRY.md` §10, this must be located or confirmed deleted before this family can be considered fully mapped.
+Active. `High` criticality.
+
+**Resolved 2026-09-05 (live):** the previously-missing `Subflow Application Creation Monday-AffordX (Apr 2026)` (`9067654`) has been found — it exists, is Active, `islinked: true` (confirmed called by other scenarios), lives outside any Make folder (not deleted, simply unfiled), and was last edited 2026-08-26. It is a callable subflow that searches Contacts (via `8518416`), creates the AffordX board item and its bank-statement subitems. This closes the previously-open "must be located or confirmed deleted" gap.
+
+**New as of 2026-09-05 — AffordX → Existing Mortgages sync (Active - Under Improvement):** a second sync direction, from AffordX loans into Existing Mortgages, was found live and confirmed structurally via blueprint inspection — see §10a. Per RSFA this is complete and in production, with one explicitly open post-production refinement (the Client Profile linkage question, §18).
 
 ## 5. Trigger
 
@@ -115,6 +129,48 @@ Not applicable — this is a Make.com-mediated integration, not a native Monday/
 
 `COMP-MAKE-ERROR-001` — called by all three scenarios in this family.
 
+## 10a. AffordX → Existing Mortgages sync (new, confirmed live 2026-09-05)
+
+**Status: Active - Under Improvement (Confirmed from live system, 2026-09-05).** Documented separately from the daily AffordX Submissions sync above because it runs on a different Monday board pair, a different scenario chain, and was found live only during this update pass — RSFA's own account of this feature (per the update request that prompted this documentation) matches the structure found in the live Make blueprints.
+
+**Business behaviour (Confirmed from live Make + Monday schema, 2026-09-05):** an adviser explicitly marks a loan subitem on the 🏧 AffordX: Bank Statements board (`5025365497`) as `Existing Mortgages Syncing` = **Sync** (subitem status column; other values are `Don't Sync` and `Pending Decision`). This is the guardrail: only the loan explicitly marked `Sync` drives the sync, which is how RSFA avoids the problem of multiple AffordX applications sharing the same Loan Number. The sync then:
+
+1. Looks up the loan's Loan Number in ✅️ Existing Mortgages (`5024672364`).
+2. If a matching Existing Mortgages record is found (and exactly one match) → updates it and its subitem sync relation. If **more than one** match is found, the flow takes an explicit error branch instead of guessing (`COMP-MAKE-ERROR-001` notification) — a safety property confirmed directly from the blueprint's routing logic, not inferred.
+3. If no match is found → creates a new Existing Mortgages record. New mortgages created this way are marked `AffordX Status` = **Rod to Check** (confirmed live Monday status label).
+4. Either branch ends with a Slack notification (`Send Uploaded Notification To Slack`, confirmed live) and a board_relation update on the AffordX subitem (`Item Sync In Existing Mortgages`).
+5. Once a loan is selected for `Sync`, subsequent edits to that AffordX subitem continue to flow through this same path (re-running the parent scenario re-triggers the same update/create logic) — confirmed by the parent scenario's webhook-driven, re-entrant design; not separately load-tested in this pass.
+
+### Scenario chain (Confirmed from live blueprint inspection, 2026-09-05)
+
+| Scenario ID | Exact Make name | Role | Trigger | Notes |
+|---|---|---|---|---|
+| `9721689` | M.com: AffordX item Need Sync to Existing Mortgages (Aug 2026) | Parent | Webhook (custom webhook, "Lead"-style item-level trigger from the AffordX subitem) | Fetches the AffordX subitem, its parent, Contact and Client Profile, calls `9662353`, then updates the AffordX subitem's `Item Sync In Existing Mortgages` relation. Created 2026-08-27, last edited 2026-09-04. |
+| `9662353` | M.com: Subflow AffordX to Existing Mortgages Sync (Aug 2026) | Bridge subflow (also independently callable) | On-demand | Does the actual Existing Mortgages search/create/update described above. Calls `8518416` (Search Contacts) to resolve the Contact. Created 2026-08-14, last edited 2026-09-05 (same day as this documentation pass — actively worked on). |
+
+Both scenarios call `COMP-MAKE-ERROR-001` on every module's error branch, consistent with the rest of this family.
+
+### Field mapping (Confirmed from live Make scenario interface + live Monday column schema, 2026-09-05)
+
+| Make subflow input (`9662353` interface) | Existing Mortgages column (confirmed live) | Notes |
+|---|---|---|
+| `LoanNumber` | `Loan Number` (text) | De-duplication key |
+| `TermYears` | `Doc Term` (numbers, "year" unit) | User's "Doc Term" mapping confirmed |
+| `FRexp` | `FR Exp` (date) | — |
+| `InterestRate` | `Interest Rate` (numbers, %) | — |
+| `IOExp` | `IO Exp` (date) | — |
+| `OriginalLoan` | `Original Loan ($)` (numbers) | — |
+| `PIorIO` | `P&I or IO` (status: P&I / IO) | — |
+| `Repeyment` (sic — literal Make interface field name) | `Repayment` (numbers) | Typo exists in the live Make interface, not in the Monday column name |
+| `SettelmentDate` (sic — literal Make interface field name) | `Settlement Date` (date) | Typo exists in the live Make interface, not in the Monday column name |
+| `Frequency` | `Frequency` (status: Monthly/Fortnightly/Quarterly/Weekly) | — |
+| `LoanType` | `Loan Type` (status: Fixed/Floating/Offset/RC/Construction loan) | — |
+| `ClientSummary`, `PeoplesIDS`, `ApplicationID`, `SubitemID` | Used internally for Contact/Client Profile/subitem resolution | Not directly mapped to a single Existing Mortgages column |
+
+### Open item — NOT resolved (per RSFA, raised 2026-09-04)
+
+RSFA raised an open question on 2026-09-04 about exactly which Client Profile the AffordX ↔ Existing Mortgages links should point to (a Contact can, in principle, relate to more than one Client Profile, and the AffordX board's `Client Profile` column is a mirror derived through Contacts rather than a direct relation). **This is explicitly an open post-production refinement, not resolved** — do not treat the Client Profile linkage as fully verified. TODO: verify directly with RSFA before relying on this relation for anything Client-Profile-specific.
+
 ## 11. End-to-end process
 
 ```mermaid
@@ -160,9 +216,10 @@ flowchart TD
 
 ## 14. Dependencies
 
-- Missing scenario `9067654` (`Subflow Application Creation Monday-AffordX`) is an open, unresolved dependency of `6238398` — this scenario's full sync behaviour cannot be considered fully verified until this is located.
+- `9067654` (`Subflow Application Creation Monday-AffordX`) is confirmed to exist and be Active — no longer an open dependency gap (resolved 2026-09-05).
 - AffordX API credentials and Monday API token, stored in Make's connection vault.
 - Board/column IDs stored as Make scenario variables — must be updated if the board is cloned or fields renamed (explicit warning in source material).
+- The AffordX → Existing Mortgages sync (§10a) depends on the adviser explicitly setting `Existing Mortgages Syncing` = `Sync` on exactly one AffordX subitem per Loan Number; the guardrail assumes advisers follow this convention.
 
 ## 15. Error handling
 
@@ -178,10 +235,11 @@ Not confirmed. TODO: verify whether the daily sync can be manually re-run on dem
 
 ## 18. Known limitations
 
-- Missing subscenario `9067654` — an open, unresolved gap that must be found or confirmed deleted (`knowledge/03_AUTOMATION_REGISTRY.md` §8, §10).
 - Applicants are currently stored as plain text on the Monday parent item, not yet linked to the Contacts board (explicitly flagged as a planned enhancement in source material, not yet implemented).
 - Closed/inactive AffordX loans are not currently archived or flagged in Monday — also a stated roadmap item, not yet implemented.
-- No Slack notification for new applications or status changes currently exists (also on the roadmap, not implemented).
+- No Slack notification for new applications or status changes currently exists on the daily-sync side (§5–13 above); the newer Existing Mortgages sync (§10a) does have Slack notifications, confirmed live.
+- **Open, not resolved (raised by RSFA 2026-09-04):** which Client Profile the AffordX ↔ Existing Mortgages links should point to when a Contact relates to more than one Client Profile — see §10a. Do not mark this as resolved without further evidence.
+- The "more than 1 match" error branch in §10a's Loan Number search has not been deliberately tested against a real duplicate-Loan-Number scenario; its behaviour is confirmed from the blueprint's routing logic, not from an observed execution.
 
 ## 19. Security and sensitive data
 
@@ -228,15 +286,19 @@ Disable the affected Make.com scenario(s). No automated rollback of already-sync
 - `exports/make/valid-scenarios-working-inventory.md`, `exports/make/make-scenario-call-graph.md` — Current. Scenario IDs, trigger types, the confirmed missing-subscenario gap.
 - `knowledge/03_AUTOMATION_REGISTRY.md` §3, §4, §8, §10 — Current. Canonical ID, family grouping, shared-component treatment of the client-creation subflow, and the explicit missing-scenario gap.
 - `knowledge/02_SYSTEMS_REGISTRY.md` SYS-AFFORDX-001 — Current. Platform description and status.
+- Live Make MCP blueprint inspection, 2026-09-05 — scenarios `9067654`, `9721689`, `9662353`. Confirmed from live system.
+- Live Monday MCP `get_board_info`, 2026-09-05 — boards `5024672364` (Existing Mortgages) and `5025365497` (AffordX: Bank Statements). Confirmed from live system.
 
 ## 25. Known gaps
 
-- Missing scenario `9067654` must be located in Make.com or confirmed deleted.
 - Exact current Monday board ID for "AffordX Submissions" is not confirmed against `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — it may be the same as, or different from, `🏧 AffordX: Bank Statements` (`5025365497`); needs direct verification.
-- Roadmap items (Contacts linkage, closed-loan handling, Slack notifications) are explicitly not yet implemented — do not describe them as current behaviour.
+- Roadmap items (Contacts linkage, closed-loan handling, Slack notifications on the daily-sync side) are explicitly not yet implemented — do not describe them as current behaviour.
+- **Open (§10a, §18):** which Client Profile the AffordX ↔ Existing Mortgages sync should point to when a Contact has more than one Client Profile — raised by RSFA 2026-09-04, not resolved.
+- The AffordX subitem "more than 1 match" error branch (§10a) has not been observed in a real execution.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, call-graph and source-material evidence; missing-scenario gap and unconfirmed board ID recorded. | Claude (documentation task) |
+| 2026-09-05 | Live re-verification via Make MCP: resolved the `9067654` missing-scenario gap (found, Active, unfiled); discovered and documented the new AffordX → Existing Mortgages sync (`9721689` parent + `9662353` bridge subflow), confirmed via live blueprint inspection and live Monday column schema for `5024672364` and `5025365497`; recorded the open, unresolved Client Profile linkage question raised by RSFA on 2026-09-04. | Claude (documentation task) |

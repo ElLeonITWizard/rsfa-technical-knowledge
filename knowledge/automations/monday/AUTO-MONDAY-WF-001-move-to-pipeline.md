@@ -3,7 +3,7 @@ id: AUTO-MONDAY-WF-001
 title: Move to Pipeline Workflow (New)
 platform:
   - Monday Workflow
-status: active
+status: deprecated
 criticality: high
 owner: RSFA
 technical_account: tech@rsfa.co.nz
@@ -26,12 +26,14 @@ related_boards:
     id: "5025429617"
 related_scenarios: []
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 documentation_status: partial
 ---
 
 # AUTO-MONDAY-WF-001 — Move to Pipeline Workflow (New)
+
+> **Deprecated as of 2026-09-05.** Per RSFA, this native Monday Workflow's function has been replaced by the new Make.com scenario `M.com: Move to Pipeline (Sep 2026)` (`9756260`), part of the 2026-09-04 Leads Board Revamp. See `knowledge/automations/make/AUTO-LEADS-001-lead-client-profile-creation.md` §10a for the replacement automation. **This document is retained as historical reference, not deleted**, per `CLAUDE.md` §11. The workflow's own board (`5025429617`) was confirmed live on 2026-09-05 to still exist, unchanged since 2025-12-04 — its underlying Monday Workflow recipe has not been independently confirmed disabled; do not assume it is fully inert without direct verification in Monday's Workflow builder.
 
 ## 1. Purpose
 
@@ -56,7 +58,7 @@ This is a native Monday Workflow (Monday's workflow-automation feature), not a M
 
 ## 4. Current status
 
-Active. `High` criticality per `knowledge/03_AUTOMATION_REGISTRY.md` §6 and `knowledge/04_MONDAY_BOARDS_REGISTRY.md`.
+**Deprecated 2026-09-05** — per RSFA, replaced by Make scenario `9756260` (`M.com: Move to Pipeline (Sep 2026)`), confirmed live and active via Make MCP on 2026-09-05 (created 2026-09-03, last edited 2026-09-04). `High` criticality per `knowledge/03_AUTOMATION_REGISTRY.md` §6 and `knowledge/04_MONDAY_BOARDS_REGISTRY.md`. The Monday Workflow board itself (`5025429617`) was confirmed live still present and unchanged since 2025-12-04 — the underlying recipe's actual enabled/disabled state was not directly checked (Monday Workflow recipes are not exposed via the board-schema API used for this verification).
 
 ## 5. Trigger
 
@@ -211,3 +213,4 @@ Disable or edit the workflow directly in Monday.com's Workflow builder. No autom
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and board-registry evidence only; Monday Workflow recipe internals not directly available. | Claude (documentation task) |
+| 2026-09-05 | Marked deprecated/replaced per RSFA, superseded by the new Make scenario `M.com: Move to Pipeline (Sep 2026)` (`9756260`) as part of the 2026-09-04 Leads Board Revamp. Confirmed the scenario's live existence and this workflow's unchanged board state via MCP; did not independently confirm the underlying Monday Workflow recipe is disabled. Document retained, not deleted. | Claude (documentation task) |

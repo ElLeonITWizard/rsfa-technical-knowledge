@@ -6,8 +6,8 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 ---
 
 # RSFA Systems Registry
@@ -106,6 +106,8 @@ No secret value should ever be stored in this repository.
 | `SYS-CLAUDE-001` | Claude | AI and technical assistance | Active - Expanding | Medium | Technical consultation, repository maintenance, skills, agents and future tool workflows | Rod Schubert | `tech@rsfa.co.nz` | https://claude.ai/ | Technical configuration, documentation, communications | `knowledge/systems/ai/claude.md` |
 | `SYS-CHATGPT-001` | ChatGPT Business | AI and company knowledge | Active - Expanding | Medium | Company Knowledge, technical consultation, Monday and connected-system research | Rod Schubert | `tech@rsfa.co.nz` | https://chatgpt.com/ | Technical configuration, documentation, communications | `knowledge/systems/ai/chatgpt.md` |
 | `SYS-KNOWLEDGE-001` | RSFA Technical Knowledge Repository | Knowledge base | Active - Expanding | High | Canonical technical documentation, schemas, playbooks and incident history | RSFA | `tech@rsfa.co.nz` | Private GitHub repository and approved RSFA storage | Technical configuration, documentation | Repository root |
+| `SYS-KC-001` | RSFA Knowledge Centre | Knowledge base / intranet | Active - Expanding | High | Central staff knowledge base / intranet for advice-process, compliance and systems knowledge; custom React app; migration target for GetGuru content | Rod Schubert (content/direction), Rupert (technical build) | `tech@rsfa.co.nz` | https://app.rsfa.co.nz/kb | Client-adjacent process knowledge, technical configuration, documentation | `knowledge/systems/knowledge-centre/` (not yet created) |
+| `SYS-COPILOT-001` | RSFA Copilot Agent (POC) | AI and technical assistance | Experimental | Medium | Proof-of-concept exploring read-only AI access to RSFA knowledge and operational systems (SharePoint, Knowledge Centre, Monday.com) | Rod Schubert | `tech@rsfa.co.nz` | Not confirmed | Technical configuration, documentation; read-only, not confirmed to touch client data directly | `knowledge/systems/ai/rsfa-copilot-agent.md` (not yet created) |
 | `SYS-1PASSWORD-001` | 1Password | Credential management | Active | High | Secure storage of RSFA credentials and access information | Rod Schubert | `tech@rsfa.co.nz` | https://my.1password.com/ | Credentials, technical configuration | `knowledge/systems/1password/` |
 | `SYS-PLANOLITIX-001` | Planolitix | Legacy platform | Legacy - Migration Required | Medium | Legacy operational or knowledge system pending migration | Rod Schubert | `tech@rsfa.co.nz` | Access via `rod@rsfa.co.nz` with 2FA | Client personal data, documents, operational information | `knowledge/systems/legacy/planolitix.md` |
 | `SYS-GETGURU-001` | GetGuru | Legacy knowledge platform | Legacy - Migration Required | Medium | Legacy knowledge or operational information pending migration | Rod Schubert | `tech@rsfa.co.nz` | Technical access not currently confirmed | Documents, operational information | `knowledge/systems/legacy/getguru.md` |
@@ -154,6 +156,8 @@ It stores and connects major operational records including:
 - Activity logs.
 - Documentation.
 - Email campaign templates.
+
+**Monday Testing Workspace (per RSFA, 2026-09-05 — Confirmed from provided evidence, not independently located live):** RSFA has created, or intends to create, a dedicated Monday workspace for development/testing, isolated from production boards, using synthetic (non-real) data and mirroring production structure. The stated purpose is to avoid accidental cross-connections to real boards — the need surfaced after discovering that duplicating the `✅️ Existing Mortgages` board could retain a live Connect Boards/Mirror-column link back to the real `Client Profiles` board. A live search for a workspace matching "RSFA" on 2026-09-05 returned only the production `Real Savvy_CRM` workspace (`2308685`) — the testing workspace's exact name/ID could not be confirmed or ruled out this way. TODO: verify the exact workspace name/ID directly with RSFA before referencing it elsewhere.
 
 ---
 
@@ -308,6 +312,12 @@ This layer includes:
 - Notifications.
 - Triggering of external automations.
 - Workflow progression.
+
+**Per RSFA (2026-09-05):** Monday's Workflow-builder feature specifically (as
+opposed to simple per-board Automations, which remain in active use) is no
+longer used for new automation logic. Both known Workflow-builder automations
+— `AUTO-MONDAY-WF-001` and `AUTO-MONDAY-WF-002` — have been deprecated. See
+`knowledge/decisions/ADR-001-deprecate-monday-workflows.md`.
 
 ---
 
@@ -572,6 +582,43 @@ This reference forces the Main Outlook Email Filing flow to associate the email 
 
 ---
 
+## SYS-KC-001 — RSFA Knowledge Centre
+
+- **Category:** Knowledge base / intranet
+- **Status:** Active - Expanding
+- **Criticality:** High
+- **Primary role:** Central staff knowledge base / intranet for RSFA
+- **Content/direction owner:** Rod Schubert
+- **Technical build owner:** Rupert
+- **Technical account:** `tech@rsfa.co.nz`
+- **Access URL:** https://app.rsfa.co.nz/kb
+- **Handles client data:** Not primarily; may reference client-adjacent process knowledge
+- **Main connected systems:** GetGuru (migration source), MCP tooling (AI access), Monday.com, SharePoint
+- **Detailed documentation:** `knowledge/systems/knowledge-centre/` (not yet created)
+
+The Knowledge Centre is a custom React application intended to replace GetGuru as RSFA's central knowledge base. **Confirmed live 2026-09-05** via the Real Savvy Knowledge Centre MCP connector: a folder taxonomy already exists (Lending, Insurance, Client Process, Compliance & Templates, Systems & Tools, Company Info, and their subfolders), but content population is very early — only **1 published article** exists across the entire structure (in the Refinancing subfolder). The GetGuru export/reorganisation (see `SYS-GETGURU-001`) is intended as migration source material, but that migration into published Knowledge Centre articles has evidently not yet substantially happened. Complex content and full SOPs may still require refinement before publication — do not describe the Knowledge Centre as populated or content-complete.
+
+An MCP connection exists for AI access to the Knowledge Centre (article search, drafting, review workflow) and is usable today (this repository's own session used it on 2026-09-05). A historical reference exists to a pilot endpoint, `https://rsfa-agent-plugin-pilot.vercel.app/api/mcp` — on 2026-09-05 this endpoint responded `405 Method Not Allowed` to a GET request, consistent with a live POST-only MCP endpoint rather than a decommissioned deployment, but **this could not be confirmed as the current production endpoint** — TODO: verify with Rupert/Rod before treating it as a production fact.
+
+---
+
+## SYS-COPILOT-001 — RSFA Copilot Agent (POC)
+
+- **Category:** AI and technical assistance
+- **Status:** Experimental (proof of concept)
+- **Criticality:** Medium
+- **Primary role:** Explore read-only AI access to RSFA knowledge and operational systems
+- **Administrative owner:** Rod Schubert
+- **Technical account:** `tech@rsfa.co.nz`
+- **Access URL:** Not confirmed
+- **Handles client data:** Not confirmed; scoped as read-only over SharePoint, the Knowledge Centre and Monday.com
+- **Main connected systems:** SharePoint, RSFA Knowledge Centre, Monday.com
+- **Detailed documentation:** `knowledge/systems/ai/rsfa-copilot-agent.md` (not yet created)
+
+**Confirmed from provided evidence, 2026-09-05 — not independently verified live in this pass.** Described as an initial proof of concept for read-only AI access across SharePoint, the Knowledge Centre and Monday.com. This is explicitly a POC, not a production or business-critical system — do not document it as more complete than confirmed. Exact configuration (which MCP tools/scopes it uses, hosting, access boundaries) has not been verified; TODO: verify before relying on this entry for anything beyond its existence as a POC.
+
+---
+
 ## SYS-1PASSWORD-001 — 1Password
 
 - **Category:** Security and credential management
@@ -616,7 +663,7 @@ Remaining information must be identified and migrated before retirement.
 - **Handles client data:** Unknown
 - **Detailed documentation:** `knowledge/systems/legacy/getguru.md`
 
-Remaining information must be identified and migrated before retirement.
+Remaining information must be identified and migrated before retirement. **Per RSFA (2026-09-05, Confirmed from provided evidence):** an initial export/reorganisation of GetGuru content has been completed — most cards and Word documents (including images) were preserved, a Master Index was produced, and a security guide was generated, intended as migration source material for `SYS-KC-001`. This does **not** mean GetGuru is decommissioned — no evidence confirms that — and it does not mean the content has actually been migrated into published Knowledge Centre articles (see `SYS-KC-001`, where only 1 article is currently published). Status remains `Legacy - Migration Required` rather than `Retired`.
 
 ---
 
@@ -744,3 +791,7 @@ The following information still requires verification:
 - Microsoft 365 tenant administration URL.
 - Future Microsoft Bookings architecture.
 - Exact RSFA website integrations.
+- **New 2026-09-05:** exact name/ID of the Monday Testing Workspace (see SYS-MONDAY-001 summary) — not confirmed live.
+- **New 2026-09-05:** whether `https://rsfa-agent-plugin-pilot.vercel.app/api/mcp` is still the current production MCP endpoint for `SYS-KC-001`, or only a historical pilot (responded 405 to GET on 2026-09-05, consistent with a live endpoint, but not confirmed as production).
+- **New 2026-09-05:** exact scope/configuration of `SYS-COPILOT-001` (RSFA Copilot Agent POC) beyond its existence as a read-only proof of concept.
+- **New 2026-09-05:** the RSFA Knowledge Centre's content population remains very early (1 published article) — extent and timeline of GetGuru → Knowledge Centre content migration is unconfirmed.

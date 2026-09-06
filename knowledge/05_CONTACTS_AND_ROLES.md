@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-07-30
+last_modified: 2026-08-04
 last_verified: 2026-07-30
 ---
 
@@ -270,8 +270,8 @@ A person may have more than one classification.
   - Technical communications.
   - External and internal support conversations.
   - IT-related correspondence.
-- **Planned automation use:**
-  - Intended to be added to Main Outlook Email Filing.
+- **Automation use:**
+  - Added to Main Outlook Email Filing as of 2026-08-04, per RSFA report — exact new flow name not yet confirmed against an export or `knowledge/03_AUTOMATION_REGISTRY.md`. See `AUTO-EMAIL-001`.
 - **Role classification:**
   - Technical communication account
 - **Important note:** This is not the default platform-login account.

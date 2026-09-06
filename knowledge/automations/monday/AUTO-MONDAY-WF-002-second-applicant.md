@@ -3,7 +3,7 @@ id: AUTO-MONDAY-WF-002
 title: Leads App 2 Creation + CP Name
 platform:
   - Monday Workflow
-status: active
+status: deprecated
 criticality: high
 owner: RSFA
 technical_account: tech@rsfa.co.nz
@@ -22,12 +22,14 @@ related_boards:
     id: "5025430003"
 related_scenarios: []
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 documentation_status: partial
 ---
 
 # AUTO-MONDAY-WF-002 — Leads App 2 Creation + CP Name
+
+> **Deprecated as of 2026-09-05.** Per RSFA, this native Monday Workflow has been deactivated outright, with no direct replacement automation: a two-applicant Leads Form submission now produces a **single** Lead item representing both applicants, instead of a second linked Lead item. This is part of a broader decision to stop using Monday's Workflow-builder feature — see `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`. **This document is retained as historical reference, not deleted**, per `CLAUDE.md` §11. The workflow's own board (`5025430003`) was confirmed live on 2026-09-05 to still exist, unchanged since 2025-12-06 — consistent with, but not independent proof of, deactivation.
 
 ## 1. Purpose
 
@@ -52,7 +54,7 @@ This is a native Monday Workflow, referenced explicitly in `knowledge/04_MONDAY_
 
 ## 4. Current status
 
-Active. `High` criticality per `knowledge/03_AUTOMATION_REGISTRY.md` §6 and `knowledge/04_MONDAY_BOARDS_REGISTRY.md`.
+**Deprecated 2026-09-05** — per RSFA, deactivated with no direct replacement; a two-applicant Leads Form submission now produces a single Lead item. `High` criticality per `knowledge/03_AUTOMATION_REGISTRY.md` §6 and `knowledge/04_MONDAY_BOARDS_REGISTRY.md` reflects its historical/pre-deprecation criticality. See `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`.
 
 ## 5. Trigger
 
@@ -183,16 +185,20 @@ Disable or edit the workflow directly in Monday.com's Workflow builder. No autom
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Board ID, columns, and the explicit cross-reference from the Leads board's operational notes.
 - `source-material/make/M.com_ Creating Contact and Client Profile after Lead was Added (Mar 2026).md` — Current. Confirms per-applicant processing logic that this workflow's output feeds into.
 - No `exports/monday/` files currently exist; this workflow's internal recipe logic has not been directly exported or reviewed.
+- RSFA direct report, 2026-09-05 — reported this workflow deactivated, no replacement, single Lead item now used for two-applicant submissions.
+- Live Monday MCP `get_board_info`, 2026-09-05 — board `5025430003` confirmed unchanged since 2025-12-06.
 
 ## 25. Known gaps
 
-- Exact detection condition for "two applicants" is not confirmed.
-- Exact Client Profile naming format is not confirmed.
-- Error-handling and manual-reprocessing behaviour are unconfirmed.
-- Monday Workflow recipe steps are not directly viewable in current exports; this documentation should be revisited once a live Monday Workflow export or direct review is available.
+- Exact detection condition for "two applicants" that was used while this workflow was active is not confirmed (now moot, but relevant to historical incidents).
+- Exact Client Profile naming format previously applied is not confirmed.
+- Error-handling and manual-reprocessing behaviour were never confirmed while active.
+- Monday Workflow recipe steps were never directly viewable in exports.
+- **New 2026-09-05:** how Client Profile naming for joint applications is now handled, if at all, with only a single Lead item representing both applicants, is not confirmed — TODO: verify with RSFA whether this is a known, accepted gap or whether other logic (e.g. within `AUTO-LEADS-001`) now covers it.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and board-registry evidence only; Monday Workflow recipe internals not directly available. | Claude (documentation task) |
+| 2026-09-05 | Marked deprecated per RSFA: deactivated outright, no replacement — a two-applicant Leads Form submission now produces a single Lead item. Confirmed this workflow's board unchanged live via Monday MCP. Recorded under `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`. Document retained, not deleted. | Claude (documentation task) |

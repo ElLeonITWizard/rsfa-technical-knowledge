@@ -32,6 +32,8 @@ related_boards:
     id: "5029313274"
   - name: 📬 Overflow Emails (OLD)
     id: "5025365487"
+  - name: Power Automate Runs
+    id: "5030408927"
 related_scenarios: []
 related_flows:
   - name: Main Outlook Inbox Email Filling
@@ -47,8 +49,8 @@ related_flows:
   - name: Overflow Emails Contact Matching
   - name: Overflow Emails Suggested Match Approval
   - name: Overflow Emails Related Client Profile Change
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 documentation_status: partial
 ---
 
@@ -66,7 +68,7 @@ RSFA advisers correspond with clients almost entirely through Outlook (mailboxes
 
 ### Included
 
-- Monitoring of the Sent (and, per mailbox flow name, Received) folders of the mailboxes: Rod, Kathleen, Seth, Jet, and the `support` shared mailbox.
+- Monitoring of the Sent (and, per mailbox flow name, Received) folders of the mailboxes: Rod, Kathleen, Seth, Jet, the `support` shared mailbox, and — per RSFA report, 2026-08-04 — the `it-support` shared mailbox.
 - Matching an email to a Client Profile via Contacts primary/secondary email columns.
 - Filing the `.eml` file and PDF/attachment copies into the client's SharePoint folder.
 - Adding processed emails to the Client Profile's Emails & Activities timeline.
@@ -82,7 +84,7 @@ RSFA advisers correspond with clients almost entirely through Outlook (mailboxes
 
 ## 4. Current status
 
-Active for Rod, Kathleen, Seth and Support mailboxes. The two Jet-related flows (`Outlook Email Filing - Jet v2`, `OLD Outlook SENT Email Filling - Jet v2`) are `Active - Planned Retirement` and are expected to be removed together with the Jet overflow board when Jet leaves RSFA (per `knowledge/01_RSFA_SYSTEM_MAP.md` §15 and §4.3). Planned additions for `it-support@rsfa.co.nz` and `leo@rsfa.co.nz` mailboxes are not yet active — TODO: verify whether these have since gone live.
+Active for Rod, Kathleen, Seth and Support mailboxes. The two Jet-related flows (`Outlook Email Filing - Jet v2`, `OLD Outlook SENT Email Filling - Jet v2`) are `Active - Planned Retirement` and are expected to be removed together with the Jet overflow board when Jet leaves RSFA (per `knowledge/01_RSFA_SYSTEM_MAP.md` §15 and §4.3). Per RSFA report (2026-08-04), the `it-support@rsfa.co.nz` mailbox is now also active in this flow family — TODO: confirm the exact new flow name(s) against a Power Automate export or live portal, none exist yet. The planned addition for `leo@rsfa.co.nz` remains not active — TODO: verify.
 
 ## 5. Trigger
 
@@ -100,8 +102,10 @@ New email detected in a monitored mailbox's Sent folder (per the source-material
 - `.eml` file saved under the client's SharePoint folder, in the `f. Email Communication` subfolder.
 - PDF attachments saved under the `g. Email Attachments` subfolder, tagged Internal/External and With/Without Attachment.
 - Client Profile Emails & Activities timeline entry.
-- Slack notification when a new attachment is filed.
+- Slack notification when a new attachment is filed, posted to a per-mailbox channel following the `{mailbox}_ai_emails` naming pattern (confirmed in the 2026-07-30 export: `rod_ai_emails`, `kathleen_ai_emails`, `seth_ai_emails`, `jet_ai_emails`, `leo_ai_emails`). Per RSFA report (2026-08-04), `it_support_ai_emails` and `support_ai_emails` channels were added, extending this pattern to the `it-support` and `support` mailboxes — not yet independently confirmed in a Power Automate export.
 - For unmatched emails: an item created in the relevant adviser's Overflow Emails board, plus a Slack message in the adviser's overflow channel.
+- For failed filing attempts: an email to `tech@rsfa.co.nz` (subject `Failed Item Email Filing`, per RSFA report) for later reprocessing via `Email Filling Failed Items Processing` (`AUTO-EMAIL-BACKUP-001`), and a Slack notification to the shared `fails_ai_emails` channel — see §15.
+- An execution record for the flow run, written to the Monday.com `Power Automate Runs` board (`5030408927`) — see §9 and §16.
 
 ## 8. Systems involved
 
@@ -117,6 +121,7 @@ Outlook (source), Power Automate (execution), Monday.com (Contacts / Client Prof
 | 📬 Overflow Emails - Seth | `5029313272` | Unmatched-email queue for Seth |
 | 📬 Overflow Emails - Jet | `5029313274` | Unmatched-email queue for Jet (planned retirement) |
 | 📬 Overflow Emails (OLD) | `5025365487` | Historical/legacy overflow board — TODO: verify current use |
+| ⚡ Power Automate Runs | `5030408927` | Execution log board. **Confirmed live 2026-09-05**: public access, 13,217 items, 10 columns including `Developer Notes` and a `Reprocessed` status label not previously documented — see §16 |
 
 ## 10. Platform implementation
 
@@ -216,11 +221,15 @@ TODO: complete mapping from current production configuration for the exact Share
 
 ## 15. Error handling
 
-Not confirmed in source material. TODO: verify whether failed filing attempts are captured by `AUTO-EMAIL-BACKUP-001`'s "Failed Items Processing" flow or another mechanism.
+On a filing failure, an email is sent to `tech@rsfa.co.nz` (subject `Failed Item Email Filing`, per RSFA report) so the item can be reprocessed later via `Email Filling Failed Items Processing` (`AUTO-EMAIL-BACKUP-001`). This is confirmed from the 2026-07-30 Power Automate Solution export: the `Send an email` action's recipient field in `Main Outlook Inbox Email Filling` and every mailbox-specific flow inspected already contains `tech@rsfa.co.nz` together with a Slack channel value for `fails_ai_emails`.
+
+Per RSFA report (2026-08-04), this failure path also posts to the Slack `fails_ai_emails` channel for shared team visibility. **Discrepancy flagged, not silently resolved:** the same `fails_ai_emails` value is already present alongside `tech@rsfa.co.nz` in the 2026-07-30 export inspected for this update, so the Slack side of this behaviour may have existed at export time rather than being newly added on 2026-08-04 — the earlier version of this document simply had not confirmed it. TODO: verify the exact subject line and Slack message content, and whether anything about this path actually changed on 2026-08-04, against a current export or live flow run.
 
 ## 16. Logging and observability
 
-`knowledge/01_RSFA_SYSTEM_MAP.md` §10 records that Power Automate run history is not considered sufficient for long-term tracking, and that RSFA intends to create a dedicated board for logging all client-specific processed emails. This is a known, currently unimplemented gap — TODO: verify whether this board now exists.
+**Confirmed live 2026-09-05** via the Monday MCP connector: a dedicated board — `⚡ Power Automate Runs` (`5030408927`, public, 13,217 items) — records one item per Power Automate flow execution, with columns `Solution` (dropdown), `Flow Name` (text), `Power Automate Run URL` (link), `Status` (status: `Running` / `Succeeded` / `Reprocessed` / `Cancelled` / `Failed` — `Reprocessed` was not previously documented), `Started At` / `Finished At` (date), `Processing Details` (long text/JSON), `Parent Runs` (a board-relation to itself — links a child run, e.g. `Main Outlook Inbox Email Filling`, back to its mailbox-specific parent run), `Item ID`, and `Developer Notes` (text, not previously documented). This addresses the gap previously recorded in `knowledge/01_RSFA_SYSTEM_MAP.md` §10 and `knowledge/03_AUTOMATION_REGISTRY.md` §10: Power Automate's native run history is limited to a 28-day window and was not considered sufficient for long-term tracking.
+
+The board's `Solution` dropdown is structured to cover every Power Automate solution (SP Email Filing, DocuSign to SharePoint, SP Adviser Name Change, SP Client Folder Creation & Renaming, Email Backup Generator, N/A), but this is board *design*, not confirmed usage — item volume is consistent with only the Email Filing flow family being connected in practice today. This was checked only at the board-schema level (columns, access, item count); individual item content (which would include `Processing Details`) was deliberately not queried, per `CLAUDE.md` §13, to avoid pulling any PII into this documentation. It remains **not confirmed** whether `Processing Details` captures per-email Client Profile mapping specifically (see §18) — that would require inspecting a live Power Automate flow definition, not just the Monday board schema.
 
 ## 17. Manual operations and reprocessing
 
@@ -230,7 +239,7 @@ An adviser can manually assign a Client Profile to an Overflow Emails item; this
 
 - Matching depends entirely on the sender/recipient address appearing in Contacts; a client emailing from an unrecognised address will always land in Overflow.
 - The Jet mailbox flows are active but explicitly planned for retirement.
-- No long-term, queryable log of which specific emails were filed against which Client Profile currently exists outside SharePoint file properties and the Monday timeline.
+- No long-term, queryable log of which specific emails were filed against which Client Profile currently exists outside SharePoint file properties and the Monday timeline. The new `Power Automate Runs` board (§16) logs flow-execution history, but it is not yet confirmed whether it captures per-email Client Profile mapping specifically.
 
 ## 19. Security and sensitive data
 
@@ -270,16 +279,18 @@ Disable the affected mailbox-specific flow(s) in Power Automate; the `Main Outlo
 2. Check whether the sender/recipient address exists in Contacts (Primary or Secondary).
 3. If matched but not filed, check whether the Client Profile's SharePoint folder link is valid (see `AUTO-SP-FOLDER-001`).
 4. If unmatched, check the relevant adviser's Overflow Emails board and Slack channel.
-5. Check Power Automate run history for the relevant mailbox flow (subject to the logging limitation in §16).
+5. Check Power Automate run history for the relevant mailbox flow (subject to the 28-day native window).
+6. Check the `Power Automate Runs` board (`5030408927`) for the flow's execution history and `Processing Details`, if connected — see §16.
 
 ## 24. Source references
 
-- `source-material/power-automate/Outlook Email Filing to SharePoint.md` — Partial. Describes filing/matching/tagging logic step-by-step but flow name does not match current registry name; treat as historical/illustrative of logic, not confirmation of current flow structure.
+- `source-material/power-automate/Outlook Email Filing to SharePoint.md` — Rewritten 2026-08-04 as a plain-language staff walkthrough covering the full current flow (all mailboxes, forced-match convention, overflow path, error handling, Power Automate Runs logging). No longer the old GetGuru-sourced, Sent-folder-only version. Screenshots pending — see placeholders in the file. This canonical document remains the authoritative technical/evidence record; the walkthrough is the staff-facing companion.
 - `knowledge/03_AUTOMATION_REGISTRY.md` §5, §5.1 — Current. Authoritative for exact flow names, roles, status and Solution mapping.
 - `knowledge/01_RSFA_SYSTEM_MAP.md` §10, §15 — Current. Business context, overflow flow diagram, Jet retirement plan, logging gap.
 - `knowledge/02_SYSTEMS_REGISTRY.md` SYS-RSFA-REF-001 — Current. Forced-match subject convention.
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Overflow board IDs and descriptions.
-- `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms exact flow names, workflow IDs and export-time state (Activated/Draft) for 15 flows in the `RSFAOutlookEmailFilling` Solution.
+- `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` — Current-export-snapshot, inspected 2026-07-30. Point-in-time evidence; not a live-system verification. Confirms exact flow names, workflow IDs and export-time state (Activated/Draft) for 15 flows in the `RSFAOutlookEmailFilling` Solution. Re-inspected 2026-08-04 for the failure-notification recipient field (`tech@rsfa.co.nz` plus `fails_ai_emails`) and the per-mailbox `{mailbox}_ai_emails` Slack channel pattern.
+- RSFA direct report, 2026-08-04 — reported: Slack `fails_ai_emails` failure notification alongside the existing `tech@rsfa.co.nz` failure email; `it-support@rsfa.co.nz` mailbox added to this flow family; new `Power Automate Runs` Monday board (`5030408927`); `it_support_ai_emails` and `support_ai_emails` Slack channels added. Historical information / RSFA-reported, not independently verified against a live system or a new export — see §25.
 
 ## 25. Known gaps
 
@@ -290,6 +301,9 @@ Disable the affected mailbox-specific flow(s) in Power Automate; the `Main Outlo
 - Exact SharePoint property/column names used for tagging are not confirmed from a current export.
 - **New, unresolved as of 2026-07-30:** three flows in the export ("Filling") differ from their registry counterparts ("Filing") by spelling only — treated as likely the same flow, not corrected. Four additional flows in the export (`Outlook INBOX items email filing (Rod)`/`(Kathleen)`, `Sent Emails Control`, `Outlook SENT Email Filling - Support v2`) have no registry counterpart at all and are unmapped. `Overflow Emails Suggested Match Approval` is registered but absent from the export. An `Outlook_Insurance_RSFA` connection reference suggests an undocumented Insurance mailbox. None of this has been silently resolved — see `exports/power-automate/solutions/rsfa-outlook-email-filing/manifest.md` for full detail and `knowledge/03_AUTOMATION_REGISTRY.md` §5.1 for the registry-level summary.
 - **Security finding from the 2026-07-30 export:** `Main Outlook Inbox Email Filling`, both `Outlook INBOX items email filing` flows, and both Overflow Emails flows were found to call Monday.com (and, in three flows, OpenAI) using hardcoded HTTP Authorization headers containing literal API credentials, instead of a Connection Reference or Environment Variable. The literal values have been redacted in the repository's unpacked copy; see the Solution manifest's "Security review" section. Both credentials should be rotated.
+- **New, unresolved as of 2026-08-04:** exact Power Automate flow name(s) for the `it-support@rsfa.co.nz` mailbox are not confirmed — no export or registry entry exists for them yet.
+- **New, unresolved as of 2026-08-04:** the `it_support_ai_emails` and `support_ai_emails` Slack channel additions, and the `fails_ai_emails` failure notification, are documented from RSFA's direct report rather than a live export. The 2026-07-30 export already shows `fails_ai_emails` alongside `tech@rsfa.co.nz` in the failure recipient field, so that part may predate the 2026-08-04 report rather than being newly added — see §15.
+- **Partially resolved 2026-09-05:** `Power Automate Runs` board (`5030408927`) access type (public), column set (10 columns, including previously-undocumented `Developer Notes` and a `Reprocessed` status) and item volume were confirmed live via Monday MCP. **Still unresolved:** its exact folder location (folder id `6749452`, name not resolved) and, more importantly, exactly which Power Automate flows actually write to it — inferred from item volume, not confirmed from a Power Automate export or flow definition.
 
 ## 26. Change history
 
@@ -297,3 +311,6 @@ Disable the affected mailbox-specific flow(s) in Power Automate; the `Main Outlo
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, system map and source-material evidence. | Claude (documentation task) |
 | 2026-07-30 | Added export evidence from the `RSFAOutlookEmailFilling` Power Automate Solution export: exact workflow IDs and export-time states for 11 registered flows; flagged 4 unmapped flows, 3 "Filing"/"Filling" spelling conflicts, 1 registered-but-missing flow, an undocumented Insurance mailbox connection reference, and a hardcoded-credential security finding — none silently resolved. | Claude (documentation task) |
+| 2026-08-04 | Documented RSFA-reported additions: Slack `fails_ai_emails` failure notification alongside the existing `tech@rsfa.co.nz` failure email (subject `Failed Item Email Filing`); `it-support@rsfa.co.nz` mailbox added to this flow family; new `Power Automate Runs` Monday board (`5030408927`) for durable flow-execution logging beyond Power Automate's 28-day run-history window; `it_support_ai_emails` and `support_ai_emails` Slack channels added. Cross-checked against the 2026-07-30 export where possible (§15); not independently verified live — see §25. | Claude (documentation task) |
+| 2026-08-04 | Rewrote the companion staff walkthrough, `source-material/power-automate/Outlook Email Filing to SharePoint.md`, to cover the current flow end-to-end; updated its source-reference entry above accordingly. | Claude (documentation task) |
+| 2026-09-05 | Live re-verification via Monday MCP of the `⚡ Power Automate Runs` board (`5030408927`): confirmed public access, 13,217 items, and its full column set including two previously-undocumented columns (`Developer Notes`, and a `Reprocessed` status label). Board schema queried only — no item-level content (e.g. `Processing Details`) was pulled, to avoid PII. Flow-level Power Automate facts (mailbox membership, credential handling) were not re-verified this pass, as no Power Automate MCP access was available. | Claude (documentation task) |

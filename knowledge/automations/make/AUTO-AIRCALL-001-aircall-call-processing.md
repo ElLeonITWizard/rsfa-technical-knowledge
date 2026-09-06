@@ -33,9 +33,13 @@ related_scenarios:
     id: "5543887"
   - name: M.com: New item in Contacts (Aircall) -> Delete
     id: "6548539"
+  - name: M.com: New Transcription in Aircall (Jul 2026)
+    id: "9627699"
+  - name: M.com: Contact Change in Aircall Board (Jul 2026)
+    id: "9627714"
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 documentation_status: partial
 ---
 
@@ -69,14 +73,21 @@ Aircall's native Monday integration creates a call record in the `📞 Aircall: 
 
 ## 4. Current status
 
-Active - Under Improvement. Registry criticality: High. Two of the four family scenarios show recent errors per the Make inventory export (`M.com: Aircall Upload Transcriptions To SP (Jul 2026)`: 6 recent errors, per `exports/make/valid-scenarios-working-inventory.md`) — TODO: verify current error status and root cause before relying on this automation as fully stable.
+Active - Under Improvement. Registry criticality: High. **Per RSFA, the transcription/summary automation has been stabilised** (2026-09-05 update). Confirmed from live system (2026-09-05): the trigger architecture changed materially since 2026-07-30 —
+
+- `Aircall Transcript Summary` (`6123035`), the original standalone scenario, is now **Inactive** (last edited 2026-08-08).
+- Two new scenarios, both created 2026-08-06, now provide the trigger path into the core processing scenario `9498962`: `M.com: New Transcription in Aircall (Jul 2026)` (`9627699`, triggered directly by Aircall's own `transcription.created` webhook — not a Monday-watch trigger) and `M.com: Contact Change in Aircall Board (Jul 2026)` (`9627714`, triggered by a Monday webhook when a call's linked Contact changes, gated by "already processed" checks to avoid duplicate runs).
+
+This is a materially different, more event-accurate trigger design than the original Monday-watch-only approach, consistent with RSFA's description of stabilisation work — but the causal relationship between the two changes (new scenarios created → old scenario deactivated two days later) is inferred from timing, not confirmed by a change-log entry. The `Transcription Available (Bot)` flag on the Aircall VOIP Call Board (`5026308494`) still exists per the 2026-07-30 export; not re-verified live in this pass. Recent-error counts from the 2026-07-30 export (6 recent errors on `9498962`) were not re-checked live in this pass — TODO: verify current error status.
 
 ## 5. Trigger
 
-- `Aircall Transcript Summary` (6123035): Monday.com instant trigger (watch) on the Aircall VOIP Call Board.
-- `M.com: Aircall Upload Transcriptions To SP (Jul 2026)` (9498962): Monday.com instant trigger (watch) — fires when a new Aircall call is registered.
+- `Aircall Transcript Summary` (6123035): Monday.com instant trigger (watch) on the Aircall VOIP Call Board. **Inactive as of 2026-09-05** — retained here for history, not a current trigger path.
+- `M.com: Aircall Upload Transcriptions To SP (Jul 2026)` (9498962): Monday.com instant trigger (watch) — fires when a new Aircall call is registered. **Also confirmed live (2026-09-05) to be independently callable as a subscenario**, invoked by both `9627699` and `9627714` below.
 - `M.com: Calls > Unknown/Client` (5543887): Monday.com instant trigger (watch).
 - `M.com: New item in Contacts (Aircall) -> Delete` (6548539): Monday.com instant trigger (watch), for cleanup of Aircall-generated Contacts.
+- `M.com: New Transcription in Aircall (Jul 2026)` (9627699) — **new, confirmed live 2026-09-05:** Aircall-native webhook trigger on the `transcription.created` conversation-intelligence event; calls `9498962` directly with the Call ID.
+- `M.com: Contact Change in Aircall Board (Jul 2026)` (9627714) — **new, confirmed live 2026-09-05:** Monday webhook trigger, fires on a Contact-link change to a call item; calls `9498962` after "already processed" checks.
 
 ## 6. Inputs
 
@@ -110,10 +121,12 @@ Aircall (native integration + API), Monday.com (call board, Contacts, Client Pro
 
 | Scenario ID | Exact Make name | Role | Status | Trigger | Calls | Called by | Source confidence |
 |---|---|---|---|---|---|---|---|
-| `6123035` | Aircall Transcript Summary | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) |
-| `9498962` | M.com: Aircall Upload Transcriptions To SP (Jul 2026) | Parent | Active | Monday.com instant trigger (watch) | `Outlook: Email Notification after Failed Scenario` (`8732008`) | None confirmed | Current (registry + call graph); matches source-material walkthrough in detail |
+| `6123035` | Aircall Transcript Summary | Standalone | **Inactive (was Active)** | Monday.com instant trigger (watch) | None confirmed | None confirmed | Confirmed live 2026-09-05: status change since 2026-07-30 |
+| `9498962` | M.com: Aircall Upload Transcriptions To SP (Jul 2026) | Parent (also confirmed callable as subscenario) | Active | Monday.com instant trigger (watch); also called on-demand by `9627699`/`9627714` | `Outlook: Email Notification after Failed Scenario` (`8732008`) | `9627699`, `9627714` (confirmed live 2026-09-05) | Current (registry + call graph); matches source-material walkthrough in detail |
 | `5543887` | M.com: Calls > Unknown/Client | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) |
 | `6548539` | M.com: New item in Contacts (Aircall) -> Delete | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) |
+| `9627699` | M.com: New Transcription in Aircall (Jul 2026) | Parent | Active | Aircall instant trigger (`transcription.created`) | `9498962` | None confirmed | New, confirmed live 2026-09-05 via blueprint inspection |
+| `9627714` | M.com: Contact Change in Aircall Board (Jul 2026) | Parent | Active | Monday webhook (Contact-link change) | `9498962` | None confirmed | New, confirmed live 2026-09-05 via blueprint inspection |
 
 `Outlook: Email Notification after Failed Scenario` (`8732008`, `COMP-MAKE-ERROR-001`) is called by `9498962` as a shared error-handling component, not part of this automation's own logic.
 
@@ -195,7 +208,9 @@ Not confirmed. TODO: verify whether a failed transcription/summary generation ca
 
 - Short calls may not produce a transcription — expected, not a defect.
 - Slack notification for new Aircall processing is described in the system map as "currently being developed" and should not be assumed live.
-- Two of the four scenarios in this family have unconfirmed recent-error counts as of the last Make inventory export — needs follow-up before being treated as fully stable.
+- Recent-error counts from the 2026-07-30 export were not re-checked live in this pass — needs follow-up before being treated as fully stable.
+- The reason `6123035` was deactivated is not confirmed — inferred from timing relative to the two new trigger scenarios, not from a direct statement or change log.
+- The `Transcription Available (Bot)` field on the Aircall VOIP Call Board was not re-verified live in this pass (last confirmed in the 2026-07-30 export).
 
 ## 19. Security and sensitive data
 
@@ -242,16 +257,20 @@ Disable the affected Make.com scenario(s). No automated rollback of already-gene
 - `knowledge/03_AUTOMATION_REGISTRY.md` §3, §4 — Current. Family grouping and canonical ID.
 - `knowledge/01_RSFA_SYSTEM_MAP.md` §11 — Current. Business-process flow and expected-short-call behaviour.
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Aircall VOIP Call Board description.
+- RSFA direct report, 2026-09-05 — reported the transcription/summary automation as stabilised.
+- Live Make MCP scenario list and blueprint inspection, 2026-09-05 — confirmed `6123035` inactive, `9627699`/`9627714` new and active, and both calling `9498962` as a subscenario.
 
 ## 25. Known gaps
 
 - Exact Monday native automation recipe used in the call-routing path is not documented.
 - Slack notification status (built vs. planned) is unconfirmed.
-- Root cause of recent errors on scenarios `9498962` and `9254149`-adjacent flows is not investigated in this pass.
+- Root cause of recent errors on scenarios `9498962` and `9254149`-adjacent flows is not investigated in this pass; current error status not re-checked live.
 - Manual reprocessing procedure for a failed transcription/summary generation is not confirmed.
+- The reason `6123035` was deactivated is not confirmed (inferred from timing only).
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, call-graph and source-material evidence. | Claude (documentation task) |
+| 2026-09-05 | Documented the stabilised trigger architecture per RSFA and live Make MCP re-verification: `6123035` confirmed Inactive; two new scenarios (`9627699` Aircall-native transcription webhook, `9627714` Monday Contact-change webhook) confirmed live, both calling `9498962` as a subscenario. Recorded that the causal link between the two changes is inferred from timing, not confirmed. | Claude (documentation task) |

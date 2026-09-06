@@ -32,9 +32,11 @@ related_scenarios:
     id: "8800779"
   - name: "M.com: Connect Entities to Mortgage Pipeline (Dec25)"
     id: "8278547"
+  - name: "M.com: Move to Pipeline (Sep 2026)"
+    id: "9756260"
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-09-05
+last_verified: 2026-09-05
 documentation_status: partial
 ---
 
@@ -57,24 +59,28 @@ The Leads board is the entry point for new prospects, reached via the external L
 - Per-applicant check for an existing Contact by email; creating one if missing.
 - Updating the Client Profile with the correct linked Contacts once all applicants are processed.
 - Connecting Client Profile / Contact / Trust entities to a newly-created Mortgage Pipeline record (`8278547`).
-- Routing a Lead into the Mortgage, Insurance or KiwiSaver pipeline when its `Pipeline Status` changes (`AUTO-MONDAY-WF-001`, a Monday Workflow, not a Make scenario).
-- Creating a second Lead item and supporting Client Profile naming when a Leads Form submission contains two applicants (`AUTO-MONDAY-WF-002`, a Monday Workflow).
+- Routing a Lead into the Mortgage, Insurance or KiwiSaver pipeline when its `Pipeline Status` changes — **as of 2026-09-05, via Make scenario `9756260`** (`M.com: Move to Pipeline (Sep 2026)`), which per RSFA replaces the previous native Monday Workflow `AUTO-MONDAY-WF-001` — see §10a and `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md` (now deprecated, retained for history).
+- ~~Creating a second Lead item and supporting Client Profile naming when a Leads Form submission contains two applicants~~ — **deprecated 2026-09-05.** `AUTO-MONDAY-WF-002` (the Monday Workflow that did this) has been deactivated outright, per RSFA, with no replacement — see §10a. A two-applicant submission now produces a **single** Lead item.
+- **New as of 2026-09-04 (Leads Board Revamp, per RSFA — see §10a):** three SuperForm-based Internal Forms (Leads, Contacts, Trusts & Companies), pinned as views on their respective boards, used by advisers/staff for internal record creation.
 
 ### Excluded
 
 - Client, Deal and Policy naming synchronisation after initial creation (`AUTO-NAMING-001`).
 - Mortgage Application / ROMA data consolidation into Masterboard (`AUTO-MASTERBOARD-001`).
+- The Leads Board Revamp's still-open refinements (external-facing Leads form, Contact Creation Form behaviour without an existing Client Profile, a potential fourth internal form, column-connection review, permissions, external-lead Slack notification) — these are explicitly **not** part of the completed core; see §10a.
 
 ## 4. Current status
 
 Active. `Critical` per `knowledge/03_AUTOMATION_REGISTRY.md` §3.
+
+**Leads Board Revamp — core completed 2026-09-04, per RSFA (Confirmed from provided evidence; the Make-side change is additionally Confirmed from live system, 2026-09-05).** See §10a for what was completed and what remains open — do not treat the open refinements as done.
 
 ## 5. Trigger
 
 - `M.com: Creating Contact and Client Profile after Lead was Added (Mar 2026)` (`8800779`): new Leads Form submission or manually-created item in the Leads board.
 - `M.com: Connect Entities to Mortgage Pipeline (Dec25)` (`8278547`): Webhook (custom webhook) — fired when a Mortgage Pipeline record needs its related entities connected (exact triggering condition not confirmed — TODO: verify; likely fired by `AUTO-MONDAY-WF-001`'s pipeline-creation action).
 - `AUTO-MONDAY-WF-001` (Monday Workflow): `Pipeline Status` change on Leads.
-- `AUTO-MONDAY-WF-002` (Monday Workflow): Leads Form application contains two applicants.
+- ~~`AUTO-MONDAY-WF-002` (Monday Workflow): Leads Form application contains two applicants.~~ **Deprecated 2026-09-05** — see §10a.
 
 ## 6. Inputs
 
@@ -87,7 +93,7 @@ Active. `Critical` per `knowledge/03_AUTOMATION_REGISTRY.md` §3.
 - New or confirmed-existing Contact per applicant, matched by email.
 - Client Profile updated with correctly linked Contacts.
 - New Mortgage/Insurance/KiwiSaver pipeline record, with Client Profile/Contact/Trust entities connected.
-- (Two-applicant case) A second Lead item created.
+- ~~(Two-applicant case) A second Lead item created.~~ **Deprecated 2026-09-05** — now a single Lead item represents both applicants; see §10a.
 
 ## 8. Systems involved
 
@@ -119,8 +125,30 @@ Not applicable.
 
 ### Monday native automations or workflows
 
-- `AUTO-MONDAY-WF-001` — Move to Pipeline Workflow (New), board `5025429617`: creates the Mortgage, Insurance or KiwiSaver pipeline record from a `Pipeline Status` change on Leads. See `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md`.
-- `AUTO-MONDAY-WF-002` — Leads App 2 Creation + CP Name, board `5025430003`: creates the second Lead item for two-applicant submissions and supports Client Profile naming. See `knowledge/automations/monday/AUTO-MONDAY-WF-002-second-applicant.md`.
+- `AUTO-MONDAY-WF-001` — Move to Pipeline Workflow (New), board `5025429617`: **deprecated 2026-09-05**, previously created the Mortgage, Insurance or KiwiSaver pipeline record from a `Pipeline Status` change on Leads. Per RSFA, replaced by Make scenario `9756260` — see §10a and `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md`.
+- `AUTO-MONDAY-WF-002` — Leads App 2 Creation + CP Name, board `5025430003`: **deprecated 2026-09-05**, previously created the second Lead item for two-applicant submissions and supported Client Profile naming. Per RSFA, deactivated outright with no replacement. See §10a and `knowledge/automations/monday/AUTO-MONDAY-WF-002-second-applicant.md`.
+
+## 10a. Leads Board Revamp (2026-09-04) — completed core vs. open refinements
+
+**Per RSFA, the core revamp was completed 2026-09-04.** The Make-side change (`9756260`) is independently Confirmed from live system (2026-09-05); the board/form-level changes below are Confirmed from provided evidence (RSFA's own account), not independently re-verified against a live Monday form/board configuration in this pass.
+
+### Completed core (do not treat anything outside this list as done)
+
+- Three Internal Forms, built with SuperForm: **Leads**, **Contacts**, and **Trusts & Companies** — pinned as views on their respective boards for staff/adviser use.
+- A new Lead intake flow: checks Contacts, creates or links a Contact, creates or links a Client Profile, and creates or links a Trust/Company record when applicable.
+- `Pipeline Status` (Mortgage / Insurance / KiwiSaver) automatically creates/links the corresponding pipeline item — **Confirmed from live system, 2026-09-05:** this is now done by Make scenario `9756260` (`M.com: Move to Pipeline (Sep 2026)`, webhook-triggered off the Leads board's `Pipeline Status` column, routing to `5025201889`/`5025201920`/`5025201954` and creating an item with a `*Leads` board-relation back to the originating Lead), replacing the native Monday Workflow `AUTO-MONDAY-WF-001`.
+- **Two-applicant handling simplified:** per RSFA (2026-09-05), `AUTO-MONDAY-WF-002` (Leads App 2 Creation + CP Name) has also been deactivated, with **no replacement** — a Leads Form submission with two applicants now produces a **single** Lead item, rather than a second linked Lead item. This is part of a broader decision to stop building Monday Workflow-builder automations — see `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`. How the resulting single Lead's Client Profile naming and per-applicant Contact/Client Profile creation (§3, §12) now handles two applicants inside one Lead item is **not confirmed** — TODO: verify.
+- The Lead → connected-client-records process is described by RSFA as simplified relative to the pre-revamp process, with an adviser-facing guide now available (location not confirmed in this repository — TODO: verify where the adviser guide is stored).
+- Live Make MCP re-verification, 2026-09-05, also shows `8800779` (`M.com: Creating Contact and Client Profile after Lead was Added`) was last edited **2026-09-05** — the same day as this documentation pass — consistent with active work on this family around the revamp, though the exact nature of that edit was not blueprint-inspected.
+
+### Open refinements — explicitly NOT completed, do not mark as production behaviour
+
+- An external-facing Leads Form for the public website, potentially on its own URL.
+- Behaviour of the Contact Creation Form when no Client Profile exists yet for that contact.
+- A potential fourth Internal Form: "Client Profiles Creation (Internal Use)", and an option to create a Contact without a Profile.
+- A review of the Leads board's column connections.
+- Permissions/ownership questions for Seth on the revamped boards/forms.
+- A Slack notification for new **external** leads specifically — not confirmed as implemented; do not assume it exists without live confirmation.
 
 ### Native integrations
 
@@ -153,7 +181,7 @@ flowchart TD
     L -->|Yes| M[AUTO-MONDAY-WF-001: create Mortgage/Insurance/KiwiSaver pipeline record]
     M --> N[M.com: Connect Entities to Mortgage Pipeline]
     K --> O{Two applicants on Leads Form?}
-    O -->|Yes| P[AUTO-MONDAY-WF-002: create second Lead item, support CP naming]
+    O -->|Yes, pre-2026-09-05| P[DEPRECATED: AUTO-MONDAY-WF-002 create second Lead item, support CP naming]
 ```
 
 ## 12. Data mapping
@@ -193,7 +221,9 @@ Not confirmed. TODO: verify whether a manually-created, incomplete Lead item can
 
 - Contact matching is by email only; a lead with no email, or a duplicate/mistyped email, could result in duplicate Contact creation — TODO: verify whether any secondary matching (name, phone) exists.
 - `M.com: Update Dependents (Dec25)` (`8260037`) and the inactive `M.com: CRM Migration - Connect Client Profiles and Pipelines (Dec25)` (`8264526`) sit in the same "Leads and Client Profiles" functional area per the Make inventory export but are **not confirmed** to be part of this automation's execution path — they are not documented here and should be investigated separately before being assigned a canonical automation ID. `8264526` is inactive and should be retained as a historical migration utility per `knowledge/03_AUTOMATION_REGISTRY.md` §9.
-- The shared search utility `8518416` has no confirmed caller and may or may not be part of this family's execution — flagged above.
+- The shared search utility `8518416` has no confirmed caller **within this family** — live re-verification on 2026-09-05 found its actual callers (`9067654`, `9662353`) both belong to the AffordX family instead (see `knowledge/automations/make/AUTO-AFFORDX-001-mortgage-application-sync.md` §10a); it is very likely not part of this family's execution path.
+- The Leads Board Revamp's open refinements (§10a) are not implemented — do not treat the external Leads Form, the fourth Internal Form idea, or the external-lead Slack notification as current behaviour.
+- `AUTO-MONDAY-WF-002` is deprecated with no replacement (§10a) — how the single-Lead-per-two-applicants behaviour actually handles Client Profile naming and per-applicant Contact creation is not confirmed; do not assume the pre-deprecation logic still applies unchanged.
 
 ## 19. Security and sensitive data
 
@@ -210,7 +240,7 @@ None recorded.
 - New Leads Form submission, single applicant, no existing Client Profile/Contact → both created and correctly linked.
 - New Leads Form submission, applicant matches existing Contact by email → existing Contact reused, no duplicate.
 - Manually-created, initially-incomplete Lead item → automation waits appropriately before processing.
-- Two-applicant Leads Form submission → second Lead item created via `AUTO-MONDAY-WF-002`.
+- ~~Two-applicant Leads Form submission → second Lead item created via `AUTO-MONDAY-WF-002`.~~ **No longer applicable since 2026-09-05** — confirm instead that a two-applicant submission produces a single Lead item with both applicants correctly represented (exact expected behaviour TODO: verify — see §10a, §18).
 - `Pipeline Status` change → correct pipeline record created via `AUTO-MONDAY-WF-001`, entities connected via `8278547`.
 
 ### Test data restrictions
@@ -231,7 +261,7 @@ Disable the affected Make.com scenario(s) or Monday Workflow. No automated rollb
 2. Check whether a Client Profile/Contact already existed for the applicant's email, to understand which branch executed.
 3. If pipeline routing didn't occur, confirm `Pipeline Status` was actually changed (not just displayed) on the Lead.
 4. Check for `COMP-MAKE-ERROR-001` failure emails.
-5. For two-applicant cases, confirm the Leads Form submission actually contained two applicants before expecting `AUTO-MONDAY-WF-002` to fire.
+5. For two-applicant cases (since 2026-09-05): do not expect a second Lead item — `AUTO-MONDAY-WF-002` is deprecated. Confirm instead that the single Lead item correctly represents both applicants.
 
 ## 24. Source references
 
@@ -240,17 +270,26 @@ Disable the affected Make.com scenario(s) or Monday Workflow. No automated rollb
 - `knowledge/03_AUTOMATION_REGISTRY.md` §3, §4, §6 — Current. Canonical ID, family grouping, Monday Workflow inventory.
 - `knowledge/01_RSFA_SYSTEM_MAP.md` §5, §9 — Current. Leads Form context.
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Board IDs and relationships.
+- RSFA direct report, 2026-09-05 — reported the Leads Board Revamp core-completed 2026-09-04: three SuperForm Internal Forms, new Lead intake flow, Pipeline Status auto-routing. Historical/RSFA-reported for the board/form-level detail — see §10a.
+- Live Make MCP scenario list and blueprint inspection, 2026-09-05 — scenario `9756260` confirmed live; `8518416`'s actual callers confirmed to be outside this family.
+- RSFA direct report, 2026-09-05 — reported `AUTO-MONDAY-WF-002` also deactivated, no replacement, single Lead item now used for two applicants.
+- Live Monday MCP `get_board_info`, 2026-09-05 — board `5025430003` confirmed unchanged since 2025-12-06.
+- `knowledge/decisions/ADR-001-deprecate-monday-workflows.md` — Current. Records the architectural decision to stop building Monday Workflow-builder automations.
 
 ## 25. Known gaps
 
 - No source-material walkthrough exists for `8278547` (Connect Entities to Mortgage Pipeline).
 - The exact trigger condition for `8278547` is not confirmed.
 - `8260037` (Update Dependents) and the inactive `8264526` (CRM Migration) are not confirmed to belong to this automation family — flagged for follow-up, not assumed.
-- The shared search utility `8518416`'s actual caller(s) are unconfirmed.
 - Secondary (non-email) contact-matching logic, if any, is unconfirmed.
+- The Leads Board Revamp's open refinements (§10a) all remain unresolved: external Leads Form, Contact Creation Form behaviour without a Client Profile, a potential fourth Internal Form, Leads board column-connection review, Seth's permissions, and external-lead Slack notification.
+- **New 2026-09-05:** `AUTO-MONDAY-WF-002`'s deactivation leaves an unconfirmed gap — how joint-applicant Client Profile naming and per-applicant Contact/Client Profile creation now work when both applicants live inside a single Lead item (previously handled by that workflow creating a second Lead item).
+- The exact `Pipeline Status` value-to-pipeline routing condition inside scenario `9756260` was confirmed for Mortgage/Insurance/KiwiSaver/ALL labels via blueprint inspection, but the precise set of Leads-board `Pipeline Status` values that map to each is not separately enumerated here.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, call-graph and source-material evidence; unclassified adjacent scenarios flagged rather than assumed. | Claude (documentation task) |
+| 2026-09-05 | Documented the 2026-09-04 Leads Board Revamp (per RSFA): three SuperForm Internal Forms, new Lead intake flow, and Pipeline Status auto-routing now via Make scenario `9756260` (confirmed live, replacing the deprecated `AUTO-MONDAY-WF-001`). Recorded open refinements explicitly as not completed. Resolved `8518416`'s actual callers as belonging to the AffordX family, not this one. | Claude (documentation task) |
+| 2026-09-05 | Documented, per RSFA follow-up, that `AUTO-MONDAY-WF-002` was also deactivated with no replacement — a two-applicant Leads Form submission now produces a single Lead item. Updated scope, trigger, outputs, flowchart, testing and troubleshooting sections accordingly; flagged the resulting Client-Profile-naming/per-applicant-processing gap as unconfirmed. Recorded under `knowledge/decisions/ADR-001-deprecate-monday-workflows.md`. | Claude (documentation task) |

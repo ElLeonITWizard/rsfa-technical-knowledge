@@ -1,253 +1,306 @@
-### <u>Summary of automation</u>
+---
+id: GUIDE-AUTO-EMAIL-001
+title: Outlook Email Filing to SharePoint — Staff Walkthrough
+status: active
+audience: RSFA staff and advisers
+owner: RSFA
+canonical_document: knowledge/automations/power-automate/AUTO-EMAIL-001-client-email-filing.md
+last_modified: 2026-08-04
+last_verified: 2026-07-30
+documentation_status: partial — screenshots pending
+---
 
--  The automation begins by scanning the Sent folder for new emails, followed by a short delay to prevent conflicts. It extracts key email details such as sender, recipients (To, CC, BCC), subject, and timestamps, adjusting time zones for consistency. 
+# Outlook Email Filing to SharePoint — How It Works
 
--  Recipient names are organized into lists, and sender names are cleaned for clarity. The automation checks a Monday board for existing email records, performs alternate searches if necessary, and retrieves client profile information using unique IDs. It locates client folders in SharePoint, ensuring no duplicate email files are created. The process checks if emails are internal or external based on the RSFA domain and whether they contain PDF attachments. Email properties are updated accordingly in SharePoint, and if attachments exist, they are saved in a designated folder with updated properties. Notifications for new attachments are sent via Slack. 
+## About this guide
 
--  The automation concludes with all emails and attachments organized and tagged adequately in SharePoint.
+This is a plain-language, step-by-step walkthrough of how RSFA's Outlook Email Filing automation works today, written for RSFA staff rather than for a technical audit.
 
-### 1. **Starting the Search in Sent Folder**
+For the full technical record — exact Power Automate flow names, workflow IDs, evidence sources and open verification items — see the canonical document: `knowledge/automations/power-automate/AUTO-EMAIL-001-client-email-filing.md`.
 
--  The automation begins by scanning the Sent folder for any new emails that need processing.
+**This guide replaces the previous version of this document.** The previous version only described the Sent-folder path for a single mailbox, with no detail on the overflow queue, forced-match convention, error handling or run logging. Its screenshots (hosted on GetGuru) no longer matched the current flow and have been removed. Every step below has a placeholder for a new screenshot — see [How to fill in the screenshots](#how-to-fill-in-the-screenshots) at the end.
 
-![Image: ](https://content.api.getguru.com/files/view/3028a50c-a235-428e-b47a-d628b86f8203)
+**Last updated:** 2026-08-04. Content reflects the 2026-07-30 Power Automate Solution export plus adjustments RSFA reported on 2026-08-04 (see the callouts marked **(2026-08-04)** below — these are not yet independently re-verified against a live export).
 
-![Image: ](https://content.api.getguru.com/files/view/b537354a-2067-483c-b45a-3e9865968a61)
+---
 
-### 2. **Adding a Short Delay**
+## 1. Overview
 
--  To prevent overlap with other processes, a small delay is introduced after the initial search. This ensures that multiple instances of the automation don’t run at the same time, which could cause conflicts and failed process.
+The automation watches several Outlook mailboxes. When a new email arrives, it tries to match the sender/recipient to a Client Profile in Monday.com and file a copy of the email — and any PDF attachments — into that client's SharePoint folder. If it can't find a confident match, the email goes into a human-reviewed overflow queue instead of being dropped or lost. If the filing attempt itself fails, the automation now flags that failure to the team rather than failing silently.
 
-![Image: ](https://content.api.getguru.com/files/view/15e1b66e-e190-4d67-9fbb-c19d8ec61157)
+```mermaid
+flowchart TD
+    A[New email in a monitored mailbox] --> B[Main Outlook Inbox Email Filling]
+    B --> C{Matched to a Client Profile?}
+    C -->|Yes| D[File .eml in Email Communication folder]
+    D --> E[File PDF attachments in Email Attachments folder]
+    E --> F[Tag Internal/External, With/Without Attachment]
+    F --> G[Add entry to Client Profile timeline]
+    G --> H{Attachments present?}
+    H -->|Yes| I["Slack: mailbox's #_ai_emails channel"]
+    H -->|No| J[No Slack notification]
+    C -->|No| K[Save .eml to Emails to Sort in SharePoint]
+    K --> L[Create item in adviser Overflow Emails board]
+    L --> M[Slack: adviser overflow channel]
+    M --> N[Manual Client Profile assignment]
+    N --> O[Overflow Emails Related Client Profile Change]
+    O --> B
+    B -.->|Filing fails| P["Email to tech@rsfa.co.nz + Slack #fails_ai_emails"]
+    P --> Q[Retried later by Email Filling Failed Items Processing]
+    B -.->|Every run| R[Logged to Power Automate Runs board]
+```
 
-### 3. **Extracting Email Details**
+![Screenshot: high-level automation overview, if a diagram/screenshot exists in Power Automate designer](PENDING)
 
--  The automation collects key information from each email, including the sender’s email address, the recipients listed in the "To" field, any addresses included in the "CC" (Carbon Copy) and "BCC" (Blind Carbon Copy) fields, as well as other important details like the email subject and timestamp. This data is then stored for use in the following steps, ensuring all necessary information is readily available for processing and organization.
+---
 
-![Image: ](https://content.api.getguru.com/files/view/d3cc4eed-137e-4438-9469-753ef3fa2d75)
+## 2. Which mailboxes are covered
 
-### 4. **Converting and Formatting Time Zones**
+| Mailbox | Sent folder | Received folder | Status |
+|---|---|---|---|
+| Rod | Monitored | Monitored | Active |
+| Kathleen | Monitored | Monitored | Active |
+| Seth | Monitored | Monitored | Active |
+| Jet | Monitored | Monitored | Active — planned retirement (removed when Jet leaves RSFA) |
+| Support (shared) | Monitored | Monitored | Active |
+| IT Support (shared) | Monitored | Monitored | **Active — added 2026-08-04** (per RSFA report; exact flow name not yet confirmed in an export) |
+| Leo | — | — | Planned, not active yet |
 
--  The automation adjusts the timestamp of each email to the relevant time zone. Once the time zone is updated, the date and time are formatted consistently to ensure a standardized appearance across all emails.
+Every mailbox-specific flow calls one shared, central flow — **Main Outlook Inbox Email Filling** — which does the actual matching, filing, tagging and notification work described below. This means a fix or change made once in the central flow applies to every mailbox.
 
-![Image: ](https://content.api.getguru.com/files/view/de46da4d-5b8b-47c7-91e1-b9ca06dc8b73)
+![Screenshot: list of mailbox-specific flows in Power Automate](PENDING)
 
-### 5. **Getting Recipient Details and Combining Recipients**
+---
 
--  The automation extracts each recipient’s name from the "To" field of the email. This is a crucial step as it identifies the primary people the email was sent to.
+## 3. Step-by-step: how an email gets filed
 
--  After extracting individual recipients from the "To" field, the automation combines them into a single, organized list. This allows for easy access to all main recipients in one place.
+### 3.1 Detecting the email
 
-![Image: ](https://content.api.getguru.com/files/view/2e11d05b-55fe-48d7-810e-f44ab261b297)
+1. **New email detected.** The automation watches the Sent and Received folders of each monitored mailbox for new messages.
 
-### 6. **Getting CC Recipient Details and Combining CC Recipients**
+   ![Screenshot: trigger configuration for a mailbox flow](PENDING)
 
--  The automation retrieves email addresses from the "CC" field, which contains secondary recipients who were copied on the email for reference or awareness.
+2. **Short delay.** A small delay runs after detection so that multiple instances of the automation don't overlap and cause conflicts.
 
--  All "CC" recipients are combined into a unified list. Like the main recipient list, this combined CC list makes it easy to refer to everyone copied on the email.
+   ![Screenshot: delay action](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/ea5f0c7a-3aeb-4e70-930a-187a8a7752a3)
+### 3.2 Reading the email
 
-### 7. **Getting BCC Recipient Details and Combining BCC Recipients**
+3. **Extract email details.** Sender address, To/CC/BCC recipients, subject and timestamp are pulled from the message.
 
--  The automation extracts addresses from the "BCC" field. BCC recipients receive the email but are hidden from other recipients, so their details are managed separately.
+   ![Screenshot: parse email details](PENDING)
 
--  All BCC recipients are combined into one list, allowing the automation to handle them as a group without displaying these details to other email recipients.
+4. **Convert and format the timestamp** to the correct time zone and a consistent date/time format.
 
-![Image: ](https://content.api.getguru.com/files/view/f52db091-7112-4904-b711-884a5ac1843e)
+   ![Screenshot: time zone conversion](PENDING)
 
-### 8. Getting sender name **Cleaning it Up**
+5. **Get and combine To recipients** into a single organized list.
 
--  The automation retrieves the sender name and removes any unnecessary characters or formatting. This makes the sender name clean, consistent, and easy to read.
+   ![Screenshot: To recipients step](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/e301a722-3e1f-4cc8-a998-60fbadde2e9c)
+6. **Get and combine CC recipients** into a single list.
 
-### 9. **Combining All Emails, Recipients, CC, and BCC into a String**
+   ![Screenshot: CC recipients step](PENDING)
 
--  All recipients email are combined into a single string format. This provides a comprehensive view of all recipients involved in the email.
+7. **Get and combine BCC recipients** into a single list (handled separately since BCC recipients aren't visible to others on the email).
 
-![Image: ](https://content.api.getguru.com/files/view/eea5c6cf-2060-434b-8e4f-716db3db4714)
+   ![Screenshot: BCC recipients step](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/f8e87af4-d920-48c4-9a5b-249be3e23035)
+8. **Clean up the sender's name**, removing extra characters or formatting.
 
-### 10. Getting subject line and **Cleaning it Up**
+   ![Screenshot: sender name cleanup](PENDING)
 
--  The automation retrieves the subject line and removes any unnecessary characters or formatting. This makes the subject line clean, consistent, and easy to read.
+9. **Combine all recipients** (To, CC, BCC) into one combined string for reference.
 
-![Image: ](https://content.api.getguru.com/files/view/15e4e3a8-7d5a-4292-b08e-6f5341332648)
+   ![Screenshot: combined recipients string](PENDING)
 
-### 11. **Searching for ID and name Information in Monday Board’s column**
+10. **Clean up the subject line**, removing extra characters or formatting.
 
--  The automation checks the Monday board’s primary email database for any matching records. It searches by ID and Name to find if the email is already listed in the database.
+    ![Screenshot: subject line cleanup](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/61de4e31-7487-4ef9-a682-f9e67b17e431)
+### 3.3 Matching the email to a client
 
-![Image: ](https://content.api.getguru.com/files/view/e7c2d3db-d21b-49b0-9c6b-c6b722e6141d)
+11. **Search the Contacts board's primary email column** for a record matching the sender or recipient address.
 
-### 12. **Checking if the Email is Found in the Monday Board column**
+    ![Screenshot: primary email search](PENDING)
 
--  A condition is set to check if the email was found in the database. If it was found, the process continues normally; if not, it triggers an alternate search.
+12. **Check whether a match was found.** If yes, continue normally. If not, the automation runs an alternate search (next step).
 
-![Image: ](https://content.api.getguru.com/files/view/fcc5097c-81f5-4b61-aa84-0199274eaf29)
+    ![Screenshot: match-found condition](PENDING)
 
-### 13. **Performing an Alternate Search in the Monday Board’s Secondary Column**
+13. **Alternate search in the secondary/alternate email column** on the Contacts board, if the primary search didn't find anything.
 
--  If the email wasn’t located in the primary column, an alternate search is performed in a secondary email column on the Monday board. This search also looks for a matching ID and Name.
+    ![Screenshot: secondary email search](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/10d2c7e0-cb45-49f1-bfda-2a12d27cf150)
+14. **Forced match via subject line (Real Savvy Ref).** Independently of address matching, an adviser can use the Real Savvy Ref Outlook Add-in to put `RSFA Ref %ClientProfileID%` in the email subject, forcing a match to a specific Client Profile regardless of the sender/recipient address.
 
-![Image: ](https://content.api.getguru.com/files/view/d12c3623-d46b-4859-8be9-21cc5e1828ed)
+    ![Screenshot: Real Savvy Ref add-in / forced match subject](PENDING)
 
-### 14. **Parsing the Unique ID**
+15. **Parse the matched Client Profile's unique ID**, once a match is found by any of the methods above.
 
--  Once the email is found in either database, its unique ID is parsed. This ID is crucial for linking the email to other client records and databases.
+    ![Screenshot: parsing the Client Profile ID](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/aee3a5ef-a770-48c2-94b1-408b7305a017)
+16. **Query the Client Profile record** for its linked SharePoint folder.
 
-### 15. **Querying the Monday Board for Client Profile Information**
+    ![Screenshot: querying Client Profile / SP folder link](PENDING)
 
--  Using the unique ID, the automation queries the Monday board to retrieve information from the Client Profile column. This step gathers specific client details linked to the email.
+### 3.4 Filing the email
 
-![Image: ](https://content.api.getguru.com/files/view/2c23c950-02cf-4d21-837c-49b90caf8ee3)
+17. **Locate the client's folder in SharePoint** using the folder link from the Client Profile record.
 
-![Image: ](https://content.api.getguru.com/files/view/2bfb6da9-e0f0-46ed-8984-91f697c326e3)
+    ![Screenshot: locating client folder in SharePoint](PENDING)
 
-### 16. **Searching for Client Folder Location in SharePoint**
+18. **Check whether the email file already exists** in SharePoint, to avoid creating a duplicate.
 
--  The automation queries SharePoint to locate the client’s specific folder. This folder is where the email and any related files will ultimately be stored.
+    ![Screenshot: duplicate check](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/7332e601-6bea-41f0-b626-9835ca390ec8)
+19. **If the file already exists, stop here** — nothing further happens for that email.
 
-![Image: ](https://content.api.getguru.com/files/view/fa016552-ce09-4b8b-9a3a-052bea5bd2ec)
+    ![Screenshot: duplicate-found stop condition](PENDING)
 
-### 17. **Locating the Email File in SharePoint**
+20. **Save the email file.** If the client's folder exists, the `.eml` file is saved under `f. Email Communication` inside it. If the client folder can't be found, the email is instead saved to a general/overflow SharePoint location (historically `Emails to sort/Rod_Shay_Kathleen` — TODO: confirm this path is still current for every mailbox).
 
--  A separate query is made in SharePoint to check if an email file for this particular email already exists. This prevents duplicate file creation.
+    ![Screenshot: saving the email file](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/46ef9864-eed5-4e36-a075-1c2c23509c51)
+21. **Classify Internal vs. External**, by checking whether the sender and recipient(s) both use the RSFA domain.
 
-![Image: ](https://content.api.getguru.com/files/view/f8f37b35-2403-4593-b955-38a0494513ab)
+    ![Screenshot: internal/external domain check](PENDING)
 
-### 18. **Checking if the Email File Exists**
+22. **Check for PDF attachments.**
 
--  If the email file is found, the automation stops here to avoid duplicating files. If the file does not exist, the automation proceeds to create it.
+    ![Screenshot: attachment check](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/69b1ff16-b365-4306-b42e-894b07acf7b6)
+23. **Tag the email file's properties** in SharePoint with one of four combinations:
+    - Internal, No Attachment
+    - Internal, Yes Attachment
+    - External, No Attachment
+    - External, Yes Attachment
 
-### **19. Checking if the Client's Folder Exists in SharePoint**
+    ![Screenshot: tagging file properties](PENDING)
 
--  The automation verifies if a client-specific folder is present in SharePoint. This is essential for determining where to place the email file.
+24. **Save each PDF attachment** as its own file under `g. Email Attachments` in the client's folder, and tag its properties the same way.
 
-![Image: ](https://content.api.getguru.com/files/view/9307657f-5448-47c9-8764-124d1bb6aa6d)
+    ![Screenshot: saving attachment files](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/e406a11c-624e-4840-a21d-332c104d9cc3)
+25. **Add an entry to the Client Profile's Emails & Activities timeline** so the correspondence shows up on the client record in Monday.com.
 
-### 20. **Placing the Email File in the Correct Folder**
+    ![Screenshot: timeline entry](PENDING)
 
--  If a specific client folder exists in SharePoint, the email file is saved there; otherwise, it is placed in the general "Emails to sort/Rod_Shay_Kathleen" folder
+26. **Send a Slack notification if an attachment was filed.** The message goes to that mailbox's own Slack channel, following the pattern `{mailbox}_ai_emails` — for example `rod_ai_emails`, `kathleen_ai_emails`, `seth_ai_emails`, `jet_ai_emails`. **(2026-08-04)** RSFA reports `it_support_ai_emails` and `support_ai_emails` channels were added, extending this to the IT Support and Support mailboxes — not yet independently confirmed in an export.
 
-![Image: ](https://content.api.getguru.com/files/view/f46c2deb-80f3-45ee-92d6-843b2bbf697b)
+    ![Screenshot: Slack attachment notification](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/b2f9ecfd-fb0f-48d1-a670-c8586c91f65c)
+27. **Log the run.** **(2026-08-04)** Every run of this flow is now recorded as an item on the Monday.com `Power Automate Runs` board — see [§6](#6-tracking-every-run--power-automate-runs-board-2026-08-04) below.
 
-### 21. **Checking if the Sender and Receiver are from the RSFA Domain**
+    ![Screenshot: Power Automate Runs board item for this flow](PENDING)
 
--  A check is performed to see if both the sender and recipient(s) are using the RSFA domain. This helps classify the email as internal or external.
+---
 
-![Image: ](https://content.api.getguru.com/files/view/35fb4747-0385-46d3-b217-c107fe39d9af)
+## 4. When a match can't be found — the overflow path
 
-### 22. **Checking for PDF Attachments**
+If no Client Profile can be matched (address search and Real Savvy Ref both come up empty):
 
--  The automation checks if the email includes any PDF attachments. This is important for further processing and property updates.
+1. The `.eml` file is saved to a general **Emails to Sort** location in SharePoint instead of a client folder.
+2. An item is created on the relevant adviser's **Overflow Emails** board (Rod/Kathleen, Seth, or Jet — see the boards table below).
+3. A Slack message is sent to that adviser's overflow Slack channel.
+4. An AI-suggested Client Profile match may be proposed (**Overflow Emails Contact Matching**), which requires human approval before being applied (**Overflow Emails Suggested Match Approval**) — it is not applied automatically.
+5. Once a person manually assigns a Client Profile to the overflow item (either accepting the AI suggestion or picking one directly), that assignment triggers **Overflow Emails Related Client Profile Change**, which reprocesses the email through the same filing logic described in [§3.3](#33-matching-the-email-to-a-client) onward.
 
-![Image: ](https://content.api.getguru.com/files/view/0304e8d8-729b-4c55-96c6-35f9d842469e)
+![Screenshot: Overflow Emails board item](PENDING)
 
-### 23. **Updating Email File Properties in SharePoint**
+![Screenshot: AI suggested match / approval step](PENDING)
 
--  The email file’s properties, including the date, sender’s name, list of recipients, subject, and more, are updated in SharePoint.
+**Overflow boards:**
 
-    1.  If the email is internal (both sender and recipient are RSFA) and has no attachments, it’s labeled as “Internal” with an additional “No Attachment” tag.
+| Board | Adviser(s) | Status |
+|---|---|---|
+| 📬 Overflow Emails - Rod/Kathleen | Rod, Kathleen | Active |
+| 📬 Overflow Emails - Seth | Seth | Active |
+| 📬 Overflow Emails - Jet | Jet | Active — planned retirement |
+| 📬 Overflow Emails (OLD) | — | Legacy — TODO: confirm current use |
 
-    2.  If the email is internal and includes an attachment, it’s labeled as “Internal” and tagged with “Yes Attachment.”
+---
 
-    3.  If the email is external (either sender or recipient is outside RSFA) and has no attachment, it’s marked as “External” with a “No Attachment” tag.
+## 5. When something fails — error handling **(2026-08-04)**
 
-    4.  If the email is external and includes an attachment, it’s labeled as “External” and tagged with “Yes Attachment.”
+If a filing attempt itself fails (as opposed to simply not finding a client match, which is the overflow path above):
 
-![Image: ](https://content.api.getguru.com/files/view/657daf8f-c761-4d60-8590-22190ba91dbd)
+1. An email is sent to `tech@rsfa.co.nz` with the subject **Failed Item Email Filing**, so the item can be picked up and reprocessed later by the scheduled `Email Filling Failed Items Processing` flow (part of the Email Backup and Failed Item Recovery automation).
+2. A Slack notification is also posted to the shared `fails_ai_emails` channel, so the whole team has visibility into filing failures, not just the technical inbox.
 
-### 24. **Creating the Email File under Client's Folder if It Exists**
+![Screenshot: failure email to tech@rsfa.co.nz](PENDING)
 
--  If a client-specific folder exists, locate the client's folder in SharePoint
+![Screenshot: fails_ai_emails Slack notification](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/9ce124af-6ba8-4944-a874-84e88e88ffe5)
+> **Note:** the Slack side of this may not be brand new as of 2026-08-04 — a Power Automate export inspected on 2026-07-30 already showed the `fails_ai_emails` Slack channel wired in alongside `tech@rsfa.co.nz` in the failure-notification step. It's possible this was already in place and simply hadn't been documented yet, rather than being a change made on 2026-08-04. Not yet confirmed either way.
 
--  Save the email file under “f. Email Communication” within that folder.
+---
 
-![Image: ](https://content.api.getguru.com/files/view/03ef6b63-c216-44d6-83e4-2cb520c56712)
+## 6. Tracking every run — Power Automate Runs board **(2026-08-04)**
 
-![Image: ](https://content.api.getguru.com/files/view/55fe749b-ef18-488b-96ce-a8297ed68d1c)
+Power Automate's own run history only keeps 28 days of data, which isn't enough for long-term tracking or troubleshooting. To fix this, RSFA reports a new Monday.com board was created:
 
-### **25. Checking if the Sender and Receiver are from the RSFA Domain for Client Folders**
+**Power Automate Runs** — [https://rsfa-squad.monday.com/boards/5030408927](https://rsfa-squad.monday.com/boards/5030408927)
 
--  For emails in client-specific folders, the automation again checks if both the sender and receiver are from the RSFA domain.
+Every execution of a connected flow gets one item on this board, with the following columns:
 
-![Image: ](https://content.api.getguru.com/files/view/d3b8fc91-d516-4a7a-92c2-2b031b5bdf2b)
+| Column | Purpose |
+|---|---|
+| Solution | Which Power Automate Solution the flow belongs to |
+| Flow Name | Exact name of the flow that ran |
+| Power Automate Run URL | Direct link to that run in the Power Automate portal |
+| Status | `Succeeded`, `Cancelled`, `Failed`, or `Running` |
+| Started At | When the run began |
+| Finished At | When the run ended |
+| Processing Details | A JSON blob with the specific details of that run |
+| Parent Runs | For subflows (like `Main Outlook Inbox Email Filling`, which is called by every mailbox-specific flow), a link back to the parent flow's run item |
 
-### 26. **Verifying if the Email Contains a PDF Attachment in Client-Specific Folders**
+At the moment, only the Email Filing flow family is connected to this board. RSFA plans to connect other Power Automate flows to it over time, so it becomes a single place to check the history of any flow's runs — not just email filing.
 
--  A check is performed to see if the email includes a PDF attachment for client-specific folder emails.
+![Screenshot: Power Automate Runs board view](PENDING)
 
-![Image: ](https://content.api.getguru.com/files/view/c8aa05a5-891b-4fa2-9a7e-24a840963862)
+![Screenshot: an individual run item, showing Parent Runs linkage](PENDING)
 
-### 27. **Updating Properties for Client-Specific Folders**
+---
 
--  The email file properties, including date, sender, subject, and other details, are updated for client-specific folders, ensuring consistency.
+## 7. What's still unclear or unverified
 
-    1.  If the email is internal and has no attachment, it’s labeled as “Internal” and tagged with “No Attachment.”
+This section is intentionally honest about gaps, so nobody assumes something is confirmed when it isn't:
 
-    2.  If the email is internal and has an attachment, it’s labeled as “Internal” and tagged with “Yes Attachment.”
+- The exact new Power Automate flow name(s) for the IT Support mailbox haven't been confirmed yet.
+- Whether the `fails_ai_emails` Slack notification is genuinely new as of 2026-08-04, or simply undocumented until now (see the note in §5).
+- Which flows are and aren't yet connected to the Power Automate Runs board, beyond Email Filing.
+- Whether the Power Automate Runs board's `Processing Details` field records which specific email was filed against which Client Profile, or only flow-level run status.
+- Whether the general "Emails to Sort" SharePoint path referenced in [§3.4](#34-filing-the-email) is still current for every mailbox.
+- Exact retry schedule for `Email Filling Failed Items Processing`.
 
-    3.  If the email is external and has no attachment, it’s labeled as “External” with a “No Attachment” tag.
+See `knowledge/automations/power-automate/AUTO-EMAIL-001-client-email-filing.md` §25 for the full, continuously-updated list.
 
-    4.  If the email is external and has an attachment, it’s labeled as “External” with a “Yes Attachment” tag.
+---
 
-![Image: ](https://content.api.getguru.com/files/view/31ea6ffd-c685-488f-ae81-c4eeeeaeb18d)
+## 8. Where to go for more detail
 
-### 28. **Extracting Attachment Details and clean it up**
+- **Full technical record** (flow names, workflow IDs, export evidence, registry entries): `knowledge/automations/power-automate/AUTO-EMAIL-001-client-email-filing.md`
+- **Monday board registry:** `knowledge/04_MONDAY_BOARDS_REGISTRY.md`
+- **Automation registry:** `knowledge/03_AUTOMATION_REGISTRY.md`
+- **System-wide email flow diagram:** `knowledge/01_RSFA_SYSTEM_MAP.md` §10
 
--  If the email includes an attachment, extract the details of each attachment for further processing and storage. Remove any unnecessary characters or formatting from the subject line to keep it clean, consistent, and easy to read.
+---
 
-![Image: ](https://content.api.getguru.com/files/view/9d079d7d-d4a8-427e-8c44-3ddd5bbadec3)
+## How to fill in the screenshots
 
-### **29. Checking for PDF Attachments**
+Every step above has a placeholder in this form:
 
--  The automation checks if the email includes any PDF attachments. This is important for further processing and property updates.
+```markdown
+![Screenshot: short description of what it should show](PENDING)
+```
 
-![Image: ](https://content.api.getguru.com/files/view/163e90af-031a-4a51-a3d9-4d6c292a4d3c)
+To add a real screenshot, replace `PENDING` with the image's URL or a relative path to an image file stored in this repository (e.g. under an `assets/` folder next to this document), keeping the descriptive alt text so the image stays identifiable if the link ever breaks again.
 
-### 30. **Creating the Attachment File under “g. Email Attachments” Folder**
+---
 
--  If a PDF attachment exists, each attachment is saved as a separate file in the “g. Email Attachments” folder within the client’s directory.
+## Change history
 
-![Image: ](https://content.api.getguru.com/files/view/062c91a1-4dc6-4590-b4b9-4e9fa086f5d7)
-
-![Image: ](https://content.api.getguru.com/files/view/94f3f3ef-bcf8-4bf0-bd94-17113c5cacc4)
-
-### 31. **Updating Attachment File Properties**
-
--  The properties of each attachment, such as date, sender, and client association, are updated in SharePoint.
-
-![Image: ](https://content.api.getguru.com/files/view/60c14e6b-b0ee-4ff9-8bf4-4b26afa502ef)
-
-### 32. **Sending Slack Notifications for New Attachments**
-
--  A notification is sent to Slack for each attachment that is added to SharePoint. This informs the team about new documents being available.
-
-![Image: ](https://content.api.getguru.com/files/view/fa009ed8-64d0-49ed-b270-839b45bdfcd8)
-
-![Image: ](https://content.api.getguru.com/files/view/f0a71f8a-6c6a-4241-817a-2b74a82c487f)
-
-### 33. **End of Automation**
-
--  The process completes once all the steps are fulfilled, ensuring all emails and attachments are organized, filed, and properly tagged in SharePoint, with notifications sent where needed.
+| Date | Change | Author |
+|---|---|---|
+| 2026-08-04 | Full rewrite from the original GetGuru-sourced walkthrough (Sent-folder-only, single mailbox, no overflow/error/logging detail, dead image links). Now covers all monitored mailboxes, the forced-match convention, the overflow path, error handling and the Power Automate Runs board. Screenshots removed pending replacements — see placeholders throughout. | Claude (documentation task) |
