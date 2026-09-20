@@ -1,0 +1,2404 @@
+{
+    "name": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+    "flow": [
+        {
+            "id": 1,
+            "module": "gateway:CustomWebHook",
+            "version": 1,
+            "parameters": {
+                "hook": 4371210
+            },
+            "mapper": {},
+            "metadata": {
+                "designer": {
+                    "x": 0,
+                    "y": 2100,
+                    "name": "Webhook: Receive DocuSeal Event"
+                }
+            }
+        },
+        {
+            "id": 2,
+            "module": "util:SetVariables",
+            "version": 1,
+            "parameters": {},
+            "mapper": {
+                "scope": "roundtrip",
+                "variables": [
+                    {
+                        "name": "EventType",
+                        "value": "{{1.event_type}}"
+                    },
+                    {
+                        "name": "SubmissionId",
+                        "value": "{{ifempty(1.data.submission_id; ifempty(1.data.submission.id; 1.data.id))}}"
+                    }
+                ]
+            },
+            "metadata": {
+                "designer": {
+                    "x": 300,
+                    "y": 2100,
+                    "name": "Extract Event Type & Submission ID"
+                },
+                "restore": {
+                    "expect": {
+                        "scope": {
+                            "label": "One cycle"
+                        },
+                        "variables": {
+                            "items": [
+                                null,
+                                null
+                            ]
+                        }
+                    }
+                },
+                "expect": [
+                    {
+                        "name": "variables",
+                        "spec": {
+                            "name": "value",
+                            "spec": [
+                                {
+                                    "name": "name",
+                                    "type": "text",
+                                    "label": "Variable name",
+                                    "required": true
+                                },
+                                {
+                                    "name": "value",
+                                    "type": "any",
+                                    "label": "Variable value"
+                                }
+                            ],
+                            "type": "collection",
+                            "label": "Variable"
+                        },
+                        "type": "array",
+                        "label": "Variables",
+                        "validate": {
+                            "unique": {
+                                "by": "name"
+                            },
+                            "minItems": 1
+                        }
+                    },
+                    {
+                        "name": "scope",
+                        "type": "select",
+                        "label": "Variable lifetime",
+                        "required": true,
+                        "validate": {
+                            "enum": [
+                                "roundtrip",
+                                "execution"
+                            ]
+                        }
+                    }
+                ],
+                "interface": [
+                    {
+                        "name": "EventType",
+                        "type": "any",
+                        "label": "EventType"
+                    },
+                    {
+                        "name": "SubmissionId",
+                        "type": "any",
+                        "label": "SubmissionId"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "module": "builtin:BasicRouter",
+            "version": 1,
+            "mapper": null,
+            "metadata": {
+                "designer": {
+                    "x": 600,
+                    "y": 2100,
+                    "name": "Route: Valid vs Invalid Payload"
+                }
+            },
+            "routes": [
+                {
+                    "flow": [
+                        {
+                            "id": 10,
+                            "module": "docuseal:universal",
+                            "version": 1,
+                            "parameters": {
+                                "__IMTCONN__": 14378638
+                            },
+                            "filter": {
+                                "name": "Valid payload",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{2.EventType}}",
+                                            "o": "exist"
+                                        },
+                                        {
+                                            "a": "{{2.SubmissionId}}",
+                                            "b": "",
+                                            "o": "text:notequal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "url": "/submissions/{{2.SubmissionId}}",
+                                "method": "GET"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 1950,
+                                    "name": "DocuSeal: Get Submission Snapshot"
+                                }
+                            },
+                            "onerror": [
+                                {
+                                    "id": 9001,
+                                    "module": "scenario-service:CallSubscenario",
+                                    "version": 2,
+                                    "parameters": {
+                                        "scenario": "SCN_8732008",
+                                        "shouldWaitForExecutionEnd": true
+                                    },
+                                    "mapper": {
+                                        "data": {
+                                            "ScenarioURL": "{{var.scenario.url}}",
+                                            "ErrorMessage": "Step: DocuSeal GET /submissions/{id}. Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{10.error.message}}",
+                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                            "ToRecipients": "tech@rsfa.co.nz"
+                                        }
+                                    },
+                                    "metadata": {
+                                        "designer": {
+                                            "x": 1200,
+                                            "y": 3900,
+                                            "name": "Alert: DocuSeal GET /submissions/{id} (Email)"
+                                        },
+                                        "restore": {
+                                            "parameters": {
+                                                "scenario": {
+                                                    "label": "Outlook: Email Notification after Failed Scenario"
+                                                }
+                                            }
+                                        },
+                                        "parameters": [
+                                            {
+                                                "name": "scenario",
+                                                "type": "scenario",
+                                                "label": "Scenario",
+                                                "required": true
+                                            },
+                                            {
+                                                "name": "shouldWaitForExecutionEnd",
+                                                "type": "boolean",
+                                                "label": "Wait for the scenario to finish",
+                                                "required": true
+                                            }
+                                        ],
+                                        "expect": [
+                                            {
+                                                "name": "data",
+                                                "spec": [
+                                                    {
+                                                        "name": "ScenarioName",
+                                                        "type": "text",
+                                                        "label": "",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "ScenarioURL",
+                                                        "type": "text",
+                                                        "label": "",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "ErrorMessage",
+                                                        "type": "text",
+                                                        "label": "",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "ToRecipients",
+                                                        "type": "text",
+                                                        "label": "",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "CCRecipients",
+                                                        "type": "text",
+                                                        "label": ""
+                                                    },
+                                                    {
+                                                        "name": "BCCRecipients",
+                                                        "type": "text",
+                                                        "label": ""
+                                                    }
+                                                ],
+                                                "type": "collection",
+                                                "label": "Scenario Inputs"
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "id": 91,
+                                    "module": "slack:CreateMessage",
+                                    "version": 4,
+                                    "parameters": {
+                                        "__IMTCONN__": 4778199
+                                    },
+                                    "mapper": {
+                                        "text": "DocuSeal integration error\nScenario: M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)\nEvent: {{2.EventType}}\nSubmission ID: {{2.SubmissionId}}\nStep: DocuSeal GET /submissions/{id}\nError: {{10.error.message}}\nAction required: Check DocuSeal connection (tech@rsfa.co.nz) and API status.\n\n🚨 *DocuSeal Automation Failed*\r\n\r\n*Scenario:* M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)\r\n*Submission ID:* {{2.SubmissionId}}\r\n*Failed Step:* DocuSeal GET /submissions/{id}\r\n*Error:* {{10.error.message}}\r\n*Make Execution:* <{{var.scenario.executionUrl}}|Open Execution in Make>\r\n",
+                                        "parse": false,
+                                        "mrkdwn": true,
+                                        "channel": "C0BDU8F52S0",
+                                        "channelWType": "manualy"
+                                    },
+                                    "metadata": {
+                                        "designer": {
+                                            "x": 1500,
+                                            "y": 3900,
+                                            "name": "Alert: DocuSeal GET /submissions/{id} (Slack)"
+                                        },
+                                        "restore": {
+                                            "expect": {
+                                                "parse": {
+                                                    "mode": "chose"
+                                                },
+                                                "mrkdwn": {
+                                                    "mode": "chose"
+                                                },
+                                                "link_names": {
+                                                    "mode": "chose"
+                                                },
+                                                "channelWType": {
+                                                    "label": "Enter manually"
+                                                },
+                                                "unfurl_links": {
+                                                    "mode": "chose"
+                                                },
+                                                "unfurl_media": {
+                                                    "mode": "chose"
+                                                },
+                                                "reply_broadcast": {
+                                                    "mode": "chose"
+                                                }
+                                            },
+                                            "parameters": {
+                                                "__IMTCONN__": {
+                                                    "data": {
+                                                        "scoped": "true",
+                                                        "connection": "slack3"
+                                                    },
+                                                    "label": "Make Bot General Slack Connection (rsfa-realadvice.slack.com - make)"
+                                                }
+                                            }
+                                        },
+                                        "parameters": [
+                                            {
+                                                "name": "__IMTCONN__",
+                                                "type": "account:slack2,slack3",
+                                                "label": "Connection",
+                                                "required": true
+                                            }
+                                        ],
+                                        "expect": [
+                                            {
+                                                "name": "channelWType",
+                                                "type": "select",
+                                                "label": "Enter a channel ID or name",
+                                                "required": true,
+                                                "validate": {
+                                                    "enum": [
+                                                        "manualy",
+                                                        "list"
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "name": "text",
+                                                "type": "text",
+                                                "label": "Text"
+                                            },
+                                            {
+                                                "name": "blocks",
+                                                "type": "text",
+                                                "label": "Blocks"
+                                            },
+                                            {
+                                                "name": "thread_ts",
+                                                "type": "text",
+                                                "label": "Thread message ID (time stamp)"
+                                            },
+                                            {
+                                                "name": "reply_broadcast",
+                                                "type": "boolean",
+                                                "label": "Reply broadcast"
+                                            },
+                                            {
+                                                "name": "link_names",
+                                                "type": "boolean",
+                                                "label": "Link names"
+                                            },
+                                            {
+                                                "name": "parse",
+                                                "type": "boolean",
+                                                "label": "Parse message text"
+                                            },
+                                            {
+                                                "name": "mrkdwn",
+                                                "type": "boolean",
+                                                "label": "Use markdown"
+                                            },
+                                            {
+                                                "name": "unfurl_links",
+                                                "type": "boolean",
+                                                "label": "Unfurl primarily text-based content"
+                                            },
+                                            {
+                                                "name": "unfurl_media",
+                                                "type": "boolean",
+                                                "label": "Unfurl media content"
+                                            },
+                                            {
+                                                "name": "icon_emoji",
+                                                "type": "text",
+                                                "label": "Icon emoji"
+                                            },
+                                            {
+                                                "name": "icon_url",
+                                                "type": "url",
+                                                "label": "Icon url"
+                                            },
+                                            {
+                                                "name": "username",
+                                                "type": "text",
+                                                "label": "User name"
+                                            },
+                                            {
+                                                "name": "channel",
+                                                "type": "text",
+                                                "label": "Channel ID or name",
+                                                "required": true
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "id": 12,
+                            "module": "datastore:ExistRecord",
+                            "version": 1,
+                            "parameters": {
+                                "datastore": 185679
+                            },
+                            "mapper": {
+                                "key": "docuseal_submission:{{2.SubmissionId}}"
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1200,
+                                    "y": 1800,
+                                    "name": "Check If Submission Already Synced"
+                                }
+                            }
+                        },
+                        {
+                            "id": 20,
+                            "module": "util:SetVariables",
+                            "version": 1,
+                            "mapper": {
+                                "scope": "roundtrip",
+                                "variables": [
+                                    {
+                                        "name": "TemplateName",
+                                        "value": "{{if(10.body.template.name;10.body.template.name;emptystring)}}"
+                                    },
+                                    {
+                                        "name": "SubmitterStatusesJoined",
+                                        "value": "{{join(map(10.body.submitters;\"status\");\",\")}}"
+                                    },
+                                    {
+                                        "name": "SubmitterNamesJoined",
+                                        "value": "{{join(map(10.body.submitters;\"name\");\"|\")}}"
+                                    },
+                                    {
+                                        "name": "SubmitterCount",
+                                        "value": "{{length(10.body.submitters)}}"
+                                    },
+                                    {
+                                        "name": "EarliestSentAt",
+                                        "value": "{{if(length(10.body.submitters)>0;10.body.submitters[1].sent_at;emptystring)}}"
+                                    },
+                                    {
+                                        "name": "CompletedAt",
+                                        "value": "{{if(10.body.status=\"completed\";10.body.completed_at;emptystring)}}"
+                                    },
+                                    {
+                                        "name": "SignedDocUrl",
+                                        "value": "{{if(10.body.combined_document_url;10.body.combined_document_url;emptystring)}}"
+                                    },
+                                    {
+                                        "name": "OwnerPersonId",
+                                        "value": "{{if(lower(10.body.created_by_user.email)=\"support@rsfa.co.nz\";\"46751134\";emptystring)}}"
+                                    },
+                                    {
+                                        "name": "ContactSearchEmails",
+                                        "value": "{{map(10.body.submitters;\"email\")}}"
+                                    },
+                                    {
+                                        "name": "ContactSearchPhones",
+                                        "value": "{{map(10.body.submitters;\"phone\")}}"
+                                    }
+                                ]
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1500,
+                                    "y": 1800,
+                                    "name": "Derive Submitter & Document Fields"
+                                }
+                            }
+                        },
+                        {
+                            "id": 21,
+                            "module": "util:SetVariables",
+                            "version": 1,
+                            "parameters": {},
+                            "mapper": {
+                                "scope": "roundtrip",
+                                "variables": [
+                                    {
+                                        "name": "NewStatus",
+                                        "value": "{{switch(2.EventType; \"submission.completed\"; \"Completed\"; \"submission.expired\"; \"Expired\"; \"form.declined\"; \"Declined\"; \"form.viewed\"; \"Viewed\"; \"form.started\"; \"Viewed\"; \"submission.created\"; if(contains(join(map(1.data.submitters; \"status\"); \",\"); \"sent\"); \"Sent\"; \"Draft\"); \"form.completed\"; if(10.body.status = \"completed\"; \"Completed\"; \"Viewed\"); if(10.body.status = \"completed\"; \"Completed\"; if(10.body.status = \"declined\"; \"Declined\"; if(10.body.status = \"expired\"; \"Expired\"; if(contains(20.SubmitterStatusesJoined; \"completed\"); \"Viewed\"; if(contains(20.SubmitterStatusesJoined; \"opened\"); \"Viewed\"; if(contains(20.SubmitterStatusesJoined; \"sent\"); \"Sent\"; \"Draft\")))))))}}"
+                                    },
+                                    {
+                                        "name": "TemplateShort",
+                                        "value": "{{join(slice(split(20.TemplateName; ); 0; 3); )}}"
+                                    },
+                                    {
+                                        "name": "RecipientLabel",
+                                        "value": "{{if(20.SubmitterCount <= 1; first(split(ifempty(10.body.submitters[1].name; 10.body.submitters[1].email); )); if(20.SubmitterCount = 2; first(split(ifempty(10.body.submitters[1].name; 10.body.submitters[1].email); )) + \" and \" + first(split(ifempty(10.body.submitters[2].name; 10.body.submitters[2].email); )); first(split(ifempty(10.body.submitters[1].name; 10.body.submitters[1].email); )) + \" and \" + (20.SubmitterCount - 1) + \" more\"))}}"
+                                    },
+                                    {
+                                        "name": "SentDateFormatted",
+                                        "value": "{{if(20.EarliestSentAt; formatDate(parseDate(20.EarliestSentAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); \"D MMMM YYYY\"); formatDate(now; \"D MMMM YYYY\"))}}"
+                                    },
+                                    {
+                                        "name": "FallbackItemLabel",
+                                        "value": "DocuSeal Submission {{2.SubmissionId}}"
+                                    }
+                                ]
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 1800,
+                                    "y": 1800,
+                                    "name": "Compute Status, Short Template Name & Recipient Label"
+                                },
+                                "restore": {
+                                    "expect": {
+                                        "scope": {
+                                            "label": "One cycle"
+                                        },
+                                        "variables": {
+                                            "items": [
+                                                null,
+                                                null,
+                                                null,
+                                                null,
+                                                null
+                                            ]
+                                        }
+                                    }
+                                },
+                                "expect": [
+                                    {
+                                        "name": "variables",
+                                        "spec": {
+                                            "name": "value",
+                                            "spec": [
+                                                {
+                                                    "name": "name",
+                                                    "type": "text",
+                                                    "label": "Variable name",
+                                                    "required": true
+                                                },
+                                                {
+                                                    "name": "value",
+                                                    "type": "any",
+                                                    "label": "Variable value"
+                                                }
+                                            ],
+                                            "type": "collection",
+                                            "label": "Variable"
+                                        },
+                                        "type": "array",
+                                        "label": "Variables",
+                                        "validate": {
+                                            "unique": {
+                                                "by": "name"
+                                            },
+                                            "minItems": 1
+                                        }
+                                    },
+                                    {
+                                        "name": "scope",
+                                        "type": "select",
+                                        "label": "Variable lifetime",
+                                        "required": true,
+                                        "validate": {
+                                            "enum": [
+                                                "roundtrip",
+                                                "execution"
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "interface": [
+                                    {
+                                        "name": "NewStatus",
+                                        "type": "any",
+                                        "label": "NewStatus"
+                                    },
+                                    {
+                                        "name": "TemplateShort",
+                                        "type": "any",
+                                        "label": "TemplateShort"
+                                    },
+                                    {
+                                        "name": "RecipientLabel",
+                                        "type": "any",
+                                        "label": "RecipientLabel"
+                                    },
+                                    {
+                                        "name": "SentDateFormatted",
+                                        "type": "any",
+                                        "label": "SentDateFormatted"
+                                    },
+                                    {
+                                        "name": "FallbackItemLabel",
+                                        "type": "any",
+                                        "label": "FallbackItemLabel"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "id": 22,
+                            "module": "util:SetVariables",
+                            "version": 1,
+                            "mapper": {
+                                "scope": "roundtrip",
+                                "variables": [
+                                    {
+                                        "name": "NewRank",
+                                        "value": "{{switch(21.NewStatus;\"Draft\";0;\"Sent\";1;\"Viewed\";2;\"Completed\";4;\"Declined\";4;\"Expired\";4;0)}}"
+                                    },
+                                    {
+                                        "name": "TargetGroup",
+                                        "value": "{{if(21.NewStatus=\"Completed\";\"group_mm4q8vrz\";if(21.NewStatus=\"Declined\";\"group_mm4q1z3r\";if(21.NewStatus=\"Expired\";\"group_mm4q1z3r\";\"group_mm4qa1h0\")))}}"
+                                    },
+                                    {
+                                        "name": "ItemName",
+                                        "value": "{{ifempty(21.TemplateShort;21.FallbackItemLabel)}} - {{ifempty(21.RecipientLabel;\"Unknown submitter\")}} - {{ifempty(21.SentDateFormatted;formatDate(now;\"D MMMM YYYY\"))}}"
+                                    }
+                                ]
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 2100,
+                                    "y": 1800,
+                                    "name": "Compute Status Rank, Target Group & Item Name"
+                                }
+                            }
+                        },
+                        {
+                            "id": 39,
+                            "module": "builtin:BasicRouter",
+                            "version": 1,
+                            "mapper": null,
+                            "metadata": {
+                                "designer": {
+                                    "x": 2400,
+                                    "y": 1800,
+                                    "name": "Route: Existing Item vs New Item"
+                                }
+                            },
+                            "routes": [
+                                {
+                                    "flow": [
+                                        {
+                                            "id": 40,
+                                            "module": "datastore:GetRecord",
+                                            "version": 1,
+                                            "parameters": {
+                                                "datastore": 185679
+                                            },
+                                            "filter": {
+                                                "name": "Record exists",
+                                                "conditions": [
+                                                    [
+                                                        {
+                                                            "a": "{{12.exist}}",
+                                                            "b": "{{true}}",
+                                                            "o": "boolean:equal"
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                            "mapper": {
+                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                "returnWrapped": false
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 2700,
+                                                    "y": 1050,
+                                                    "name": "Get Sync Index Record (Existing Item)"
+                                                },
+                                                "restore": {
+                                                    "parameters": {
+                                                        "datastore": {
+                                                            "label": "DocuSeal Sync Index (Sep 2026)"
+                                                        }
+                                                    }
+                                                },
+                                                "parameters": [
+                                                    {
+                                                        "name": "datastore",
+                                                        "type": "datastore",
+                                                        "label": "Data store",
+                                                        "required": true
+                                                    }
+                                                ],
+                                                "expect": [
+                                                    {
+                                                        "name": "key",
+                                                        "type": "text",
+                                                        "label": "Key",
+                                                        "required": true
+                                                    },
+                                                    {
+                                                        "name": "returnWrapped",
+                                                        "type": "boolean",
+                                                        "label": "Return Wrapped Output",
+                                                        "required": true
+                                                    }
+                                                ],
+                                                "interface": [
+                                                    {
+                                                        "name": "MondayItemId",
+                                                        "type": "number",
+                                                        "label": "Monday Item ID"
+                                                    },
+                                                    {
+                                                        "name": "LastKnownStatus",
+                                                        "type": "text",
+                                                        "label": "Last Known Status"
+                                                    },
+                                                    {
+                                                        "name": "LastEventTimestamp",
+                                                        "type": "text",
+                                                        "label": "Last processed DocuSeal event timestamp"
+                                                    },
+                                                    {
+                                                        "name": "NotifiedSent",
+                                                        "type": "boolean",
+                                                        "label": "Sent Slack notification already fired"
+                                                    },
+                                                    {
+                                                        "name": "NotifiedCompleted",
+                                                        "type": "boolean",
+                                                        "label": "Completed Slack notification already fired"
+                                                    },
+                                                    {
+                                                        "name": "NotifiedDeclinedSubmitterIds",
+                                                        "type": "text",
+                                                        "label": "Comma-separated submitter IDs already notified as declined"
+                                                    },
+                                                    {
+                                                        "name": "NotifiedNeedsReview",
+                                                        "type": "boolean",
+                                                        "label": "Needs-review (Client Profile ambiguous) Slack notification already fired"
+                                                    },
+                                                    {
+                                                        "name": "LockTimestamp",
+                                                        "type": "text",
+                                                        "label": "Set while a webhook is actively processing this submission, to detect concurrent duplicates"
+                                                    }
+                                                ],
+                                                "advanced": true
+                                            },
+                                            "onerror": [
+                                                {
+                                                    "id": 9002,
+                                                    "module": "scenario-service:CallSubscenario",
+                                                    "version": 2,
+                                                    "parameters": {
+                                                        "scenario": "SCN_8732008",
+                                                        "shouldWaitForExecutionEnd": true
+                                                    },
+                                                    "mapper": {
+                                                        "data": {
+                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                            "ErrorMessage": "Step: Data Store GetRecord (update path). Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{40.error.message}}",
+                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                        }
+                                                    },
+                                                    "metadata": {
+                                                        "designer": {
+                                                            "x": 3000,
+                                                            "y": 2100,
+                                                            "name": "Alert: Data Store GetRecord (update path) (Email)"
+                                                        },
+                                                        "restore": {
+                                                            "parameters": {
+                                                                "scenario": {
+                                                                    "label": "Outlook: Email Notification after Failed Scenario"
+                                                                }
+                                                            }
+                                                        },
+                                                        "parameters": [
+                                                            {
+                                                                "name": "scenario",
+                                                                "type": "scenario",
+                                                                "label": "Scenario",
+                                                                "required": true
+                                                            },
+                                                            {
+                                                                "name": "shouldWaitForExecutionEnd",
+                                                                "type": "boolean",
+                                                                "label": "Wait for the scenario to finish",
+                                                                "required": true
+                                                            }
+                                                        ],
+                                                        "expect": [
+                                                            {
+                                                                "name": "data",
+                                                                "spec": [
+                                                                    {
+                                                                        "name": "ScenarioName",
+                                                                        "type": "text",
+                                                                        "label": "",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "ScenarioURL",
+                                                                        "type": "text",
+                                                                        "label": "",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "ErrorMessage",
+                                                                        "type": "text",
+                                                                        "label": "",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "ToRecipients",
+                                                                        "type": "text",
+                                                                        "label": "",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "CCRecipients",
+                                                                        "type": "text",
+                                                                        "label": ""
+                                                                    },
+                                                                    {
+                                                                        "name": "BCCRecipients",
+                                                                        "type": "text",
+                                                                        "label": ""
+                                                                    }
+                                                                ],
+                                                                "type": "collection",
+                                                                "label": "Scenario Inputs"
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": 41,
+                                            "module": "util:SetVariables",
+                                            "version": 1,
+                                            "mapper": {
+                                                "scope": "roundtrip",
+                                                "variables": [
+                                                    {
+                                                        "name": "OldRank",
+                                                        "value": "{{switch(40.LastKnownStatus;\"Draft\";0;\"Sent\";1;\"Viewed\";2;\"Completed\";4;\"Declined\";4;\"Expired\";4;0)}}"
+                                                    }
+                                                ]
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 3000,
+                                                    "y": 900,
+                                                    "name": "Compute Previous Status Rank"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "id": 45,
+                                            "module": "builtin:BasicRouter",
+                                            "version": 1,
+                                            "mapper": null,
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 3300,
+                                                    "y": 900,
+                                                    "name": "Guard: Only Advance Status Forward"
+                                                }
+                                            },
+                                            "routes": [
+                                                {
+                                                    "flow": [
+                                                        {
+                                                            "id": 50,
+                                                            "module": "monday:ChangeMultipleColumnValuesV2",
+                                                            "version": 2,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 240128
+                                                            },
+                                                            "filter": {
+                                                                "name": "Advance only if new status rank >= old status rank",
+                                                                "conditions": [
+                                                                    [
+                                                                        {
+                                                                            "a": "{{22.NewRank}}",
+                                                                            "b": "{{41.OldRank}}",
+                                                                            "o": "number:greaterorequal"
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                            },
+                                                            "mapper": {
+                                                                "itemId": "{{40.MondayItemId}}",
+                                                                "boardId": "5029524384",
+                                                                "columnValuesToChange": [
+                                                                    {
+                                                                        "columnId": "color_mm4qhhhc",
+                                                                        "columnValue": {
+                                                                            "label": "{{21.NewStatus}}",
+                                                                            "settings": {
+                                                                                "labels": [
+                                                                                    {
+                                                                                        "id": 0,
+                                                                                        "hex": "#fdab3d",
+                                                                                        "color": 0,
+                                                                                        "index": 1,
+                                                                                        "label": "Sent",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    },
+                                                                                    {
+                                                                                        "id": 1,
+                                                                                        "hex": "#00c875",
+                                                                                        "color": 1,
+                                                                                        "index": 2,
+                                                                                        "label": "Completed",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    },
+                                                                                    {
+                                                                                        "id": 2,
+                                                                                        "hex": "#007eb5",
+                                                                                        "color": 3,
+                                                                                        "index": 4,
+                                                                                        "label": "Declined",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    },
+                                                                                    {
+                                                                                        "id": 3,
+                                                                                        "hex": "#df2f4a",
+                                                                                        "color": 2,
+                                                                                        "index": 6,
+                                                                                        "label": "Error",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    },
+                                                                                    {
+                                                                                        "id": 4,
+                                                                                        "hex": "#9d50dd",
+                                                                                        "color": 4,
+                                                                                        "index": 3,
+                                                                                        "label": "Viewed",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    },
+                                                                                    {
+                                                                                        "id": 7,
+                                                                                        "hex": "#579bfc",
+                                                                                        "color": 7,
+                                                                                        "index": 0,
+                                                                                        "label": "Draft",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    },
+                                                                                    {
+                                                                                        "id": 11,
+                                                                                        "hex": "#bb3354",
+                                                                                        "color": 11,
+                                                                                        "index": 5,
+                                                                                        "label": "Expired",
+                                                                                        "is_done": false,
+                                                                                        "is_deactivated": false
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "selectType": "label2index"
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        "columnId": "text_mm4qr449",
+                                                                        "columnValue": "{{20.TemplateName}}"
+                                                                    }
+                                                                ],
+                                                                "create_labels_if_missing": false
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 3600,
+                                                                    "y": 900,
+                                                                    "name": "Monday: Update Status, Dates & Document (Existing Item)"
+                                                                },
+                                                                "onerror": [
+                                                                    {
+                                                                        "id": 9003,
+                                                                        "module": "scenario-service:CallSubscenario"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "onerror": [
+                                                                {
+                                                                    "id": 9003,
+                                                                    "module": "scenario-service:CallSubscenario",
+                                                                    "version": 2,
+                                                                    "parameters": {
+                                                                        "scenario": "SCN_8732008",
+                                                                        "shouldWaitForExecutionEnd": true
+                                                                    },
+                                                                    "mapper": {
+                                                                        "data": {
+                                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                                            "ErrorMessage": "Step: Monday ChangeMultipleColumnValues (update). Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{50.error.message}}",
+                                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "id": 52,
+                                                            "module": "datastore:UpdateRecord",
+                                                            "version": 1,
+                                                            "parameters": {
+                                                                "datastore": 185679
+                                                            },
+                                                            "mapper": {
+                                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                                "data": {
+                                                                    "MondayItemId": "{{40.MondayItemId}}",
+                                                                    "LastKnownStatus": "{{21.NewStatus}}",
+                                                                    "LastEventTimestamp": "{{now}}"
+                                                                }
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 3900,
+                                                                    "y": 750,
+                                                                    "name": "Sync Index: Update Record (Existing Item)"
+                                                                }
+                                                            },
+                                                            "onerror": [
+                                                                {
+                                                                    "id": 9005,
+                                                                    "module": "scenario-service:CallSubscenario",
+                                                                    "version": 2,
+                                                                    "parameters": {
+                                                                        "scenario": "SCN_8732008",
+                                                                        "shouldWaitForExecutionEnd": true
+                                                                    },
+                                                                    "mapper": {
+                                                                        "data": {
+                                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                                            "ErrorMessage": "Step: Data Store UpdateRecord. Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{52.error.message}}",
+                                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "id": 9102,
+                                                            "module": "util:SetVariables",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "filter": null,
+                                                            "mapper": {
+                                                                "scope": "roundtrip",
+                                                                "variables": [
+                                                                    {
+                                                                        "name": "ItemUrl",
+                                                                        "value": "https://rsfa-squad.monday.com/boards/5029524384/pulses/{{40.MondayItemId}}"
+                                                                    },
+                                                                    {
+                                                                        "name": "DeclinedSubmitterName",
+                                                                        "value": "{{if(10.body.submitters[1].status = \"declined\"; ifempty(ifempty(10.body.submitters[1].name; 10.body.submitters[1].role); \"Unknown submitter\"); if(10.body.submitters[2].status = \"declined\"; ifempty(ifempty(10.body.submitters[2].name; 10.body.submitters[2].role); \"Unknown submitter\"); if(10.body.submitters[3].status = \"declined\"; ifempty(ifempty(10.body.submitters[3].name; 10.body.submitters[3].role); \"Unknown submitter\"); if(10.body.submitters[4].status = \"declined\"; ifempty(ifempty(10.body.submitters[4].name; 10.body.submitters[4].role); \"Unknown submitter\"); \"Unknown submitter\"))))}}"
+                                                                    },
+                                                                    {
+                                                                        "name": "DeclinedSubmitterId",
+                                                                        "value": "{{if(10.body.submitters[1].status = \"declined\"; 10.body.submitters[1].id; if(10.body.submitters[2].status = \"declined\"; 10.body.submitters[2].id; if(10.body.submitters[3].status = \"declined\"; 10.body.submitters[3].id; if(10.body.submitters[4].status = \"declined\"; 10.body.submitters[4].id; emptystring))))}}"
+                                                                    },
+                                                                    {
+                                                                        "name": "DeclineReason",
+                                                                        "value": "{{ifempty(if(10.body.submitters[1].status = \"declined\"; 10.body.submitters[1].decline_reason; if(10.body.submitters[2].status = \"declined\"; 10.body.submitters[2].decline_reason; if(10.body.submitters[3].status = \"declined\"; 10.body.submitters[3].decline_reason; if(10.body.submitters[4].status = \"declined\"; 10.body.submitters[4].decline_reason; emptystring)))); \"No reason provided\")}}"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 4200,
+                                                                    "y": 600,
+                                                                    "name": "Set Declined Variables"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9014,
+                                                            "module": "monday:GetItemColumnValueV2",
+                                                            "version": 2,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 240128
+                                                            },
+                                                            "mapper": {
+                                                                "itemId": "{{40.MondayItemId}}",
+                                                                "boardId": "5029524384",
+                                                                "columnId": "board_relation_mm4qrrxr",
+                                                                "isToMapLabels": false
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 4500,
+                                                                    "y": 600,
+                                                                    "name": "Monday: Get Client Profile Link (Existing Item)"
+                                                                }
+                                                            },
+                                                            "onerror": [
+                                                                {
+                                                                    "id": 9015,
+                                                                    "module": "scenario-service:CallSubscenario",
+                                                                    "version": 2,
+                                                                    "parameters": {
+                                                                        "scenario": "SCN_8732008",
+                                                                        "shouldWaitForExecutionEnd": true
+                                                                    },
+                                                                    "mapper": {
+                                                                        "data": {
+                                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                                            "ErrorMessage": "Step: Monday GetItemColumnValueV2 (Client Profile lookup, update path). Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{9014.error.message}}",
+                                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "id": 9016,
+                                                                    "module": "slack:CreateMessage",
+                                                                    "version": 4,
+                                                                    "parameters": {
+                                                                        "__IMTCONN__": 4778199
+                                                                    },
+                                                                    "mapper": {
+                                                                        "text": "🚨 *DocuSeal Automation Failed*\n\n*Scenario:* M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)\n*Submission ID:* {{2.SubmissionId}}\n*Failed Step:* Monday GetItemColumnValueV2 (Client Profile lookup, update path)\n*Error:* {{9014.error.message}}\n\n*Monday Item:* <https://rsfa-squad.monday.com/boards/5029524384/pulses/{{40.MondayItemId}}|Open Item in Monday>",
+                                                                        "parse": false,
+                                                                        "mrkdwn": true,
+                                                                        "channel": "C0BDU8F52S0",
+                                                                        "channelWType": "manualy"
+                                                                    },
+                                                                    "metadata": {
+                                                                        "designer": {
+                                                                            "x": 5100,
+                                                                            "y": 1200,
+                                                                            "name": "Alert: Monday GetItemColumnValueV2 (Client Profile lookup, update path) (Slack Technical)"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "id": 9017,
+                                                            "module": "util:SetVariable2",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "mapper": {
+                                                                "name": "ClientProfileCountExisting",
+                                                                "scope": "roundtrip",
+                                                                "value": "{{length(9014.linked_item_ids)}}"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 4800,
+                                                                    "y": 450,
+                                                                    "name": "Resolve Client Profile Link (Existing Item) - ClientProfileCountExisting"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9018,
+                                                            "module": "util:SetVariable2",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "mapper": {
+                                                                "name": "ResolvedClientProfileIdExisting",
+                                                                "scope": "roundtrip",
+                                                                "value": "{{if(length(9014.linked_item_ids) = 1; 9014.linked_item_ids[1]; emptystring)}}"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 5100,
+                                                                    "y": 450,
+                                                                    "name": "Resolve Client Profile Link (Existing Item) - ResolvedClientProfileIdExisting"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9019,
+                                                            "module": "util:SetVariable2",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "mapper": {
+                                                                "name": "ClientProfileLinkReal",
+                                                                "scope": "roundtrip",
+                                                                "value": "<https://rsfa-squad.monday.com/boards/5024661649/pulses/{{9018.ResolvedClientProfileIdExisting}}|Open Client Profile in Monday>"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 5400,
+                                                                    "y": 450,
+                                                                    "name": "Resolve Client Profile Link (Existing Item) - ClientProfileLinkReal"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9020,
+                                                            "module": "util:SetVariable2",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "mapper": {
+                                                                "name": "ClientProfileLinkText",
+                                                                "scope": "roundtrip",
+                                                                "value": "{{if(9017.ClientProfileCountExisting = 1; 9019.ClientProfileLinkReal; \"Not linked\")}}"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 5700,
+                                                                    "y": 450,
+                                                                    "name": "Build Client Profile Link Text (Existing Item) - ClientProfileLinkText"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9021,
+                                                            "module": "builtin:BasicRouter",
+                                                            "version": 1,
+                                                            "mapper": null,
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 6000,
+                                                                    "y": 450,
+                                                                    "name": "Route: Send Operational Slack Notifications (Existing Item)"
+                                                                }
+                                                            },
+                                                            "routes": [
+                                                                {
+                                                                    "flow": [
+                                                                        {
+                                                                            "id": 9022,
+                                                                            "module": "slack:CreateMessage",
+                                                                            "version": 4,
+                                                                            "parameters": {
+                                                                                "__IMTCONN__": 4778199
+                                                                            },
+                                                                            "filter": {
+                                                                                "name": "Sent, not yet notified, single Client Profile",
+                                                                                "conditions": [
+                                                                                    [
+                                                                                        {
+                                                                                            "a": "{{21.NewStatus}}",
+                                                                                            "b": "Sent",
+                                                                                            "o": "text:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{40.NotifiedSent}}",
+                                                                                            "b": "{{true}}",
+                                                                                            "o": "boolean:equal"
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                            },
+                                                                            "mapper": {
+                                                                                "text": "📨 *DocuSeal Request Sent – {{22.ItemName}}*\n\n*Client Profile:* {{9020.ClientProfileLinkText}}\n*Template:* {{20.TemplateName}}\n*Document:* <{{9102.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                                "parse": false,
+                                                                                "mrkdwn": true,
+                                                                                "channel": "C07R2JNE0J0",
+                                                                                "channelWType": "manualy"
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6300,
+                                                                                    "y": 0,
+                                                                                    "name": "Slack: Sent (Existing Item) Notification"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "id": 9023,
+                                                                            "module": "datastore:UpdateRecord",
+                                                                            "version": 1,
+                                                                            "parameters": {
+                                                                                "datastore": 185679
+                                                                            },
+                                                                            "mapper": {
+                                                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                                                "data": {
+                                                                                    "NotifiedSent": true
+                                                                                }
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6600,
+                                                                                    "y": 0,
+                                                                                    "name": "Sync Index: Mark Sent Notified (Existing Item)"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "flow": [
+                                                                        {
+                                                                            "id": 9050,
+                                                                            "module": "monday:ChangeMultipleColumnValuesV2",
+                                                                            "version": 2,
+                                                                            "parameters": {
+                                                                                "__IMTCONN__": 240128
+                                                                            },
+                                                                            "filter": {
+                                                                                "name": "Completed with date and signed document URL",
+                                                                                "conditions": [
+                                                                                    [
+                                                                                        {
+                                                                                            "a": "{{21.NewStatus}}",
+                                                                                            "b": "Completed",
+                                                                                            "o": "text:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{20.CompletedAt}}",
+                                                                                            "b": "{{emptystring}}",
+                                                                                            "o": "text:notequal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{20.SignedDocUrl}}",
+                                                                                            "b": "{{emptystring}}",
+                                                                                            "o": "text:notequal"
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                            },
+                                                                            "mapper": {
+                                                                                "itemId": "{{40.MondayItemId}}",
+                                                                                "boardId": "5029524384",
+                                                                                "columnValuesToChange": [
+                                                                                    {
+                                                                                        "columnId": "date_mm4qbe7",
+                                                                                        "columnValue": {
+                                                                                            "date": "{{formatDate(parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); \"YYYY-MM-DD\")}}",
+                                                                                            "includeTime": false
+                                                                                        }
+                                                                                    },
+                                                                                    {
+                                                                                        "columnId": "link_mm4qk8jv",
+                                                                                        "columnValue": {
+                                                                                            "url": "{{20.SignedDocUrl}}",
+                                                                                            "text": "Signed document"
+                                                                                        }
+                                                                                    }
+                                                                                ],
+                                                                                "create_labels_if_missing": false
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6300,
+                                                                                    "y": 300,
+                                                                                    "name": "Monday: Set Completion Date & Signed Document (Existing Item)"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "id": 9024,
+                                                                            "module": "slack:CreateMessage",
+                                                                            "version": 4,
+                                                                            "parameters": {
+                                                                                "__IMTCONN__": 4778199
+                                                                            },
+                                                                            "filter": {
+                                                                                "name": "Completed, not yet notified, has signed document",
+                                                                                "conditions": [
+                                                                                    [
+                                                                                        {
+                                                                                            "a": "{{21.NewStatus}}",
+                                                                                            "b": "Completed",
+                                                                                            "o": "text:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{40.NotifiedCompleted}}",
+                                                                                            "b": "{{true}}",
+                                                                                            "o": "boolean:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{20.SignedDocUrl}}",
+                                                                                            "b": "{{emptystring}}",
+                                                                                            "o": "text:notequal"
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                            },
+                                                                            "mapper": {
+                                                                                "text": "✅ *DocuSeal Request Completed – {{22.ItemName}}*\n\n*Client Profile:* {{9020.ClientProfileLinkText}}\n*Signed Document:* <{{20.SignedDocUrl}}|Open Signed Document>\n*Submission:* <{{9102.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                                "parse": false,
+                                                                                "mrkdwn": true,
+                                                                                "channel": "C07R2JNE0J0",
+                                                                                "channelWType": "manualy"
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6600,
+                                                                                    "y": 300,
+                                                                                    "name": "Slack: Completed (Existing Item) Notification"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "id": 9025,
+                                                                            "module": "datastore:UpdateRecord",
+                                                                            "version": 1,
+                                                                            "parameters": {
+                                                                                "datastore": 185679
+                                                                            },
+                                                                            "mapper": {
+                                                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                                                "data": {
+                                                                                    "NotifiedCompleted": true
+                                                                                }
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6900,
+                                                                                    "y": 300,
+                                                                                    "name": "Sync Index: Mark Completed Notified (Existing Item)"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "flow": [
+                                                                        {
+                                                                            "id": 9026,
+                                                                            "module": "slack:CreateMessage",
+                                                                            "version": 4,
+                                                                            "parameters": {
+                                                                                "__IMTCONN__": 4778199
+                                                                            },
+                                                                            "filter": {
+                                                                                "name": "Declined, submitter not yet notified",
+                                                                                "conditions": [
+                                                                                    [
+                                                                                        {
+                                                                                            "a": "{{21.NewStatus}}",
+                                                                                            "b": "Declined",
+                                                                                            "o": "text:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{contains(40.NotifiedDeclinedSubmitterIds; 9102.DeclinedSubmitterId)}}",
+                                                                                            "b": "{{false}}",
+                                                                                            "o": "boolean:equal"
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                            },
+                                                                            "mapper": {
+                                                                                "text": "❌ *DocuSeal Request Declined – {{22.ItemName}}*\n\n*Declined by:* {{9102.DeclinedSubmitterName}}\n*Reason:* {{9102.DeclineReason}}\n*Client Profile:* {{9020.ClientProfileLinkText}}\n*Submission:* <{{9102.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                                "parse": false,
+                                                                                "mrkdwn": true,
+                                                                                "channel": "C07R2JNE0J0",
+                                                                                "channelWType": "manualy"
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6300,
+                                                                                    "y": 600,
+                                                                                    "name": "Slack: Declined (Existing Item) Notification"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "id": 9027,
+                                                                            "module": "datastore:UpdateRecord",
+                                                                            "version": 1,
+                                                                            "parameters": {
+                                                                                "datastore": 185679
+                                                                            },
+                                                                            "mapper": {
+                                                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                                                "data": {
+                                                                                    "MondayItemId": "",
+                                                                                    "LockTimestamp": "",
+                                                                                    "LastKnownStatus": "",
+                                                                                    "LastEventTimestamp": "",
+                                                                                    "NotifiedDeclinedSubmitterIds": "{{9102.DeclinedSubmitterId}}"
+                                                                                },
+                                                                                "upsert": true,
+                                                                                "overwriteArrays": false
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6600,
+                                                                                    "y": 600,
+                                                                                    "name": "Sync Index: Mark Declined Notified (Existing Item)"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "flow": [
+                                                                        {
+                                                                            "id": 9106,
+                                                                            "module": "monday:ChangeMultipleColumnValuesV2",
+                                                                            "version": 2,
+                                                                            "parameters": {
+                                                                                "__IMTCONN__": 240128
+                                                                            },
+                                                                            "filter": {
+                                                                                "name": "Just Completed",
+                                                                                "conditions": [
+                                                                                    [
+                                                                                        {
+                                                                                            "a": "{{21.NewStatus}}",
+                                                                                            "b": "Completed",
+                                                                                            "o": "text:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{20.CompletedAt}}",
+                                                                                            "b": "{{emptystring}}",
+                                                                                            "o": "text:notequal"
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                            },
+                                                                            "mapper": {
+                                                                                "itemId": "{{40.MondayItemId}}",
+                                                                                "boardId": "5029524384",
+                                                                                "columnValuesToChange": [
+                                                                                    {
+                                                                                        "columnId": "date_mm4qbe7",
+                                                                                        "columnValue": {
+                                                                                            "date": "{{formatDate(parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); \"YYYY-MM-DD\")}}",
+                                                                                            "includeTime": false
+                                                                                        }
+                                                                                    }
+                                                                                ],
+                                                                                "create_labels_if_missing": false
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6300,
+                                                                                    "y": 900,
+                                                                                    "name": "Monday: Set Completion Date & Signed Document (Existing Item)"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "id": 9107,
+                                                                            "module": "slack:CreateMessage",
+                                                                            "version": 4,
+                                                                            "parameters": {
+                                                                                "__IMTCONN__": 4778199
+                                                                            },
+                                                                            "filter": {
+                                                                                "name": "Completed, not yet notified, has signed document",
+                                                                                "conditions": [
+                                                                                    [
+                                                                                        {
+                                                                                            "a": "{{21.NewStatus}}",
+                                                                                            "b": "Completed",
+                                                                                            "o": "text:equal"
+                                                                                        },
+                                                                                        {
+                                                                                            "a": "{{40.NotifiedCompleted}}",
+                                                                                            "b": "{{true}}",
+                                                                                            "o": "boolean:notequal"
+                                                                                        }
+                                                                                    ]
+                                                                                ]
+                                                                            },
+                                                                            "mapper": {
+                                                                                "text": "✅ *DocuSeal Request Completed – {{22.ItemName}}*\n\n*Client Profile:* {{9020.ClientProfileLinkText}}\n*Submission:* <{{9102.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                                "parse": false,
+                                                                                "mrkdwn": true,
+                                                                                "channel": "C07R2JNE0J0",
+                                                                                "channelWType": "manualy"
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6600,
+                                                                                    "y": 900,
+                                                                                    "name": "Slack: Completed (Existing Item) Notification"
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            "id": 9108,
+                                                                            "module": "datastore:UpdateRecord",
+                                                                            "version": 1,
+                                                                            "parameters": {
+                                                                                "datastore": 185679
+                                                                            },
+                                                                            "mapper": {
+                                                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                                                "data": {
+                                                                                    "NotifiedCompleted": true
+                                                                                }
+                                                                            },
+                                                                            "metadata": {
+                                                                                "designer": {
+                                                                                    "x": 6900,
+                                                                                    "y": 900,
+                                                                                    "name": "Sync Index: Mark Completed Notified (Existing Item)"
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "flow": [
+                                        {
+                                            "id": 60,
+                                            "module": "scenario-service:CallSubscenario",
+                                            "version": 2,
+                                            "parameters": {
+                                                "scenario": "SCN_8518416",
+                                                "shouldWaitForExecutionEnd": true
+                                            },
+                                            "filter": {
+                                                "name": "Record does not exist",
+                                                "conditions": [
+                                                    [
+                                                        {
+                                                            "a": "{{12.exist}}",
+                                                            "b": "{{false}}",
+                                                            "o": "boolean:equal"
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                            "mapper": {
+                                                "data": {
+                                                    "Phones": "{{20.ContactSearchPhones}}",
+                                                    "EmailsArray": "{{20.ContactSearchEmails}}",
+                                                    "BoardToSearch": "2074688484"
+                                                }
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 2700,
+                                                    "y": 3000,
+                                                    "name": "Subflow: Search Contacts by Email/Phone (New Item)"
+                                                },
+                                                "restore": {
+                                                    "parameters": {
+                                                        "scenario": {
+                                                            "label": "M.com: Subflow Search Contacts in Monday (Feb 26)"
+                                                        }
+                                                    }
+                                                },
+                                                "interface": [
+                                                    {
+                                                        "help": "An int of the id found in Contacts JV",
+                                                        "name": "ContactID",
+                                                        "type": "integer",
+                                                        "label": "",
+                                                        "default": null,
+                                                        "required": true
+                                                    }
+                                                ]
+                                            },
+                                            "onerror": [
+                                                {
+                                                    "id": 9006,
+                                                    "module": "scenario-service:CallSubscenario",
+                                                    "version": 2,
+                                                    "parameters": {
+                                                        "scenario": "SCN_8732008",
+                                                        "shouldWaitForExecutionEnd": true
+                                                    },
+                                                    "mapper": {
+                                                        "data": {
+                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                            "ErrorMessage": "Step: Call subflow 8518416 (Search Contacts). Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{60.error.message}}",
+                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": 9078,
+                                            "module": "util:SetVariables",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "filter": null,
+                                            "mapper": {
+                                                "scope": "roundtrip",
+                                                "variables": [
+                                                    {
+                                                        "name": "DeclinedSubmitterName",
+                                                        "value": "{{if(10.body.submitters[1].status = \"declined\"; ifempty(ifempty(10.body.submitters[1].name; 10.body.submitters[1].role); \"Unknown submitter\"); if(10.body.submitters[2].status = \"declined\"; ifempty(ifempty(10.body.submitters[2].name; 10.body.submitters[2].role); \"Unknown submitter\"); if(10.body.submitters[3].status = \"declined\"; ifempty(ifempty(10.body.submitters[3].name; 10.body.submitters[3].role); \"Unknown submitter\"); if(10.body.submitters[4].status = \"declined\"; ifempty(ifempty(10.body.submitters[4].name; 10.body.submitters[4].role); \"Unknown submitter\"); \"Unknown submitter\"))))}}"
+                                                    },
+                                                    {
+                                                        "name": "DeclinedSubmitterId",
+                                                        "value": "{{if(10.body.submitters[1].status = \"declined\"; 10.body.submitters[1].id; if(10.body.submitters[2].status = \"declined\"; 10.body.submitters[2].id; if(10.body.submitters[3].status = \"declined\"; 10.body.submitters[3].id; if(10.body.submitters[4].status = \"declined\"; 10.body.submitters[4].id; emptystring))))}}"
+                                                    },
+                                                    {
+                                                        "name": "DeclineReason",
+                                                        "value": "{{ifempty(if(10.body.submitters[1].status = \"declined\"; 10.body.submitters[1].decline_reason; if(10.body.submitters[2].status = \"declined\"; 10.body.submitters[2].decline_reason; if(10.body.submitters[3].status = \"declined\"; 10.body.submitters[3].decline_reason; if(10.body.submitters[4].status = \"declined\"; 10.body.submitters[4].decline_reason; emptystring)))); \"No reason provided\")}}"
+                                                    },
+                                                    {
+                                                        "name": "PrimarySubmitterEmailDisplay",
+                                                        "value": "{{ifempty(10.body.submitters[1].email; \"Not available\")}}"
+                                                    },
+                                                    {
+                                                        "name": "TemplateNameDisplay",
+                                                        "value": "{{ifempty(20.TemplateName; \"Not available\")}}"
+                                                    }
+                                                ]
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 3000,
+                                                    "y": 2850,
+                                                    "name": "Set Declined Variables"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "id": 9075,
+                                            "module": "builtin:BasicIfElse",
+                                            "version": 1,
+                                            "filter": null,
+                                            "mapper": null,
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 3300,
+                                                    "y": 2850
+                                                }
+                                            },
+                                            "branches": [
+                                                {
+                                                    "merge": true,
+                                                    "label": "Contact Found",
+                                                    "type": "condition",
+                                                    "flow": [
+                                                        {
+                                                            "id": 61,
+                                                            "module": "monday:GetItemV2",
+                                                            "version": 2,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 240128
+                                                            },
+                                                            "mapper": {
+                                                                "id": "{{60.ContactID}}",
+                                                                "boardId": "2074688484",
+                                                                "showSubitems": false,
+                                                                "showParentItem": false
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 3600,
+                                                                    "y": 2700,
+                                                                    "name": "Monday: Get Contact's Client Profile (New Item)"
+                                                                }
+                                                            },
+                                                            "onerror": [
+                                                                {
+                                                                    "id": 9007,
+                                                                    "module": "scenario-service:CallSubscenario",
+                                                                    "version": 2,
+                                                                    "parameters": {
+                                                                        "scenario": "SCN_8732008",
+                                                                        "shouldWaitForExecutionEnd": true
+                                                                    },
+                                                                    "mapper": {
+                                                                        "data": {
+                                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                                            "ErrorMessage": "Step: Monday GetItemV2 (Contact -> Client Profile). Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{61.error.message}}",
+                                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "id": 9103,
+                                                                    "module": "slack:CreateMessage",
+                                                                    "version": 4,
+                                                                    "parameters": {
+                                                                        "__IMTCONN__": 4778199
+                                                                    },
+                                                                    "mapper": {
+                                                                        "text": "🚨 *DocuSeal Automation Failed*\n\n*Scenario:* M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)\n*Submission ID:* {{2.SubmissionId}}\n*Failed Step:* Monday GetItemColumnValueV2 (Client Profile lookup, update path)\n*Error:* {{61.error.message}}",
+                                                                        "parse": false,
+                                                                        "mrkdwn": true,
+                                                                        "channel": "C0BDU8F52S0",
+                                                                        "channelWType": "manualy"
+                                                                    },
+                                                                    "metadata": {
+                                                                        "designer": {
+                                                                            "x": 4200,
+                                                                            "y": 3000,
+                                                                            "name": "Alert: Monday GetItemColumnValueV2 (Client Profile lookup, update path) (Slack Technical)"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "id": 70,
+                                                            "module": "monday:createItem2V2",
+                                                            "version": 2,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 240128
+                                                            },
+                                                            "mapper": {
+                                                                "name": "{{22.ItemName}}",
+                                                                "boardId": "5029524384",
+                                                                "groupId": "{{22.TargetGroup}}",
+                                                                "columnIds": [
+                                                                    "text_mm4qr3yv",
+                                                                    "email_mm4qvnap",
+                                                                    "date_mm4q429w",
+                                                                    "color_mm4qhhhc",
+                                                                    "text_mm4qr449",
+                                                                    "board_relation_mm4qrrxr"
+                                                                ],
+                                                                "columnValues": {
+                                                                    "date_mm4q429w": {
+                                                                        "date": "{{formatDate(parseDate(20.EarliestSentAt; \"YYYY-MM-DDTHH:mm:ssZ\"); \"YYYY-MM-DD\")}}",
+                                                                        "dateOrDatetime": "date"
+                                                                    },
+                                                                    "text_mm4qr3yv": "{{2.SubmissionId}}",
+                                                                    "text_mm4qr449": "{{20.TemplateName}}",
+                                                                    "color_mm4qhhhc": {
+                                                                        "label": "{{21.NewStatus}}"
+                                                                    },
+                                                                    "email_mm4qvnap": {
+                                                                        "text": "{{10.body.submitters[1].email}}",
+                                                                        "email": "{{lower(trim(10.body.submitters[1].email))}}"
+                                                                    },
+                                                                    "board_relation_mm4qrrxr": {
+                                                                        "item_ids": "{{61.mappable_column_values.board_relation_mkxpzyfq.linkedPulseIds[].linkedPulseId}}"
+                                                                    }
+                                                                },
+                                                                "create_labels_if_missing": false
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 3900,
+                                                                    "y": 2550,
+                                                                    "name": "Monday: Create DocuSeal Submission Item"
+                                                                }
+                                                            },
+                                                            "onerror": [
+                                                                {
+                                                                    "id": 9008,
+                                                                    "module": "scenario-service:CallSubscenario",
+                                                                    "version": 2,
+                                                                    "parameters": {
+                                                                        "scenario": "SCN_8732008",
+                                                                        "shouldWaitForExecutionEnd": true
+                                                                    },
+                                                                    "mapper": {
+                                                                        "data": {
+                                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                                            "ErrorMessage": "Step: Monday createItem2V2 (create path). Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{70.error.message}}",
+                                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                {
+                                                                    "id": 9104,
+                                                                    "module": "slack:CreateMessage",
+                                                                    "version": 4,
+                                                                    "parameters": {
+                                                                        "__IMTCONN__": 4778199
+                                                                    },
+                                                                    "mapper": {
+                                                                        "text": "🚨 *DocuSeal Automation Failed*\n\n*Scenario:* M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)\n*Submission ID:* {{2.SubmissionId}}\n*Failed Step:* Monday GetItemColumnValueV2 (Client Profile lookup, update path)\n*Error:* {{70.error.message}}",
+                                                                        "parse": false,
+                                                                        "mrkdwn": true,
+                                                                        "channel": "C0BDU8F52S0",
+                                                                        "channelWType": "manualy"
+                                                                    },
+                                                                    "metadata": {
+                                                                        "designer": {
+                                                                            "x": 4500,
+                                                                            "y": 2700,
+                                                                            "name": "Alert: Monday GetItemColumnValueV2 (Client Profile lookup, update path) (Slack Technical)"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "id": 9100,
+                                                            "module": "util:SetVariables",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "filter": null,
+                                                            "mapper": {
+                                                                "scope": "roundtrip",
+                                                                "variables": [
+                                                                    {
+                                                                        "name": "CreatedMondayItemID",
+                                                                        "value": "{{70.id}}"
+                                                                    },
+                                                                    {
+                                                                        "name": "ClientProfileID",
+                                                                        "value": "{{61.mappable_column_values.board_relation_mkxpzyfq.linkedPulseIds[].linkedPulseId}}"
+                                                                    },
+                                                                    {
+                                                                        "name": "ClientProfileName",
+                                                                        "value": "{{61.mappable_column_values.board_relation_mkxpzyfq.text}}"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 4200,
+                                                                    "y": 2400,
+                                                                    "name": "Set Monday ID and Client Profile"
+                                                                }
+                                                            }
+                                                        }
+                                                    ],
+                                                    "conditions": [
+                                                        [
+                                                            {
+                                                                "a": "{{60.ContactID}}",
+                                                                "b": "0",
+                                                                "o": "text:notequal"
+                                                            },
+                                                            {
+                                                                "a": "{{60.ContactID}}",
+                                                                "b": "0",
+                                                                "o": "number:notequal"
+                                                            }
+                                                        ]
+                                                    ]
+                                                },
+                                                {
+                                                    "merge": true,
+                                                    "disabled": false,
+                                                    "label": "",
+                                                    "type": "else",
+                                                    "flow": [
+                                                        {
+                                                            "id": 9081,
+                                                            "module": "monday:createItem2V2",
+                                                            "version": 2,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 240128
+                                                            },
+                                                            "mapper": {
+                                                                "name": "{{22.ItemName}}",
+                                                                "boardId": "5029524384",
+                                                                "groupId": "{{22.TargetGroup}}",
+                                                                "columnIds": [
+                                                                    "text_mm4qr3yv",
+                                                                    "email_mm4qvnap",
+                                                                    "date_mm4q429w",
+                                                                    "color_mm4qhhhc",
+                                                                    "text_mm4qr449"
+                                                                ],
+                                                                "columnValues": {
+                                                                    "date_mm4q429w": {
+                                                                        "date": "{{formatDate(parseDate(20.EarliestSentAt; \"YYYY-MM-DDTHH:mm:ssZ\"); \"YYYY-MM-DD\")}}",
+                                                                        "dateOrDatetime": "date"
+                                                                    },
+                                                                    "text_mm4qr3yv": "{{2.SubmissionId}}",
+                                                                    "text_mm4qr449": "{{20.TemplateName}}",
+                                                                    "color_mm4qhhhc": {
+                                                                        "label": "{{21.NewStatus}}"
+                                                                    },
+                                                                    "email_mm4qvnap": {
+                                                                        "text": "{{10.body.submitters[1].email}}",
+                                                                        "email": "{{lower(trim(10.body.submitters[1].email))}}"
+                                                                    }
+                                                                },
+                                                                "create_labels_if_missing": false
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 3600,
+                                                                    "y": 3300,
+                                                                    "name": "Monday: Create DocuSeal Submission Item"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9097,
+                                                            "module": "util:SetVariable2",
+                                                            "version": 1,
+                                                            "parameters": {},
+                                                            "mapper": {
+                                                                "name": "CreatedMondayItemID",
+                                                                "scope": "roundtrip",
+                                                                "value": "{{9081.id}}"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 4500,
+                                                                    "y": 3300,
+                                                                    "name": "Set Created Monday ID"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": 9094,
+                                            "module": "builtin:BasicMerge",
+                                            "version": 1,
+                                            "mapper": null,
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 4800,
+                                                    "y": 2850
+                                                }
+                                            },
+                                            "outputs": [],
+                                            "filters": [
+                                                null,
+                                                null
+                                            ]
+                                        },
+                                        {
+                                            "id": 9098,
+                                            "module": "util:GetVariable2",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "filter": null,
+                                            "mapper": {
+                                                "name": "CreatedMondayItemID"
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 5100,
+                                                    "y": 2850,
+                                                    "name": "Get Created Monday ID"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "id": 71,
+                                            "module": "datastore:AddRecord",
+                                            "version": 1,
+                                            "parameters": {
+                                                "datastore": 185679
+                                            },
+                                            "mapper": {
+                                                "key": "docuseal_submission:{{2.SubmissionId}}",
+                                                "data": {
+                                                    "MondayItemId": "{{9098.CreatedMondayItemID}}",
+                                                    "NotifiedSent": false,
+                                                    "LockTimestamp": "",
+                                                    "LastKnownStatus": "{{21.NewStatus}}",
+                                                    "NotifiedCompleted": false,
+                                                    "LastEventTimestamp": "{{now}}",
+                                                    "NotifiedNeedsReview": false,
+                                                    "NotifiedDeclinedSubmitterIds": ""
+                                                },
+                                                "overwrite": false
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 5400,
+                                                    "y": 2850,
+                                                    "name": "Sync Index: Add New Record"
+                                                }
+                                            },
+                                            "onerror": [
+                                                {
+                                                    "id": 9009,
+                                                    "module": "scenario-service:CallSubscenario",
+                                                    "version": 2,
+                                                    "parameters": {
+                                                        "scenario": "SCN_8732008",
+                                                        "shouldWaitForExecutionEnd": true
+                                                    },
+                                                    "mapper": {
+                                                        "data": {
+                                                            "ScenarioURL": "{{var.scenario.url}}",
+                                                            "ErrorMessage": "Step: Data Store AddRecord. Event: {{2.EventType}}. Submission ID: {{2.SubmissionId}}. Error: {{71.error.message}}",
+                                                            "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                                            "ToRecipients": "tech@rsfa.co.nz"
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": 9101,
+                                            "module": "util:GetVariables",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "filter": null,
+                                            "mapper": {
+                                                "variables": [
+                                                    "ClientProfileID",
+                                                    "ClientProfileName"
+                                                ]
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 5700,
+                                                    "y": 2700,
+                                                    "name": "Get Client Profiles Variables"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "id": 9079,
+                                            "module": "util:SetVariables",
+                                            "version": 1,
+                                            "parameters": {},
+                                            "mapper": {
+                                                "scope": "roundtrip",
+                                                "variables": [
+                                                    {
+                                                        "name": "ItemUrl",
+                                                        "value": "https://rsfa-squad.monday.com/boards/5029524384/pulses/{{9098.CreatedMondayItemID}}"
+                                                    },
+                                                    {
+                                                        "name": "ClientProfileLinkReal",
+                                                        "value": "{{if(9101.ClientProfileID != null; \"<https://rsfa-squad.monday.com/boards/5024661649/pulses/\" + 9101.ClientProfileID + \"|\" + 9101.ClientProfileName + \">\"; \" No Client Profile found for this submission\")}}"
+                                                    }
+                                                ]
+                                            },
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 6000,
+                                                    "y": 2700,
+                                                    "name": "Set Slack Notification Variables"
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "id": 9034,
+                                            "module": "builtin:BasicRouter",
+                                            "version": 1,
+                                            "mapper": null,
+                                            "metadata": {
+                                                "designer": {
+                                                    "x": 6300,
+                                                    "y": 2700,
+                                                    "name": "Route: Send Operational Slack Notifications (New Item)"
+                                                }
+                                            },
+                                            "routes": [
+                                                {
+                                                    "flow": [
+                                                        {
+                                                            "id": 9035,
+                                                            "module": "slack:CreateMessage",
+                                                            "version": 4,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 4778199
+                                                            },
+                                                            "filter": {
+                                                                "name": "Sent & single Client Profile",
+                                                                "conditions": [
+                                                                    [
+                                                                        {
+                                                                            "a": "{{21.NewStatus}}",
+                                                                            "b": "Sent",
+                                                                            "o": "text:equal"
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                            },
+                                                            "mapper": {
+                                                                "text": "📨 *DocuSeal Request Sent – {{22.ItemName}}*\n\n*Client Profile:* {{9079.ClientProfileLinkReal}}\n*Template:* {{20.TemplateName}}\n*Document:* <{{9079.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                "parse": false,
+                                                                "mrkdwn": true,
+                                                                "channel": "C07R2JNE0J0",
+                                                                "channelWType": "manualy"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 6600,
+                                                                    "y": 2400,
+                                                                    "name": "Slack: Sent (New Item) Notification"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "flow": [
+                                                        {
+                                                            "id": 9052,
+                                                            "module": "monday:ChangeMultipleColumnValuesV2",
+                                                            "version": 2,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 240128
+                                                            },
+                                                            "filter": {
+                                                                "name": "Completed with date and signed document",
+                                                                "conditions": [
+                                                                    [
+                                                                        {
+                                                                            "a": "{{21.NewStatus}}",
+                                                                            "b": "Completed",
+                                                                            "o": "text:equal"
+                                                                        },
+                                                                        {
+                                                                            "a": "{{20.CompletedAt}}",
+                                                                            "b": "{{emptystring}}",
+                                                                            "o": "text:notequal"
+                                                                        },
+                                                                        {
+                                                                            "a": "{{20.SignedDocUrl}}",
+                                                                            "b": "{{emptystring}}",
+                                                                            "o": "text:notequal"
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                            },
+                                                            "mapper": {
+                                                                "itemId": "{{9098.CreatedMondayItemID}}",
+                                                                "boardId": "5029524384",
+                                                                "columnValuesToChange": [
+                                                                    {
+                                                                        "columnId": "date_mm4qbe7",
+                                                                        "columnValue": {
+                                                                            "date": "{{formatDate(parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); \"YYYY-MM-DD\")}}",
+                                                                            "includeTime": false
+                                                                        }
+                                                                    },
+                                                                    {
+                                                                        "columnId": "link_mm4qk8jv",
+                                                                        "columnValue": {
+                                                                            "url": "{{20.SignedDocUrl}}",
+                                                                            "text": "Signed document"
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "create_labels_if_missing": false
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 6600,
+                                                                    "y": 2700,
+                                                                    "name": "Monday: Set Completion Date & Signed Document (New Item)"
+                                                                }
+                                                            }
+                                                        },
+                                                        {
+                                                            "id": 9036,
+                                                            "module": "slack:CreateMessage",
+                                                            "version": 4,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 4778199
+                                                            },
+                                                            "filter": {
+                                                                "name": "Completed with signed document",
+                                                                "conditions": [
+                                                                    [
+                                                                        {
+                                                                            "a": "{{21.NewStatus}}",
+                                                                            "b": "Completed",
+                                                                            "o": "text:equal"
+                                                                        },
+                                                                        {
+                                                                            "a": "{{20.SignedDocUrl}}",
+                                                                            "b": "{{emptystring}}",
+                                                                            "o": "text:notequal"
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                            },
+                                                            "mapper": {
+                                                                "text": "✅ *DocuSeal Request Completed – {{22.ItemName}}*\n\n*Client Profile:* {{9079.ClientProfileLinkReal}}\n*Signed Document:* <{{20.SignedDocUrl}}|Open Signed Document>\n*Submission:* <{{9079.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                "parse": false,
+                                                                "mrkdwn": true,
+                                                                "channel": "C07R2JNE0J0",
+                                                                "channelWType": "manualy"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 6900,
+                                                                    "y": 2700,
+                                                                    "name": "Slack: Completed (New Item) Notification"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "flow": [
+                                                        {
+                                                            "id": 9037,
+                                                            "module": "slack:CreateMessage",
+                                                            "version": 4,
+                                                            "parameters": {
+                                                                "__IMTCONN__": 4778199
+                                                            },
+                                                            "filter": {
+                                                                "name": "Declined",
+                                                                "conditions": [
+                                                                    [
+                                                                        {
+                                                                            "a": "{{21.NewStatus}}",
+                                                                            "b": "Declined",
+                                                                            "o": "text:equal"
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                            },
+                                                            "mapper": {
+                                                                "text": "❌ *DocuSeal Request Declined – {{22.ItemName}}*\n\n*Declined by:* {{9078.DeclinedSubmitterName}}\n*Reason:* {{9078.DeclineReason}}\n*Client Profile:* {{9079.ClientProfileLinkReal}}\n*Submission:* <{{9079.ItemUrl}}|Open DocuSeal Submission in Monday>",
+                                                                "parse": false,
+                                                                "mrkdwn": true,
+                                                                "channel": "C07R2JNE0J0",
+                                                                "channelWType": "manualy"
+                                                            },
+                                                            "metadata": {
+                                                                "designer": {
+                                                                    "x": 6600,
+                                                                    "y": 3000,
+                                                                    "name": "Slack: Declined (New Item) Notification"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "flow": [
+                        {
+                            "id": 90,
+                            "module": "scenario-service:CallSubscenario",
+                            "version": 2,
+                            "parameters": {
+                                "scenario": "SCN_8732008",
+                                "shouldWaitForExecutionEnd": true
+                            },
+                            "filter": {
+                                "name": "Invalid payload",
+                                "conditions": [
+                                    [
+                                        {
+                                            "a": "{{2.EventType}}",
+                                            "o": "notexist"
+                                        },
+                                        {
+                                            "a": "{{2.SubmissionId}}",
+                                            "b": "",
+                                            "o": "text:equal"
+                                        }
+                                    ]
+                                ]
+                            },
+                            "mapper": {
+                                "data": {
+                                    "ScenarioURL": "{{var.scenario.url}}",
+                                    "ErrorMessage": "Invalid DocuSeal webhook payload received: missing or empty event_type and/or submission ID. Raw event_type: {{1.event_type}}. Raw data.id: {{1.data.id}}. Raw data.submission.id: {{ifempty(1.data.submission.id; \"No Submission ID found\")}}. This payload could not be processed and was not synced to Monday.",
+                                    "ScenarioName": "M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)",
+                                    "ToRecipients": "tech@rsfa.co.nz"
+                                }
+                            },
+                            "metadata": {
+                                "designer": {
+                                    "x": 900,
+                                    "y": 4200,
+                                    "name": "Alert: Webhook payload validation (Email)"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "instant": true,
+        "version": 1,
+        "scenario": {
+            "roundtrips": 1,
+            "maxErrors": 3,
+            "autoCommit": true,
+            "autoCommitTriggerLast": true,
+            "sequential": false,
+            "slots": null,
+            "confidential": false,
+            "dataloss": false,
+            "dlq": false,
+            "freshVariables": false
+        },
+        "designer": {
+            "orphans": []
+        },
+        "zone": "eu2.make.com",
+        "notes": [
+            "Repository copy note: several verbose 'restore'/'expect'/'parameters' UI-metadata blocks present in the original RSFA-supplied export (field labels, dropdown option specs, connection display labels) were omitted here to keep this file focused on functional logic (modules, mapper expressions, filters, routes, onerror handlers). No module, route, filter, mapper expression, or onerror handler was removed. See knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md for the full analysis, including exact column IDs and connection IDs referenced by the omitted metadata."
+        ]
+    }
+}

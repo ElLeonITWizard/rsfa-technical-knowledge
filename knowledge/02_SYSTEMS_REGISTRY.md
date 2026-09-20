@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-05
+last_modified: 2026-09-20
 last_verified: 2026-09-05
 ---
 
@@ -97,8 +97,8 @@ No secret value should ever be stored in this repository.
 | `SYS-PIGEON-001` | Pigeon Documents | Client document collection | Active | High | Online client document requests and uploads | Rod Schubert | `tech@rsfa.co.nz` | https://app.pigeondocuments.com/dashboard | Client personal data, financial data, insurance data, documents | `knowledge/systems/pigeon/` |
 | `SYS-MACROFORGE-001` | MacroForge | Desktop automation tool | Active | High | Automatic completion of bank end forms from Monday data | Rod Schubert | `tech@rsfa.co.nz` | https://www.macroforge.io/ | Client personal data, financial data, documents, technical configuration | `knowledge/systems/macroforge/` |
 | `SYS-AFFORDX-001` | AffordX | Financial analysis and meeting support | Active - Expanding | High | Bank-statement analysis, application tracking, meeting summaries and transcriptions | Rod Schubert | `tech@rsfa.co.nz` | https://broker.affordx.nz/ | Client personal data, financial data, communications, documents | `knowledge/systems/affordx/` |
-| `SYS-DOCUSIGN-001` | DocuSign | Electronic signatures | Active | High | Electronic signatures and signed-document workflows | Rod Schubert | `tech@rsfa.co.nz` | https://apps.docusign.com/ | Client personal data, documents, signatures | `knowledge/systems/docusign/` |
-| `SYS-DOCUSEAL-001` | DocuSeal | Electronic signatures | Experimental | Low | Potential future replacement for DocuSign | Rod Schubert | `tech@rsfa.co.nz` | https://docuseal.com/ | Test data only unless otherwise approved | `knowledge/systems/docuseal/` |
+| `SYS-DOCUSIGN-001` | DocuSign | Electronic signatures | Active - Reducing | High | Electronic signatures and signed-document workflows | Rod Schubert | `tech@rsfa.co.nz` | https://apps.docusign.com/ | Client personal data, documents, signatures | `knowledge/systems/docusign/` |
+| `SYS-DOCUSEAL-001` | DocuSeal | Electronic signatures | Active - Expanding | Medium | Planned replacement for DocuSign; first production Make.com automation now live | Rod Schubert | `tech@rsfa.co.nz` | https://docuseal.com/ | Test data only unless otherwise approved (see summary below) | `knowledge/systems/docuseal/` |
 | `SYS-GCP-001` | Google Cloud Platform | Cloud infrastructure | Active | High | Hosts custom functions and backend services used by RSFA automations | Rod Schubert | `tech@rsfa.co.nz` | https://console.cloud.google.com/ | Technical configuration, custom code, possible client references | `knowledge/systems/google-cloud/` |
 | `SYS-GCP-FUNCTIONS-001` | Google Cloud Project - RSFA Functions | Custom automation code | Active | High | Hosts custom functions called from automations | Rod Schubert | `tech@rsfa.co.nz` | https://console.cloud.google.com/welcome?project=strange-calling-402307 | Technical configuration, custom code, possible client references | `knowledge/systems/google-cloud/rsfa-functions.md` |
 | `SYS-GCP-ADDIN-001` | Google Cloud Project - rsfa-backend-fix | Add-in backend | Active | High | Hosts the backend for the Real Savvy Ref Outlook Add-in | Rod Schubert | `tech@rsfa.co.nz` | https://console.cloud.google.com/welcome?project=rsfa-backend-fix | Technical configuration, custom code, client references | `knowledge/systems/google-cloud/rsfa-backend-fix.md` |
@@ -447,7 +447,7 @@ The exact AffordX integration map still requires detailed documentation.
 ## SYS-DOCUSIGN-001 — DocuSign
 
 - **Category:** Electronic signatures
-- **Status:** Active
+- **Status:** Active - Reducing
 - **Criticality:** High
 - **Primary role:** Electronic signatures and signed-document processing
 - **Administrative owner:** Rod Schubert
@@ -458,24 +458,25 @@ The exact AffordX integration map still requires detailed documentation.
 - **Main connected systems:** Power Automate, SharePoint, Slack
 - **Detailed documentation:** `knowledge/systems/docusign/`
 
+**Per RSFA (2026-09-20, Confirmed from provided evidence, not independently verified):** RSFA plans to migrate document signing to DocuSeal between October and November 2026, after which `AUTO-DOCUSIGN-001` is expected to stop being used. DocuSign remains the active signing platform today — see `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md`.
+
 ---
 
 ## SYS-DOCUSEAL-001 — DocuSeal
 
 - **Category:** Electronic signatures
-- **Status:** Experimental
-- **Criticality:** Low
-- **Primary role:** Potential future replacement for DocuSign
+- **Status:** Active - Expanding
+- **Criticality:** Medium
+- **Primary role:** Planned replacement for DocuSign
 - **Administrative owner:** Rod Schubert
 - **Technical account:** `tech@rsfa.co.nz`
 - **Test account:** `tech@rsfa.co.nz`
 - **Access URL:** https://docuseal.com/
-- **Handles client data:** No production client data expected
+- **Handles client data:** Test data only confirmed so far (see below)
+- **Main connected systems:** Make.com, Monday.com, Slack
 - **Detailed documentation:** `knowledge/systems/docuseal/`
 
-Only a test board and trial account currently exist.
-
-No production workflow has been implemented.
+**Per RSFA (2026-09-20, Confirmed from provided evidence, not independently verified live):** a first production Make.com automation, `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)` (`9803640`, see `AUTO-DOCUSEAL-001`), is now live, syncing DocuSeal submissions to the `🖊️ DocuSeal Submissions (WIP)` Monday board (`5029524384`). The one confirmed real execution used a fictional test identity ("Leo The Lion & Leo Testing"), consistent with the "test data only" restriction still holding in practice, even though this is no longer merely a trial-account experiment. Status raised from `Experimental` to `Active - Expanding` on that basis. See `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md` for the planned full migration.
 
 ---
 
@@ -795,3 +796,4 @@ The following information still requires verification:
 - **New 2026-09-05:** whether `https://rsfa-agent-plugin-pilot.vercel.app/api/mcp` is still the current production MCP endpoint for `SYS-KC-001`, or only a historical pilot (responded 405 to GET on 2026-09-05, consistent with a live endpoint, but not confirmed as production).
 - **New 2026-09-05:** exact scope/configuration of `SYS-COPILOT-001` (RSFA Copilot Agent POC) beyond its existence as a read-only proof of concept.
 - **New 2026-09-05:** the RSFA Knowledge Centre's content population remains very early (1 published article) — extent and timeline of GetGuru → Knowledge Centre content migration is unconfirmed.
+- **New 2026-09-20:** exact scope and cutover date of the planned DocuSign → DocuSeal migration are unconfirmed beyond "October–November 2026" (per RSFA) — see `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md`. `SYS-DOCUSEAL-001`'s new automation (`AUTO-DOCUSEAL-001`) was documented from a supplied blueprint export, not an independent live Make/Monday query.

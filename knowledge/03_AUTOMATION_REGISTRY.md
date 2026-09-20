@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-05
+last_modified: 2026-09-20
 last_verified: 2026-09-05
 ---
 
@@ -63,7 +63,7 @@ This registry is an index. Detailed implementation logic belongs under `knowledg
 | Automation ID | Canonical automation | Platform | Status | Criticality | Main trigger | Main outcome | Main systems | Documentation | Detailed file |
 |---|---|---|---|---|---|---|---|---|---|
 | `AUTO-EMAIL-001` | Client Email Filing and Overflow Processing | Power Automate | Active | Critical | Incoming and sent Outlook emails | Files client emails and attachments, updates Client Profiles and routes unmatched emails | Outlook, SharePoint, Monday.com, Slack, Real Savvy Ref | Partially documented | knowledge/automations/power-automate/AUTO-EMAIL-001-client-email-filing.md |
-| `AUTO-DOCUSIGN-001` | DocuSign Signed Document Filing | Power Automate | Active | High | Completed DocuSign envelope | Files signed documents in SharePoint and sends Slack notifications | DocuSign, Power Automate, SharePoint, Slack | Partially documented | knowledge/automations/power-automate/AUTO-DOCUSIGN-001-docusign-filing.md |
+| `AUTO-DOCUSIGN-001` | DocuSign Signed Document Filing | Power Automate | Active - Planned Retirement | High | Completed DocuSign envelope | Files signed documents in SharePoint and sends Slack notifications | DocuSign, Power Automate, SharePoint, Slack | Partially documented | knowledge/automations/power-automate/AUTO-DOCUSIGN-001-docusign-filing.md |
 | `AUTO-SP-FOLDER-001` | Client SharePoint Folder Lifecycle | Power Automate | Active | High | Client Profile create, rename, permission or maintenance event | Creates, renames, permissions and maintains Client Profile folders | Monday.com, Power Automate, SharePoint | Partially documented | knowledge/automations/power-automate/AUTO-SP-FOLDER-001-client-folder-lifecycle.md |
 | `AUTO-EMAIL-BACKUP-001` | Email Backup and Failed Item Recovery | Power Automate | Active | High | Manual or scheduled backup/recovery trigger | Backs up mailbox content and retries failed email-filing items | Outlook, Power Automate, SharePoint | Partially documented | knowledge/automations/power-automate/AUTO-EMAIL-BACKUP-001-email-backup-recovery.md |
 | `AUTO-MONDAY-BACKUP-001` | Monday Activities and Emails Backup | Power Automate | Active | High | Scheduled or manual backup trigger | Backs up large Monday activity and Emails & Activities datasets | Monday.com, Power Automate, SharePoint | Partially documented | knowledge/automations/power-automate/AUTO-MONDAY-BACKUP-001-activity-backup.md |
@@ -81,6 +81,7 @@ This registry is an index. Detailed implementation logic belongs under `knowledg
 | `AUTO-UNSUBSCRIBE-001` | Client Unsubscribe and Email Preferences | Make.com | Active | Medium | Client unsubscribe webhook | Updates client and insurance email preferences | Monday.com, Make.com, Outlook | Partially documented | knowledge/automations/make/AUTO-UNSUBSCRIBE-001-email-preferences.md |
 | `AUTO-MONDAY-WF-001` | Move to Pipeline Workflow (New) | Monday Workflow | Deprecated (superseded 2026-09-05 by Make `9756260`, per RSFA) | Critical | Pipeline Status changes on Leads | Creates Mortgage, Insurance or KiwiSaver pipeline records | Monday.com | Partially documented | knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md |
 | `AUTO-MONDAY-WF-002` | Leads App 2 Creation + CP Name | Monday Workflow | Deprecated (deactivated 2026-09-05, per RSFA, no replacement) | High | Leads Form application contains two applicants | Creates second lead and supports Client Profile naming | Monday.com | Partially documented | knowledge/automations/monday/AUTO-MONDAY-WF-002-second-applicant.md |
+| `AUTO-DOCUSEAL-001` | DocuSeal Submission Lifecycle Sync | Make.com | Active | High | DocuSeal webhook event (submission created/sent/viewed/completed/declined/expired) | Creates/updates a Monday tracking item per DocuSeal submission, links Client Profile where possible, sends Slack milestone notifications | DocuSeal, Make.com, Monday.com, Slack | Partially documented | knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md |
 | `COMP-MAKE-ERROR-001` | Shared Make Failure Email Notification | Make.com shared component | Active | High | Error branch or validation failure | Sends a standard Outlook failure notification | Make.com, Outlook | Partially documented | knowledge/automations/make/components/COMP-MAKE-ERROR-001-failure-email.md |
 
 ---
@@ -145,6 +146,7 @@ The call graph previously resolved 20 of 22 chained scenarios, with two parent s
 | M.com: Subflow AffordX to Existing Mortgages Sync (Aug 2026) | `9662353` | Active | On-demand (called by parent scenario) | Mortgage Applications | bridge (also callable as subscenario) | Monday.com, Slack | AffordX Mortgage Application Sync | 2026-09-05 | New 2026-09-05. Calls `8518416` (Search Contacts); confirmed live via blueprint inspection — see `AUTO-AFFORDX-001` §10a |
 | M.com: Move to Pipeline (Sep 2026) | `9756260` | Active | Webhook (custom webhook) | Leads and Client Profiles | standalone | Webhook Gateway, Monday.com | Leads and Client Profiles | 2026-09-04 | New 2026-09-05, created 2026-09-03. Routes Leads `Pipeline Status` changes to Mortgage/Insurance/KiwiSaver Pipeline; confirmed live via blueprint inspection. Supersedes the native Monday Workflow `AUTO-MONDAY-WF-001` per RSFA — see `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md` |
 | M.com: Contact Change in Aircall Board (Jul 2026) | `9627714` | Active | Webhook (custom webhook) | Aircall | standalone | Webhook Gateway, Monday.com | Aircall Call Processing | 2026-08-11 | New 2026-09-05, created 2026-08-06. Calls `9498962` when a call's linked Contact changes; confirmed live via blueprint inspection — see `AUTO-AIRCALL-001` |
+| M.com: DocuSeal Submission Lifecycle Sync (Sep 2026) | `9803640` | Active | Webhook (custom webhook, instant) | SharePoint and Documents | parent | Webhook Gateway, Monday.com, Slack, DocuSeal (custom/universal connector) | DocuSeal Submission Lifecycle Sync | 2026-09 (exact date not given) | New 2026-09-20, provided directly by RSFA as a blueprint export (not independently queried live). Calls `8518416` (Search Contacts) and `8732008` (error email) — see `AUTO-DOCUSEAL-001` |
 | M.com: New Transcription in Aircall (Jul 2026) | `9627699` | Active | Aircall instant trigger (`transcription.created`) | Aircall | standalone | Aircall, Monday.com | Aircall Call Processing | 2026-08-06 | New 2026-09-05, created 2026-08-06. Aircall-native webhook trigger (not Monday-watch); calls `9498962`; confirmed live via blueprint inspection — see `AUTO-AIRCALL-001` |
 | Monday Board Columns Generator from JSON | `8440979` | Active | On-demand (called by parent scenario) | General / Shared Utilities | standalone | Monday.com | General / Shared Utilities | 2026-03-09 | — |
 | Outlook: Email Notification after Failed Scenario | `8732008` | Active | On-demand (called by parent scenario) | General / Shared Utilities | subscenario | Microsoft Outlook/Email | Shared utility (cross-cutting, not a business family) | 2026-02-23 | — |
@@ -162,7 +164,8 @@ The call graph previously resolved 20 of 22 chained scenarios, with two parent s
 | AffordX Mortgage Application Sync | `AffordX Subflow Client Creation (Sep 2025)` (`7292131`)<br>`AffordX to M.com Applications Sync (Aug 2025)` (`6238398`)<br>`M.com to AffordX Application Creation (Jul 2025)` (`6468551`)<br>`Subflow Application Creation Monday-AffordX (Apr 2026)` (`9067654`, found 2026-09-05 — lives outside any folder, see §8)<br>`M.com: AffordX item Need Sync to Existing Mortgages (Aug 2026)` (`9721689`, new)<br>`M.com: Subflow AffordX to Existing Mortgages Sync (Aug 2026)` (`9662353`, new) |
 | Aircall Call Processing | `Aircall Transcript Summary` (`6123035`, now Inactive)<br>`M.com: Aircall Upload Transcriptions To SP (Jul 2026)` (`9498962`)<br>`M.com: Calls > Unknown/Client` (`5543887`)<br>`M.com: New item in Contacts (Aircall) -> Delete` (`6548539`)<br>`M.com: Contact Change in Aircall Board (Jul 2026)` (`9627714`, new)<br>`M.com: New Transcription in Aircall (Jul 2026)` (`9627699`, new) |
 | Client Profile / Contact Lifecycle | `M.com: Connect Entities to Mortgage Pipeline (Dec25)` (`8278547`)<br>`M.com: CP and Deals Renaming after Contact Renaming` (`1054927`)<br>`M.com: Creating Contact and Client Profile after Lead was Added (Mar 2026)` (`8800779`) |
-| Client Profile / Contact Lifecycle (shared search utility) | `M.com: Subflow Search Contacts in Monday (Feb 26)` (`8518416`) |
+| Client Profile / Contact Lifecycle (shared search utility) | `M.com: Subflow Search Contacts in Monday (Feb 26)` (`8518416`) — now also called by `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)` (`9803640`, new 2026-09-20), in addition to its previously confirmed AffordX-family callers |
+| DocuSeal Submission Lifecycle Sync | `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)` (`9803640`, new 2026-09-20) |
 | Form Submission Filing (IQ/MA/KQ) | `M.com: New Form Submission in IQ/MA/KQ (Jun 2026)` (`9447215`) |
 | General / Shared Utilities | `Monday Board Columns Generator from JSON` (`8440979`) |
 | Insurance Policy Lifecycle | `M.com: Insurance Expiry Email (Jul 2025)` (`6279522`)<br>`M.com: Renaming after Insurance Policy Added or Owner/Provider Change (Feb 2026)` (`1215342`)<br>`M.com Reset Status And Reminder From Exisitng Insurance` (`9235525`)<br>`Real Savvy Insurance Unsubscribe (11Sep)` (`7178534`) |
@@ -184,7 +187,7 @@ Power Automate remains the principal platform for Outlook, SharePoint and other 
 
 | Exact Power Automate flow name | Trigger type | Canonical automation | Current status | Notes |
 |---|---|---|---|---|
-| DocuSign to SharePoint | Automated | `AUTO-DOCUSIGN-001` | Active | — |
+| DocuSign to SharePoint | Automated | `AUTO-DOCUSIGN-001` | Active - Planned Retirement | Per RSFA (2026-09-20), RSFA plans to migrate to DocuSeal between October and November 2026 — see `AUTO-DOCUSEAL-001` and `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md`. Still active and relied upon today. |
 | Main Outlook Inbox Email Filling | Instant child flow | `AUTO-EMAIL-001` | Active | Central reusable processing flow used by mailbox-specific and overflow flows. |
 | Outlook Email Filing - Support v2 | Automated | `AUTO-EMAIL-001` | Active | — |
 | Outlook Email Filing - Seth v2 | Automated | `AUTO-EMAIL-001` | Active | — |
@@ -316,6 +319,7 @@ Board-level recipes should initially be documented by business process. Create a
 - Several Make functional summaries are inferred from names and module structure and require business verification.
 - Most Make scenarios do not yet have a verified canonical automation document.
 - **New 2026-09-05:** a new Make scenario, `M.com: Move to Pipeline (Sep 2026)` (`9756260`, created 2026-09-03), performs the same Leads → Pipeline routing function as the pre-existing native Monday Workflow `AUTO-MONDAY-WF-001` (board `5025429617`, unchanged since 2025-12-04). Per RSFA, the Make scenario is now the active implementation and the Monday Workflow is superseded/replaced — not independently verified beyond the Make blueprint and the unchanged state of the Workflow's own board; see `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md`.
+- **New 2026-09-20:** a new Make scenario, `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)` (`9803640`), was added directly via an RSFA-supplied blueprint export rather than a live Make MCP query — its presence in `Valid scenarios/working` and its exact creation date have not been independently confirmed live. Several notification-logic discrepancies were found reading its blueprint directly — see `AUTO-DOCUSEAL-001` §18. RSFA also reported a planned DocuSign → DocuSeal migration (October–November 2026) — see `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md`.
 
 ### 10.1 Contradictions and unresolved discrepancies found while drafting detailed automation documents (2026-07-30)
 

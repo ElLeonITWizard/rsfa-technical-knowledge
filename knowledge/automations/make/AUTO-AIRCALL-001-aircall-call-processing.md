@@ -38,8 +38,8 @@ related_scenarios:
   - name: M.com: Contact Change in Aircall Board (Jul 2026)
     id: "9627714"
 related_flows: []
-last_modified: 2026-09-05
-last_verified: 2026-09-05
+last_modified: 2026-09-06
+last_verified: 2026-09-06
 documentation_status: partial
 ---
 
@@ -83,7 +83,7 @@ This is a materially different, more event-accurate trigger design than the orig
 ## 5. Trigger
 
 - `Aircall Transcript Summary` (6123035): Monday.com instant trigger (watch) on the Aircall VOIP Call Board. **Inactive as of 2026-09-05** — retained here for history, not a current trigger path.
-- `M.com: Aircall Upload Transcriptions To SP (Jul 2026)` (9498962): Monday.com instant trigger (watch) — fires when a new Aircall call is registered. **Also confirmed live (2026-09-05) to be independently callable as a subscenario**, invoked by both `9627699` and `9627714` below.
+- `M.com: Aircall Upload Transcriptions To SP (Jul 2026)` (9498962): **Corrected 2026-09-06** — this scenario has no Monday.com watch trigger of its own. Confirmed from live system (2026-09-06, Make MCP `scenarios_get`): `hookId` is null, `chainingRole` is `bridge`, scheduling type is `on-demand`. It runs only on-demand as a subscenario. Confirmed caller: `9627714` (`M.com: Contact Change in Aircall Board (Jul 2026)`). Per `03_AUTOMATION_REGISTRY.md`, likely also called by `9627699` (`M.com: New Transcription in Aircall (Jul 2026)`) — not yet independently confirmed from that scenario's own blueprint. The prior description here — "Monday.com instant trigger (watch)" — is outdated/incorrect as of this verification; retained in the change history (§26) rather than silently deleted.
 - `M.com: Calls > Unknown/Client` (5543887): Monday.com instant trigger (watch).
 - `M.com: New item in Contacts (Aircall) -> Delete` (6548539): Monday.com instant trigger (watch), for cleanup of Aircall-generated Contacts.
 - `M.com: New Transcription in Aircall (Jul 2026)` (9627699) — **new, confirmed live 2026-09-05:** Aircall-native webhook trigger on the `transcription.created` conversation-intelligence event; calls `9498962` directly with the Call ID.
@@ -122,7 +122,7 @@ Aircall (native integration + API), Monday.com (call board, Contacts, Client Pro
 | Scenario ID | Exact Make name | Role | Status | Trigger | Calls | Called by | Source confidence |
 |---|---|---|---|---|---|---|---|
 | `6123035` | Aircall Transcript Summary | Standalone | **Inactive (was Active)** | Monday.com instant trigger (watch) | None confirmed | None confirmed | Confirmed live 2026-09-05: status change since 2026-07-30 |
-| `9498962` | M.com: Aircall Upload Transcriptions To SP (Jul 2026) | Parent (also confirmed callable as subscenario) | Active | Monday.com instant trigger (watch); also called on-demand by `9627699`/`9627714` | `Outlook: Email Notification after Failed Scenario` (`8732008`) | `9627699`, `9627714` (confirmed live 2026-09-05) | Current (registry + call graph); matches source-material walkthrough in detail |
+| `9498962` | M.com: Aircall Upload Transcriptions To SP (Jul 2026) | Parent (also confirmed callable as subscenario) | Active | **Corrected 2026-09-06:** On-demand / bridge (subscenario only) — `hookId` null, `chainingRole` `bridge`, confirmed live via `scenarios_get`; no independent Monday watch trigger. Previously documented as "Monday.com instant trigger (watch)" — that was incorrect. | `Outlook: Email Notification after Failed Scenario` (`8732008`) | `9627699`, `9627714` (confirmed live 2026-09-05) | Current (registry + call graph); matches source-material walkthrough in detail |
 | `5543887` | M.com: Calls > Unknown/Client | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) |
 | `6548539` | M.com: New item in Contacts (Aircall) -> Delete | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) |
 | `9627699` | M.com: New Transcription in Aircall (Jul 2026) | Parent | Active | Aircall instant trigger (`transcription.created`) | `9498962` | None confirmed | New, confirmed live 2026-09-05 via blueprint inspection |
@@ -185,6 +185,7 @@ TODO: complete mapping from current production configuration for exact template 
 - If the call cannot be matched to a known contact, `M.com: Calls > Unknown/Client` handles routing instead of the main transcription path.
 - If no transcription is available (typically short calls), no transcript/summary document is generated — this is expected behaviour, not an error.
 - The Aircall native integration occasionally creates a stray Contacts record; `M.com: New item in Contacts (Aircall) -> Delete` removes it.
+- Voicemail items are excluded from the Aircall retrieval/document-generation branch: the `Get Contacts To Get Client Profiles` filter ("Recording and Call ID exist") was extended with an additional AND condition — `{{4.mappable_column_values.link_mm01c4ba.url}}` does NOT contain `/voicemail`. This routes voicemail records to skip the branch entirely, treated as an expected no-op, the same way short calls with no transcription are already handled. — *Confirmed from live system (2026-09-06 blueprint inspection + live fix applied by RSFA IT)*
 
 ## 14. Dependencies
 
@@ -211,6 +212,7 @@ Not confirmed. TODO: verify whether a failed transcription/summary generation ca
 - Recent-error counts from the 2026-07-30 export were not re-checked live in this pass — needs follow-up before being treated as fully stable.
 - The reason `6123035` was deactivated is not confirmed — inferred from timing relative to the two new trigger scenarios, not from a direct statement or change log.
 - The `Transcription Available (Bot)` field on the Aircall VOIP Call Board was not re-verified live in this pass (last confirmed in the 2026-07-30 export).
+- **Voicemail 404 failures — resolved 2026-09-06.** Voicemail records previously failed with a 404: `Get Item Call` (`aircall:getCall`) derives the Aircall call ID by stripping `https://assets.aircall.io/calls/` and `/recording` from the Recording/VM URL, but voicemail URLs end in `/voicemail`, so the suffix was never stripped (e.g. producing `4117209783/voicemail`). Fixed by extending the filter in `Get Contacts To Get Client Profiles` to skip `/voicemail` URLs (§13). **Residual risk:** if Aircall changes the Recording/VM URL format for voicemails, this string-match detection would silently stop working with no alert — recommend a periodic spot-check of a sample voicemail item's URL format.
 
 ## 19. Security and sensitive data
 
@@ -264,7 +266,7 @@ Disable the affected Make.com scenario(s). No automated rollback of already-gene
 
 - Exact Monday native automation recipe used in the call-routing path is not documented.
 - Slack notification status (built vs. planned) is unconfirmed.
-- Root cause of recent errors on scenarios `9498962` and `9254149`-adjacent flows is not investigated in this pass; current error status not re-checked live.
+- Root cause of recent errors on scenarios `9498962` and `9254149`-adjacent flows: **partially investigated 2026-09-06.** One cause — voicemail records producing a 404 in `Get Item Call` because the Recording/VM URL ends in `/voicemail` instead of `/recording` — is confirmed diagnosed and fixed (§13, §18). This is **not confirmed** to be the cause of all 6 recent errors recorded in `exports/make/valid-scenarios-working-inventory.md`; only the voicemail-404 pattern itself is confirmed. The remaining error count/causes are still open — TODO: verify.
 - Manual reprocessing procedure for a failed transcription/summary generation is not confirmed.
 - The reason `6123035` was deactivated is not confirmed (inferred from timing only).
 
@@ -274,3 +276,4 @@ Disable the affected Make.com scenario(s). No automated rollback of already-gene
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, call-graph and source-material evidence. | Claude (documentation task) |
 | 2026-09-05 | Documented the stabilised trigger architecture per RSFA and live Make MCP re-verification: `6123035` confirmed Inactive; two new scenarios (`9627699` Aircall-native transcription webhook, `9627714` Monday Contact-change webhook) confirmed live, both calling `9498962` as a subscenario. Recorded that the causal link between the two changes is inferred from timing, not confirmed. | Claude (documentation task) |
+| 2026-09-06 | Fixed voicemail-404 root cause in scenario `9498962` (module "Get Contacts To Get Client Profiles" filter extended to skip items whose Recording/VM URL contains "/voicemail"). Also corrected documented trigger type for `9498962` from "Monday.com instant trigger (watch)" to "on-demand / bridge (subscenario only)" based on live blueprint inspection. | TODO: confirm author |
