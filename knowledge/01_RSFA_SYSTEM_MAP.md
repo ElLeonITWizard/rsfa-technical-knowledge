@@ -8,7 +8,7 @@ scope:
   - Integrations
   - Data flows
   - Operational dependencies
-last_modified: 2026-09-20
+last_modified: 2026-10-26
 last_verified: 2026-09-05
 ---
 
@@ -505,7 +505,7 @@ Per RSFA (2026-09-20), RSFA plans to migrate to DocuSeal between October and Nov
 
 #### DocuSeal
 
-DocuSeal is RSFA's planned replacement for DocuSign. A first production Make.com automation (`AUTO-DOCUSEAL-001`, `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)`) is now live, syncing DocuSeal submissions to a dedicated Monday board (`🖊️ DocuSeal Submissions (WIP)`, `5029524384`) — see `knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md`. This is confirmed per RSFA's direct report and a supplied blueprint export, not independently verified live in this session. Test data only has been confirmed used so far.
+DocuSeal is RSFA's replacement for DocuSign and is in production use with real client submissions (confirmed live 2026-10-26). The Make.com automation `AUTO-DOCUSEAL-001` (`M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)`) syncs DocuSeal submissions to the `🖊️ DocuSeal Submissions` Monday board (`5029524384`). It also files completed submissions' signed PDFs into the client's SharePoint folder (`h. FileInvite and Docusign`) — see `knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md`. Whether DocuSign has been fully retired is not confirmed.
 
 #### Microsoft Word templates
 
@@ -1160,7 +1160,7 @@ Power Automate is used to:
 - File them in SharePoint.
 - Notify the relevant Slack channel.
 
-## 13a. DocuSeal flow (planned replacement)
+## 13a. DocuSeal flow (replacing DocuSign)
 
 ```mermaid
 flowchart LR
@@ -1169,12 +1169,15 @@ flowchart LR
     Monday[Monday.com]
     Slack[Slack]
 
+    SharePoint[SharePoint]
+
     DocuSeal --> Make
     Make --> Monday
     Make --> Slack
+    Make --> SharePoint
 ```
 
-Per RSFA (2026-09-20), DocuSeal is intended to replace DocuSign between October and November 2026. A first production automation is live: `AUTO-DOCUSEAL-001` (`M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)`) syncs DocuSeal submission status to a dedicated Monday board and sends Slack milestone notifications — see `knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md`. Unlike the DocuSign flow above, this automation does not currently file signed documents into SharePoint — see `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md` for that gap. Not independently verified live in this session.
+Per RSFA (2026-09-20), DocuSeal is intended to replace DocuSign between October and November 2026. A first production automation is live: `AUTO-DOCUSEAL-001` (`M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)`) syncs DocuSeal submission status to a dedicated Monday board and sends Slack milestone notifications — see `knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md`. Since about late September 2026 it also files each completed submission's signed PDF(s) into the client's SharePoint folder under `h. FileInvite and Docusign` (the same subfolder the DocuSign flow uses) and into the Monday item's `Files` column. If no single Client Profile or valid `SP folder` link exists, it posts a "Manual SharePoint Filing Required" Slack message instead. Confirmed from live system 2026-10-26 (Make, Monday and SharePoint checks).
 
 ---
 
@@ -1337,7 +1340,7 @@ to the real `Client Profiles` board. A live workspace search for "RSFA" on
 | Microsoft-centric automation configuration | Power Automate |
 | Form submission structure | Superforms or Monday Forms and connected Monday board |
 | Aircall call source | Aircall |
-| Signed document source | DocuSign |
+| Signed document source | DocuSeal (DocuSign until migration completes — retirement not yet confirmed) |
 | Bank end-form dataset | Masterboard: End Forms |
 | Bank end-form completion | MacroForge |
 | Bank-statement analysis and meeting summaries | AffordX |
@@ -1362,7 +1365,7 @@ to the real `Client Profiles` board. A live workspace search for "RSFA" on
 | MacroForge | Bank end-form completion | Active |
 | AffordX | Analysis, tracking and meeting summaries | Active or expanding |
 | DocuSign | Electronic signatures | Active, planned retirement (Oct-Nov 2026 migration to DocuSeal, per RSFA) |
-| DocuSeal | Planned replacement for DocuSign | Active - expanding; first production automation live (`AUTO-DOCUSEAL-001`), test data only confirmed so far |
+| DocuSeal | Replacement for DocuSign | Active - expanding; in production with client submissions and SharePoint filing (`AUTO-DOCUSEAL-001`, confirmed live 2026-10-26) |
 | GetGuru | Legacy knowledge or process system | Planned retirement (export/reorg to Knowledge Centre completed, migration not) |
 | Planolitix | Legacy system | Planned retirement |
 | Claude | AI support and future agents | Active and expanding |

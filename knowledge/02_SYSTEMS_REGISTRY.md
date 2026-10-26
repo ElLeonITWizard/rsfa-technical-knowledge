@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-20
+last_modified: 2026-10-26
 last_verified: 2026-09-05
 ---
 
@@ -98,7 +98,7 @@ No secret value should ever be stored in this repository.
 | `SYS-MACROFORGE-001` | MacroForge | Desktop automation tool | Active | High | Automatic completion of bank end forms from Monday data | Rod Schubert | `tech@rsfa.co.nz` | https://www.macroforge.io/ | Client personal data, financial data, documents, technical configuration | `knowledge/systems/macroforge/` |
 | `SYS-AFFORDX-001` | AffordX | Financial analysis and meeting support | Active - Expanding | High | Bank-statement analysis, application tracking, meeting summaries and transcriptions | Rod Schubert | `tech@rsfa.co.nz` | https://broker.affordx.nz/ | Client personal data, financial data, communications, documents | `knowledge/systems/affordx/` |
 | `SYS-DOCUSIGN-001` | DocuSign | Electronic signatures | Active - Reducing | High | Electronic signatures and signed-document workflows | Rod Schubert | `tech@rsfa.co.nz` | https://apps.docusign.com/ | Client personal data, documents, signatures | `knowledge/systems/docusign/` |
-| `SYS-DOCUSEAL-001` | DocuSeal | Electronic signatures | Active - Expanding | Medium | Planned replacement for DocuSign; first production Make.com automation now live | Rod Schubert | `tech@rsfa.co.nz` | https://docuseal.com/ | Test data only unless otherwise approved (see summary below) | `knowledge/systems/docuseal/` |
+| `SYS-DOCUSEAL-001` | DocuSeal | Electronic signatures | Active - Expanding | High | Production e-signature platform replacing DocuSign; submissions tracked in Monday and signed PDFs filed to SharePoint by `AUTO-DOCUSEAL-001` | Rod Schubert | `tech@rsfa.co.nz` | https://docuseal.com/ | Client personal data, documents, signatures (production use confirmed live 2026-10-26) | `knowledge/systems/docuseal/` |
 | `SYS-GCP-001` | Google Cloud Platform | Cloud infrastructure | Active | High | Hosts custom functions and backend services used by RSFA automations | Rod Schubert | `tech@rsfa.co.nz` | https://console.cloud.google.com/ | Technical configuration, custom code, possible client references | `knowledge/systems/google-cloud/` |
 | `SYS-GCP-FUNCTIONS-001` | Google Cloud Project - RSFA Functions | Custom automation code | Active | High | Hosts custom functions called from automations | Rod Schubert | `tech@rsfa.co.nz` | https://console.cloud.google.com/welcome?project=strange-calling-402307 | Technical configuration, custom code, possible client references | `knowledge/systems/google-cloud/rsfa-functions.md` |
 | `SYS-GCP-ADDIN-001` | Google Cloud Project - rsfa-backend-fix | Add-in backend | Active | High | Hosts the backend for the Real Savvy Ref Outlook Add-in | Rod Schubert | `tech@rsfa.co.nz` | https://console.cloud.google.com/welcome?project=rsfa-backend-fix | Technical configuration, custom code, client references | `knowledge/systems/google-cloud/rsfa-backend-fix.md` |
@@ -466,17 +466,19 @@ The exact AffordX integration map still requires detailed documentation.
 
 - **Category:** Electronic signatures
 - **Status:** Active - Expanding
-- **Criticality:** Medium
-- **Primary role:** Planned replacement for DocuSign
+- **Criticality:** High
+- **Primary role:** Production e-signature platform replacing DocuSign
 - **Administrative owner:** Rod Schubert
 - **Technical account:** `tech@rsfa.co.nz`
 - **Test account:** `tech@rsfa.co.nz`
 - **Access URL:** https://docuseal.com/
-- **Handles client data:** Test data only confirmed so far (see below)
-- **Main connected systems:** Make.com, Monday.com, Slack
+- **Handles client data:** Yes — client personal data, documents and signatures (production use confirmed live 2026-10-26)
+- **Main connected systems:** Make.com, Monday.com, Slack, SharePoint
 - **Detailed documentation:** `knowledge/systems/docuseal/`
 
 **Per RSFA (2026-09-20, Confirmed from provided evidence, not independently verified live):** a first production Make.com automation, `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)` (`9803640`, see `AUTO-DOCUSEAL-001`), is now live, syncing DocuSeal submissions to the `🖊️ DocuSeal Submissions (WIP)` Monday board (`5029524384`). The one confirmed real execution used a fictional test identity ("Leo The Lion & Leo Testing"), consistent with the "test data only" restriction still holding in practice, even though this is no longer merely a trial-account experiment. Status raised from `Experimental` to `Active - Expanding` on that basis. See `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md` for the planned full migration.
+
+**Update 2026-10-26 (Confirmed from live system — Make, Monday and SharePoint MCP checks; plus RSFA report):** DocuSeal is now used in production with real client submissions. `AUTO-DOCUSEAL-001` now also files completed submissions' signed PDFs into the client's SharePoint folder (`h. FileInvite and Docusign`, the same subfolder used by `AUTO-DOCUSIGN-001`) and into the Monday item's `Files` column. Criticality raised from `Medium` to `High` and the test-data-only restriction replaced accordingly. The Make DocuSeal connection is now `14624078` ("Support DocuSeal (support@rsfa.co.nz)"). Whether DocuSign has been fully retired is not confirmed.
 
 ---
 
@@ -797,3 +799,4 @@ The following information still requires verification:
 - **New 2026-09-05:** exact scope/configuration of `SYS-COPILOT-001` (RSFA Copilot Agent POC) beyond its existence as a read-only proof of concept.
 - **New 2026-09-05:** the RSFA Knowledge Centre's content population remains very early (1 published article) — extent and timeline of GetGuru → Knowledge Centre content migration is unconfirmed.
 - **New 2026-09-20:** exact scope and cutover date of the planned DocuSign → DocuSeal migration are unconfirmed beyond "October–November 2026" (per RSFA) — see `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md`. `SYS-DOCUSEAL-001`'s new automation (`AUTO-DOCUSEAL-001`) was documented from a supplied blueprint export, not an independent live Make/Monday query.
+- **New 2026-10-26:** `AUTO-DOCUSEAL-001` was re-verified live (Make, Monday, SharePoint). Still unconfirmed: whether DocuSign (`SYS-DOCUSIGN-001`, `AUTO-DOCUSIGN-001`) has been retired or still runs in parallel with DocuSeal; root cause of the 2026-10-21 → 23 DocuSeal scenario stoppage (see `AUTO-DOCUSEAL-001` §18).

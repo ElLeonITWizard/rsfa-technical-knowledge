@@ -1,14 +1,14 @@
 ---
 id: ADR-002
 title: Migrate electronic signatures from DocuSign to DocuSeal
-status: proposed
+status: accepted
 owner: RSFA
 date: 2026-09-20
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-20
-last_verified: 2026-09-20
+last_modified: 2026-10-26
+last_verified: 2026-10-26
 ---
 
 # ADR-002 — Migrate electronic signatures from DocuSign to DocuSeal
@@ -31,7 +31,19 @@ Per RSFA (2026-09-20, Confirmed from provided evidence — not independently ver
 - `SYS-DOCUSIGN-001` status changes from `Active` to `Active - Reducing` in `knowledge/02_SYSTEMS_REGISTRY.md`; `SYS-DOCUSEAL-001` status changes from `Experimental` to `Active - Expanding`, criticality from `Low` to `Medium`, reflecting a real production automation now depending on it.
 - New automation proposals involving document signing should default to DocuSeal, not DocuSign, unless RSFA says otherwise.
 - Once the migration completes, `AUTO-DOCUSIGN-001` should be marked `deprecated` (not deleted) per CLAUDE.md §11, linked to `AUTO-DOCUSEAL-001` as its replacement, with migration/compatibility considerations documented at that time — not yet done, since the migration has not happened.
-- `AUTO-DOCUSEAL-001` does not currently include a SharePoint-filing step for signed documents (see its §3 "Excluded" and §18), unlike `AUTO-DOCUSIGN-001`. This gap should be resolved, or explicitly accepted, before DocuSign is actually retired — otherwise signed documents would stop being filed in SharePoint.
+- ~~`AUTO-DOCUSEAL-001` does not currently include a SharePoint-filing step for signed documents~~ — **resolved (2026-10-26):** `AUTO-DOCUSEAL-001` now files each completed submission's signed PDF(s) into the client's SharePoint folder under `h. FileInvite and Docusign` (the same subfolder `AUTO-DOCUSIGN-001` uses), with a Slack "Manual SharePoint Filing Required" fallback when no single Client Profile or valid `SP folder` link exists. Confirmed from the 2026-10-26 blueprint and a live SharePoint check (see `AUTO-DOCUSEAL-001` §4, §13).
+
+## Status update — 2026-10-26
+
+Status changed from `proposed` to `accepted`. Evidence:
+
+- **Per RSFA (2026-10-26):** SharePoint filing has been implemented, multiple tests were completed, and DocuSeal is now used in production.
+- **Confirmed from live system (2026-10-26):** the DocuSeal Monday board holds real client submissions, and signed PDFs are being filed to SharePoint (`AUTO-DOCUSEAL-001` §4).
+
+Not yet confirmed:
+
+- whether DocuSign has been retired or still runs in parallel. `AUTO-DOCUSIGN-001` therefore stays `Active - Planned Retirement` and is **not** marked deprecated. Do that per CLAUDE.md §11 once RSFA confirms the cutover.
+- the open reliability findings in `AUTO-DOCUSEAL-001` §18 — the 2026-10-21 → 23 stoppage and duplicate items under concurrent webhooks. These should be reviewed before DocuSign is switched off.
 
 ## Alternatives considered
 
@@ -50,3 +62,4 @@ Not documented — this decision was reported by RSFA as already in progress, no
 | Date | Change | Author |
 |---|---|---|
 | 2026-09-20 | Initial decision record created from RSFA's direct report alongside the first DocuSeal automation's documentation. | Claude (documentation task) |
+| 2026-10-26 | Status `proposed` → `accepted`: DocuSeal confirmed in production, SharePoint-filing gap resolved; DocuSign retirement still unconfirmed. | Claude (documentation task) |
