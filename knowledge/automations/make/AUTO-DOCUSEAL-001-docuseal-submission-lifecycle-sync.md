@@ -299,7 +299,7 @@ The `h. FileInvite and Docusign` subfolder is the same target used by `AUTO-DOCU
 | `form.declined` | Declined |
 | `form.viewed`, `form.started` | Viewed |
 | `submission.created` | Sent if any submitter status contains "sent", else Draft |
-| `form.completed` | Completed if the submission body's own `status` is "completed", else Viewed |
+| `form.completed` | Completed if the submission body's own `status` is "completed"; otherwise Viewed if the completing submitter has `opened_at` (a person opened the form), else Sent. Since 2026-10-27, the API auto-completed adviser role from `AUTO-DOCUSEAL-002` never opens the form, so it no longer moves the item to Viewed |
 | any other value | Derived from the submission body: Completed / Declined / Expired if the body's `status` says so; otherwise Viewed if any submitter is "completed" or "opened", Sent if any submitter is "sent", else Draft |
 
 **Forward-only guard:** each status is ranked (Draft=0, Sent=1, Viewed=2, Completed/Declined/Expired=4). An existing item is only updated if the new event's rank is `>=` the last known rank, so a late-arriving "viewed" webhook can never revert an already-Completed item back to Viewed.
@@ -572,6 +572,7 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
 | Date | Change | Author |
 |---|---|---|
 | 2026-09-20 | Initial canonical documentation created from the RSFA-supplied blueprint export and a corroborating Slack screenshot; several notification-logic and unused-field discrepancies flagged, not silently resolved. | Claude (documentation task) |
+| 2026-10-27 | Module 21 (`NewStatus`): `form.completed` without `opened_at` now maps to Sent instead of Viewed, so the adviser auto-completion from Send Now no longer marks items Viewed. RSFA-approved; live blueprint verified identical to target (only module 21 changed); export replaced. Confirmed from a stored webhook sample that `form.completed` payloads include `opened_at`. | Claude (implementation task) |
 | 2026-10-27 | Applied the approved Lifecycle Sync change to `9803640` (module 60 filter, new template lookup 9250, new columns on 70/9081), verified identical to the target blueprint, and replaced the export snapshot. | Claude (implementation task) |
 | 2026-10-27 | Recorded the three new board columns added for `AUTO-DOCUSEAL-002` and the staged, not yet applied, Lifecycle Sync change (§25). No change made to scenario `9803640`. | Claude (implementation task) |
 | 2026-10-26 | Documented the SharePoint/Monday Files signed-document filing route (modules 9200–9234), the filing and completed-notification locks, the DocuSeal connection change and production status. Based on the RSFA-supplied 2026-10-26 blueprint and use guide, plus live checks of Make, Monday and SharePoint. Recorded the live board rename and new schema/groups, the 2026-10-21 → 23 stoppage, duplicate items and the missing-group routing as discrepancies. Replaced the blueprint export snapshot. | Claude (documentation task) |
