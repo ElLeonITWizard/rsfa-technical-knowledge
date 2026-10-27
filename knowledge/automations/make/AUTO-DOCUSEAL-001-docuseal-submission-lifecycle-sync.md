@@ -32,7 +32,7 @@ related_scenarios:
     id: "8732008"
 related_flows: []
 last_modified: 2026-10-27
-last_verified: 2026-10-26
+last_verified: 2026-10-27
 documentation_status: partial
 ---
 
@@ -555,16 +555,23 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
 - **DocuSign cutover:** whether DocuSign (`AUTO-DOCUSIGN-001`) has been retired or still runs in parallel is not confirmed — TODO: verify.
 - **SP folder link ownership:** the automation that owns the `Client Profiles` `SP folder` (`link5`) value — TODO: verify.
 - **Use guide:** the DocuSeal Integration Use Guide is internally inconsistent and needs revising (§24).
-- **Staged change, not yet applied (prepared 2026-10-27 for `AUTO-DOCUSEAL-002`, awaiting RSFA review):**
+- **Change applied 2026-10-27 (00:50 UTC, approved by RSFA) for `AUTO-DOCUSEAL-002`:**
   1. **Skip Monday-sent submissions on the new-item route:** module 60's filter gains the condition `first(map(10.body.submitters; "external_id"))` does not exist. Submissions created by Send Now carry the Monday item ID as `external_id`, and their Sync Index record is written by `AUTO-DOCUSEAL-002`. Without this, a `submission.created` webhook processed before that record exists would create a duplicate item. Inert for submissions created in DocuSeal directly.
   2. **Find the template (new module 9250):** a Monday GraphQL `items_page_by_column_values` call looks up the DocuSeal template ID on the `📄 DocuSeal Templates` board. It always returns one bundle, even when nothing matches. On error: email, then `Resume`, so the item is still created.
   3. **Fill the new columns:** both create-item modules (70, 9081) also write `Alternative Submitter Email` (`submitters[2].email`) and `Template` (the template item found in step 2).
-  - The proposed blueprint was built from the 2026-10-26 export (identical to live at that time) and was supplied to RSFA for review. Before applying, re-check that the live scenario is unchanged and keep the current export for rollback.
+  - **How it was applied:**
+    - The change was built from the live blueprint, which matched the 2026-10-26 export.
+    - The full blueprint was sent through the Make MCP connector, without the editor-only test samples and input/output schema metadata.
+    - Re-read afterwards: all 95 modules matched the target exactly, and only modules 60, 70, 9081 and the new 9250/9251/9252 differ from the previous version.
+    - The scenario stayed active throughout.
+  - **Rollback:** restore the previous blueprint from this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (commit `cd10e73` or earlier).
+  - **Behaviour not yet observed in a real run:** template link and Alternative Submitter Email on a new item; skipping of a Monday-sent submission. TODO: verify on the first executions.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
 | 2026-09-20 | Initial canonical documentation created from the RSFA-supplied blueprint export and a corroborating Slack screenshot; several notification-logic and unused-field discrepancies flagged, not silently resolved. | Claude (documentation task) |
+| 2026-10-27 | Applied the approved Lifecycle Sync change to `9803640` (module 60 filter, new template lookup 9250, new columns on 70/9081), verified identical to the target blueprint, and replaced the export snapshot. | Claude (implementation task) |
 | 2026-10-27 | Recorded the three new board columns added for `AUTO-DOCUSEAL-002` and the staged, not yet applied, Lifecycle Sync change (§25). No change made to scenario `9803640`. | Claude (implementation task) |
 | 2026-10-26 | Documented the SharePoint/Monday Files signed-document filing route (modules 9200–9234), the filing and completed-notification locks, the DocuSeal connection change and production status. Based on the RSFA-supplied 2026-10-26 blueprint and use guide, plus live checks of Make, Monday and SharePoint. Recorded the live board rename and new schema/groups, the 2026-10-21 → 23 stoppage, duplicate items and the missing-group routing as discrepancies. Replaced the blueprint export snapshot. | Claude (documentation task) |

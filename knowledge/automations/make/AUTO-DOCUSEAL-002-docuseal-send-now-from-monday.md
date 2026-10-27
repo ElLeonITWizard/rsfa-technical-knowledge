@@ -259,7 +259,7 @@ flowchart TD
 
 ## 14. Dependencies
 
-- **`AUTO-DOCUSEAL-001` change (staged, not yet applied):** without it, a `submission.created` webhook processed before module 11 writes the Sync Index record would create a duplicate Monday item. See `AUTO-DOCUSEAL-001` §25 and §21 step 2 here.
+- **`AUTO-DOCUSEAL-001` change (applied 2026-10-27):** the Lifecycle Sync skips new-item creation for submissions that carry an `external_id`. Without this, a `submission.created` webhook processed before module 11 writes the Sync Index record would create a duplicate Monday item. See `AUTO-DOCUSEAL-001` §25.
 - **Template field names:** `Client 1 full name` / `Client 2 full name` must exist, assigned to `First Party` / `Second Party`.
   - Per the DocuSeal connector, they exist only on the two NSA + Dec templates.
   - DocuSeal is believed to reject values for unknown field names (Inference — not verified), so the 3 NSA-only templates should have their client full-name fields renamed before use.
@@ -333,7 +333,7 @@ Use a test Client Profile with one test Contact and one with two test Contacts, 
 ## 21. Validation after change / activation checklist
 
 1. Complete §20 tests 1–4 using the Make "Run once" feature with a Monday test item, or with the scenario temporarily active and only a test item set to `Send Now`.
-2. Review and apply the staged `AUTO-DOCUSEAL-001` change (`AUTO-DOCUSEAL-001` §25), then run test 8.
+2. ~~Apply the `AUTO-DOCUSEAL-001` change~~ — done 2026-10-27 (`AUTO-DOCUSEAL-001` §25). Run test 8.
 3. Create the Make team custom variable `RSFA_ADVISERS`, using the JSON currently in module 3, and switch module 3 to `{{var.team.RSFA_ADVISERS}}`.
 4. Register the Monday webhook for `Status` changes on board `5029524384` pointing at webhook `4466535`. Monday sends a one-time `challenge` request when the webhook is registered, and Make must answer it. Use a temporary Webhook Response that returns `{{1.challenge}}`, or the same method used for RSFA's other Monday → Make webhooks — TODO: verify the team's standard method.
 5. Activate the scenario, send one real low-risk document, then monitor the first sends.
@@ -380,4 +380,5 @@ Use a test Client Profile with one test Contact and one with two test Contacts, 
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-10-27 | `AUTO-DOCUSEAL-001` dependency change applied in production; checklist updated. | Claude (implementation task) |
 | 2026-10-27 | Created: Templates board, new Submissions columns, inactive Make scenario `10048497` and this document, per RSFA's approved plan. Lifecycle Sync change staged, not applied. | Claude (implementation task) |
