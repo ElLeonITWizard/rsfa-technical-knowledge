@@ -260,9 +260,7 @@ flowchart TD
 ## 14. Dependencies
 
 - **`AUTO-DOCUSEAL-001` change (applied 2026-10-27):** the Lifecycle Sync skips new-item creation for submissions that carry an `external_id`. Without this, a `submission.created` webhook processed before module 11 writes the Sync Index record would create a duplicate Monday item. See `AUTO-DOCUSEAL-001` §25.
-- **Template field names:** `Client 1 full name` / `Client 2 full name` must exist, assigned to `First Party` / `Second Party`.
-  - Per the DocuSeal connector, they exist only on the two NSA + Dec templates.
-  - DocuSeal is believed to reject values for unknown field names (Inference — not verified), so the 3 NSA-only templates should have their client full-name fields renamed before use.
+- **Template field names:** `Client 1 full name` / `Client 2 full name` must exist, assigned to `First Party` / `Second Party`. Confirmed from live system (DocuSeal connector, 2026-10-27) on all 5 registered templates; RSFA renamed the fields on the 3 NSA-only templates the same day.
 - **Template roles:** DocuSeal must accept a submission without a `Second Party` submitter (single client) — test 3.
 - **Contact data:** Contacts must have a Primary Email.
 - `COMP-MAKE-ERROR-001` (`8732008`).
@@ -380,5 +378,6 @@ Use a test Client Profile with one test Contact and one with two test Contacts, 
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-10-27 | Confirmed `Client 1 full name` / `Client 2 full name` on all 5 templates after RSFA renamed the NSA-only fields; Templates board notes updated. | Claude (implementation task) |
 | 2026-10-27 | `AUTO-DOCUSEAL-001` dependency change applied in production; checklist updated. | Claude (implementation task) |
 | 2026-10-27 | Created: Templates board, new Submissions columns, inactive Make scenario `10048497` and this document, per RSFA's approved plan. Lifecycle Sync change staged, not applied. | Claude (implementation task) |
