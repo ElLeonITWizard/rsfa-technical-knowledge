@@ -59,7 +59,7 @@ Active. `Critical` per `knowledge/03_AUTOMATION_REGISTRY.md` §3. One recent err
 
 - `M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)` (`8731317`): Monday.com watch `monday:watchBoardColumnValuesV2` (hook `3905270`) on board `5026186805`, `updateType: change_specific_column_value`, column `status` (`End Forms Filling Status`). **No label value is configured**, so the scenario fires on *any* change to `status`, although the module label says "End Forms Filling Status Reviewed". *Confirmed from live system (read-only blueprint and hook config, 2026-10-27).*
 - `Macroforge to M.com: End Forms Filled (May 2026)` (`9254149`): custom webhook (hook `4136771`, label `Macroforge-Filled-End-Forms`). It fires when MacroForge's "Send to Zapier/Make" node calls back. *Confirmed from live system (read-only, 2026-10-27).*
-- Inference: when `9254149` sets `status` = `Filled`, that change probably re-triggers `8731317` unless MacroForge ignores it. TODO: verify with read-only execution history.
+- Re-trigger risk: hook `3905270` has no value or previous-value filter, no module filters, and no module reads the label. So a `Filled` write by `9254149` *can* re-run `8731317` and POST to MacroForge again, if Monday emits the event. *Confirmed from live system (read-only, 2026-10-27).* Make returned only one execution pair (`8731317` 2026-10-01 23:16:43Z, then `9254149` 23:17:09Z), and **no re-trigger followed it**. *Partially verified: 1 sample, run details not retrievable.* TODO: verify with the Monday activity log for `status` around that time. A proposed guard is a filter after module 1 allowing only the intended label. That is a production change requiring a change plan and approval, and it was not made.
 
 ## 6. Inputs
 
@@ -227,4 +227,5 @@ Disable the affected Make.com scenario. No automated rollback of MacroForge-side
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and call-graph evidence only; no source-material walkthrough available. | Claude (documentation task) |
+| 2026-10-27 | Re-trigger risk reviewed with read-only execution history (1 pair, no re-trigger observed); guard proposed, not implemented. | Claude (end-forms engine iteration 2) |
 | 2026-10-27 | Added trigger, payload contract, routing, error handling and security findings from a read-only review of the live `8731317`/`9254149` blueprints and hook `3905270`, plus MacroForge `.mforge` structure. Replacement-engine work tracked in repository `rsfa-end-forms-engine`. No production change made. | Claude (end-forms engine POC) |
