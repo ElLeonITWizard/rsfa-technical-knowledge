@@ -24,8 +24,8 @@ related_scenarios:
   - name: "Macroforge to M.com: End Forms Filled (May 2026)"
     id: "9254149"
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-10-27
+last_verified: 2026-10-27
 documentation_status: partial
 ---
 
@@ -57,18 +57,24 @@ Active. `Critical` per `knowledge/03_AUTOMATION_REGISTRY.md` §3. One recent err
 
 ## 5. Trigger
 
-- `M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)` (`8731317`): Monday.com instant trigger (watch) — fires on an approved Monday data state on the Masterboard (exact triggering column/value not confirmed from available evidence — TODO: verify).
-- `Macroforge to M.com: End Forms Filled (May 2026)` (`9254149`): Webhook (custom webhook) — fires when MacroForge signals completion.
+- `M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)` (`8731317`): Monday.com watch `monday:watchBoardColumnValuesV2` (hook `3905270`) on board `5026186805`, `updateType: change_specific_column_value`, column `status` (`End Forms Filling Status`). **No label value is configured**, so the scenario fires on *any* change to `status`, although the module label says "End Forms Filling Status Reviewed". *Confirmed from live system (read-only blueprint and hook config, 2026-10-27).*
+- `Macroforge to M.com: End Forms Filled (May 2026)` (`9254149`): custom webhook (hook `4136771`, label `Macroforge-Filled-End-Forms`). It fires when MacroForge's "Send to Zapier/Make" node calls back. *Confirmed from live system (read-only, 2026-10-27).*
+- Inference: when `9254149` sets `status` = `Filled`, that change probably re-triggers `8731317` unless MacroForge ignores it. TODO: verify with read-only execution history.
 
 ## 6. Inputs
 
-- Approved Masterboard: End Forms record data (exact payload not confirmed).
-- MacroForge completion webhook payload (exact payload not confirmed).
+- `8731317` posts a JSON body composed in module 6. The top-level keys are `userId`, `id`, `name`, `email`, `created_at`, `updated_at`, `state`, `board.id`, `creator_id`, `group.{id,title,deleted,archived}`, `formatted_created_at`, `formatted_updated_at` and `result`. The `result` object is built by JavaScript module 8, as follows. *Confirmed from live system (read-only, 2026-10-27).*
+  - Keys are Monday **column titles**, not column IDs. Values are the column `.text`, a boolean for checkbox columns, or `DDMMYYYY` for date columns.
+  - Columns that share a title are merged into arrays. Seven titles are affected, e.g. `Loan processing fee` and `Cash contribution`.
+  - Derived keys are added: `<field> Day|Month|Year` for 6 date fields, and `<field> Street|Suburb|City|Province|Postcode|Country` for 10 address fields. The address parts come from an OpenAI `gpt-4o-mini` module (26).
+  - `Subitems` is an array of `{name, values}`.
+- `9254149` receives the MacroForge callback, which echoes the payload keys flattened (`/` and `.` become `_`). **Only `id` is used.** *Confirmed from live system (read-only, 2026-10-27).*
+- The HTTP response `200 {"status":"routed","success":true}` from the MacroForge endpoint confirms dispatch only, not completion.
 
 ## 7. Outputs
 
 - Payload sent to MacroForge to initiate end-forms population (mechanism: HTTP/Custom API and/or a Google Cloud function, plus OpenAI per the scenario's listed systems — exact roles not confirmed).
-- Completion status recorded back onto the Masterboard item (`End Forms Filling Status` column, per `knowledge/04_MONDAY_BOARDS_REGISTRY.md`'s key-columns list for Masterboard: End Forms).
+- Completion status recorded back onto the Masterboard item: `9254149` sets `status` (`End Forms Filling Status`) to the label `Filled`. Other labels are `Reviewed`, `Reviewing` and `Cancelled`. *Confirmed from live system (read-only, 2026-10-27).* No file, PDF or success/failure detail is returned to Make.
 
 ## 8. Systems involved
 
@@ -123,7 +129,8 @@ TODO: complete mapping from current production configuration. No field-level pay
 
 ## 13. Decision and routing logic
 
-Not confirmed. TODO: verify the exact Monday condition (column/value) that triggers scenario `8731317`.
+- Make performs **no lender/template routing**. It sends `Banks to Send` (`dropdown_mkzvfgeg`) as text. The only branching in Make picks one of three MacroForge webhook URLs by `userId`, and all three currently hold the same value. *Confirmed from live system (read-only, 2026-10-27).*
+- In MacroForge (`.mforge` export `RSFA End Forms Filling BluePrint 271026`, inspected 2026-10-27), `Flow C` routes on `Banks to Send Contains ASB | KiwiBank | WBC | ANZ | BNZ` to 6 PDF batch fillers (25 templates, 1,013 field mappings), plus `All Banks_DOAD.pdf` for every run. *Historical information (point-in-time export).* The full inventory is in the `rsfa-end-forms-engine` repository, `docs/03-migration-inventory.md`.
 
 ## 14. Dependencies
 
@@ -132,7 +139,14 @@ Not confirmed. TODO: verify the exact Monday condition (column/value) that trigg
 
 ## 15. Error handling
 
-Scenario `8731317` calls `COMP-MAKE-ERROR-001` on failure.
+*Confirmed from live system (read-only, 2026-10-27):*
+- `8731317`:
+  - Get Item (4) and HTTP (3) use `Break` with 3 retries every 5 minutes, and the incomplete-executions queue is enabled.
+  - Address lookup (20) uses `Ignore`.
+  - OpenAI (26) uses `Resume` with `{}`, so address parts are silently missing and no alert is sent.
+  - A Code (8) failure calls `COMP-MAKE-ERROR-001` (`8732008`).
+  - Non-2xx MacroForge responses get no handling beyond the retries.
+- `9254149`: a module 2 error calls `COMP-MAKE-ERROR-001`, then `Ignore`.
 
 ## 16. Logging and observability
 
@@ -145,11 +159,19 @@ Not confirmed. TODO: verify whether a stalled or failed MacroForge run can be ma
 ## 18. Known limitations
 
 - One recent error recorded against scenario `8731317` in the last Make inventory export — root cause not investigated in this pass.
-- Exact trigger condition and payload structure are unconfirmed; this documentation is necessarily thin pending a scenario blueprint review or a dedicated source-material walkthrough.
+- The trigger has no label filter (see §5), so any `status` change, including `Filled`, sends the record to MacroForge.
+- The payload contract depends on Monday column **titles**. Renaming a column changes the keys MacroForge receives, and the mapping silently stops matching.
+- The JSON body is composed as a string template. Inference: a `"` in an item or group name would produce invalid JSON.
 
 ## 19. Security and sensitive data
 
 Masterboard data sent to MacroForge includes extensive client financial and personal information. Never trigger this automation against real client data for testing; use a dedicated test Masterboard item.
+
+Findings from the 2026-10-27 read-only review (no changes made; any fix is a production change requiring approval):
+- Unconnected test modules 43 and 44 in `8731317` store a full real-looking client payload and the MacroForge webhook URL.
+- The MacroForge webhook URLs are hard-coded in module 13, and the HTTP call uses no authentication.
+- Every run sends client address text to OpenAI (`gpt-4o-mini`).
+- The MacroForge `.mforge` export contains a real client `sample_payload` and the callback webhook URL. Store it only in an approved private location, never in a repository.
 
 ## 20. Testing
 
@@ -190,10 +212,13 @@ Disable the affected Make.com scenario. No automated rollback of MacroForge-side
 - `knowledge/02_SYSTEMS_REGISTRY.md` SYS-MACROFORGE-001 — Current. Platform description.
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Masterboard key columns including `End Forms Filling Status`.
 - No `source-material/make/` file exists for either scenario in this family.
+- Live Make blueprints of `8731317` and `9254149`, and hook `3905270` configuration — read-only retrieval 2026-10-27 via the Make connector. Current at that date.
+- MacroForge export `RSFA End Forms Filling BluePrint 271026.mforge` (SHA-256 `8052c17b…797c`) — point-in-time export, kept outside git; summarised in `rsfa-end-forms-engine/docs/03-migration-inventory.md`.
 
 ## 25. Known gaps
 
-- No implementation walkthrough exists for either scenario; trigger condition, payload structure and the exact role of Google Cloud/OpenAI in this flow are all unconfirmed.
+- Trigger, payload structure and the OpenAI role were confirmed on 2026-10-27 (read-only). Whether `Filled` re-triggers `8731317` is still unconfirmed (execution history not reviewed).
+- The Make blueprint's cached column list appears older than the live board. 11 titles used by MacroForge mappings (e.g. `Applicant 1 Full Name`) are absent from it. TODO: verify against the live board columns.
 - Manual reprocessing procedure for a stalled MacroForge run is unconfirmed.
 - MacroForge's own local/SharePoint/OneDrive synchronisation behaviour (`knowledge/01_RSFA_SYSTEM_MAP.md` §19 known gap) remains undocumented and is out of scope for this file.
 
@@ -202,3 +227,4 @@ Disable the affected Make.com scenario. No automated rollback of MacroForge-side
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and call-graph evidence only; no source-material walkthrough available. | Claude (documentation task) |
+| 2026-10-27 | Added trigger, payload contract, routing, error handling and security findings from a read-only review of the live `8731317`/`9254149` blueprints and hook `3905270`, plus MacroForge `.mforge` structure. Replacement-engine work tracked in repository `rsfa-end-forms-engine`. No production change made. | Claude (end-forms engine POC) |
