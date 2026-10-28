@@ -6,7 +6,7 @@ owner: RSFA
 workspace_id: "2308685"
 workspace_name: Real Savvy_CRM
 source_export_date: 2026-07-30
-last_modified: 2026-09-20
+last_modified: 2026-10-28
 last_verified: 2026-09-05
 ---
 
@@ -57,7 +57,7 @@ A Monday board marked `active` may still be historical, experimental, unused or 
 | Communications | 7 | Calls, overflow emails, campaigns and communication records. |
 | Compliance Register | 12 | Governance, compliance, risk and regulatory registers. |
 | Core Entity | 4 | Core records such as Leads, Contacts, Client Profiles and entities. |
-| Document Generation | 6 | Masterboard and lender-specific end-form structures. |
+| Document Generation | 7 | Masterboard and lender-specific end-form structures, plus the `Bank Forms Registry` template inventory (added 2026-10-28, created after the export). |
 | Documentation | 1 | Manual and technical-document indexes. |
 | Existing Business | 2 | In-force or completed business requiring ongoing servicing. |
 | Experimental | 1 | Testing, proof-of-concept or work-in-progress boards. |
@@ -107,6 +107,7 @@ A Monday board marked `active` may still be historical, experimental, unused or 
 | `5026525794` | [KB: End Forms](https://rsfa-squad.monday.com/boards/5026525794) | Macroforge Boards | Active | public | Document Generation | Medium | 91 | Kiwibank-specific end-form view and mirror layer sourced from Masterboard: End Forms. | `knowledge/schemas/monday/5026525794-kb-end-forms.md` |
 | `5026186805` | [Masterboard: End Forms](https://rsfa-squad.monday.com/boards/5026186805) | Macroforge Boards | Active | public | Document Generation | Critical | 400 | Consolidates mortgage, client, contact, ROMA and manual information for MacroForge bank end-form completion. | `knowledge/schemas/monday/5026186805-masterboard-end-forms.md` |
 | `5026525927` | [WBC: End Forms](https://rsfa-squad.monday.com/boards/5026525927) | Macroforge Boards | Active | public | Document Generation | Medium | 123 | Westpac-specific end-form view and mirror layer sourced from Masterboard: End Forms. | `knowledge/schemas/monday/5026525927-wbc-end-forms.md` |
+| `5032170066` | [Bank Forms Registry](https://rsfa-squad.monday.com/boards/5032170066) | Masterboards: Form Filling (`6444990`) | Active | private | Document Generation | Medium | 5 | **Confirmed live 2026-10-28.** Inventory of the blank bank end-form templates in SharePoint `RealSavvyLending/Documents/A. MACROFORGE/<Bank>/Blank Forms`; one item per template. Reference only: no automations. See the detailed summary below. | Detailed summary in this file (§7, `5032170066`); no separate schema file yet |
 | `2074688483` | [Quotes & Invoices](https://rsfa-squad.monday.com/boards/2074688483) | No folder | Active | public | Operations | Medium | 8 | Operational Monday board; detailed business purpose requires verification. | `knowledge/schemas/monday/2074688483-quotes-invoices.md` |
 | `1982102193` | [Subitems of Automations](https://rsfa-squad.monday.com/boards/1982102193) | No folder | Active | public | Subitem Board | Inherited | 4 | Subitem storage associated with `Automations`. | `knowledge/schemas/monday/1982102193-subitems-of-automations.md` |
 | `5024661650` | [Subitems of Client Profiles](https://rsfa-squad.monday.com/boards/5024661650) | No folder | Active | private | Subitem Board | Inherited | 5 | Subitem storage associated with `Client Profiles`. | `knowledge/schemas/monday/5024661650-subitems-of-client-profiles.md` |
@@ -546,6 +547,56 @@ flowchart LR
 - **Operational notes:**
   - This board is primarily a lender-specific mirror and review layer.
   - Masterboard: End Forms remains the central consolidated dataset.
+
+### `5032170066` — Bank Forms Registry
+
+- **URL:** https://rsfa-squad.monday.com/boards/5032170066
+- **Workspace / folder:** `Real Savvy_CRM` (`2308685`) / `Masterboards: Form Filling` (`6444990`)
+- **Created:** 2026-10-28 by `RSFA IT Desk` (Claude Code session, approved by RSFA). Owners: `RSFA IT Desk`, Rod Schubert.
+- **Monday state:** active
+- **Registry status:** Active
+- **Access type:** private
+- **Category:** Document Generation (reference inventory)
+- **Criticality:** Medium
+- **Last verified:** 2026-10-28 (live read-back through the Monday MCP connector)
+- **What one item represents:** one distinct blank bank end-form template stored in SharePoint `RealSavvyLending` › `Documents` › `A. MACROFORGE/<Bank>/Blank Forms`. Completed client forms (`Filled PDFs` subfolders) are deliberately excluded.
+- **Columns (confirmed live 2026-10-28):**
+
+  | Column | ID | Type | Values |
+  |---|---|---|---|
+  | Name | `name` | name | `<Bank> - <form name>` |
+  | Bank | `color_mm8jhx37` | status | BNZ, ANZ, ASB, GHL, KB, WBC, All Banks, Other / Unknown |
+  | SharePoint Form | `link_mm8jbcx8` | link | Verified link to the original file; link text is the original filename |
+  | Status | `color_mm8j1xkn` | status | Active, Inactive, Under Review, Superseded |
+  | Version | `text_mm8je45z` | text | RSFA registry version, starting at `v1.0`. **Not** the bank's document version. |
+
+- **Groups (confirmed live 2026-10-28):** `PDF` (`topics`) and `Excel` (`group_mm8j2vs1`), created by RSFA in the Monday UI.
+- **Item updates:** every item has an import update recording the original filename, extension, SharePoint file ID, folder, the bank's document revision taken from the filename, the SharePoint last-modified date and the evidence behind its Status.
+- **Initial import (2026-10-28):** 31 items, one per file found in the seven `Blank Forms` folders (BNZ 6, ANZ 5, ASB 4, GHL 3, KB 6, WBC 6, All Banks 1).
+  - **Active (24):** templates configured in MacroForge production Flow C, per the MacroForge export of 2026-10-27 analysed in `rsfa-end-forms-engine` `docs/03-migration-inventory.md`. This is confirmed from an export, not from a production run.
+  - **Under Review (3 at read-back):**
+    - `BNZ - Gifting Declaration`: in Flow C, but the PDF has no form fields.
+    - `ANZ - Boarder Income Declaration` (`01.05.26 (NEW)`): Flow C and the engine manifest both use the older `12.02.24` version, which is no longer in the folder.
+    - `ANZ - Unique Declaration (v8.2)` (`.xlsm`): not in Flow C.
+  - **Inactive (4 at read-back):** `KB - Boarder Agreement`, `KB - Non-Credit Restructure Request`, `KB - Home Loan Refix/Maintenance Request` and `WBC - Responsible Lending Declaration`.
+    - The import set these to Under Review because none is in Flow C.
+    - RSFA changed them to Inactive and moved them into the `Excel` group in the Monday UI on 2026-10-28 (board activity log).
+    - Their item updates still say "Under Review until Rod confirms"; the Status column is authoritative.
+  - **Excluded:**
+    - all `Filled PDFs` subfolders (generated client output, not enumerated);
+    - the empty `Coop` and `SBS` folders;
+    - copies of the same templates outside `RealSavvyLending/Documents/A. MACROFORGE`. These are in `A. MAIN BANKS`, `RSFATeam/Shared Documents/Bank forms`, `RSFATeam/Shared Documents/Macroforge_RealSavvy_BankForms`, `RealSavvyOperations/Documents/6. IT_OPS & PROJECTS/MacroForge (MF) end forms`, and a second `A. MACROFORGE` folder under `RealSavvyOperations/Documents/Z. TO ARRANGE DESKTOP/STORAGE TEMP`.
+  - **Not imported:** the Flow C template `Boarder-Income-Declaration 12.02.24.pdf` (ANZ), which is not in the SharePoint folder.
+- **Naming notes:**
+  - Item names come from the file contents.
+  - The meanings of the abbreviations `CAD` (ASB), `FMS` (KB) and `DOAD` (All Banks) are not confirmed. TODO: verify with RSFA.
+- **Related boards:**
+  - None linked.
+  - `Bank forms` (`1957623708`, workspace `Real Savvy_KC`) is a separate bank-forms reference hub. It is not a duplicate and was not modified.
+- **Automations:** none.
+- **Operational notes:**
+  - Use this board to track which MacroForge templates exist and their migration to the RSFA End Forms Engine (`rsfa-end-forms-engine`).
+  - Change Status only with evidence, and record the evidence in an item update.
 
 ### `5025365499` — 📋 Pigeon: Finance Checklist
 
