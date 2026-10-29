@@ -259,21 +259,20 @@ Any failure in a filing step sends a technical email and deletes the filing lock
 | DocuSeal `template.name` | `text_mm4qr449` (Template Name) | Create, and re-written on every later existing-item update | |
 | DocuSeal submission ID | `text_mm4qr3yv` (DocuSeal Submission ID) | Create only | |
 | `SignedDocUrl` (`combined_document_url`) | `link_mm4qk8jv` (Signed Document URL) | On Completed with both a completion date and a signed-doc URL present | |
-| Downloaded signed PDF(s) | `file_mm7f68r4` (Files) | Filing route, once per document | Added before the SharePoint routing, so every filed submission gets its PDFs on Monday even when SharePoint filing falls back to manual |
+| Combined signed PDF with Audit Log (`combined_document_url`; since 2026-10-29) | `file_mm7f68r4` (Files) | Filing route, once per submission | Added before the SharePoint routing, so every filed submission gets its PDFs on Monday even when SharePoint filing falls back to manual |
 | — | `long_text_mm4qcg9q` (Error Message) | Never written | |
 | `OwnerPersonId` (computed, never used) | `multiple_person_mm4qjs43` (Owner (TBD)) | Never written | |
 
 ### Signed-document filename (modules 9214, 9230)
 
-Built as follows:
+Built as follows (since 2026-10-29, one file per submission):
 
-1. Start from the DocuSeal document `name`, or the template name if `name` is empty.
+1. Start from the DocuSeal document `name` (or the template name if empty). If the submission has more than one document, use the template name instead.
 2. Remove `.pdf` and replace `/` and `:` with `-`.
-3. If the submission has more than one document, append `_` and the document's position (1-based).
-4. Append `_Ref{SubmissionId}`.
-5. Append `_` and the completion date formatted as `MMMMYY` (falling back to "now" if there is no completion date), then `.pdf`.
+3. Append `_Ref{SubmissionId}`.
+4. Append `_` and the completion date formatted as `MMMMYY` (falling back to "now" if there is no completion date), then `.pdf`.
 
-Fictional example: `Client Agreement_1_Ref12345678_October26.pdf`.
+Fictional example: `Client Agreement_Ref12345678_October26.pdf`. Before 2026-10-29, multi-document submissions produced one file per document with a `_1`, `_2`, … suffix.
 
 ### SharePoint target (module 9230)
 
@@ -339,8 +338,8 @@ The scenario never moves items between groups after creation.
    - On success the lock is never removed; it stays as the permanent "already filed" marker.
    - Every filing step's error handler emails the tech team and deletes the lock, so a later Completed event for the same submission can retry.
 3. **Monday item ID:** read from `docuseal_submission:{SubmissionId}` (module 9204). Filing continues only if `MondayItemId` exists (module 9207 filter).
-4. **For each document** in `documents[]` (`BasicFeeder` 9210), when the document has a `url`:
-   1. Download it (9211).
+4. **Once per submission** (since 2026-10-29; `BasicFeeder` 9210 iterates `slice(documents; 0; 1)` so it runs a single time):
+   1. Download the combined signed PDF, which includes DocuSeal's Audit Log at the end — `combined_document_url` (`20.SignedDocUrl`), falling back to the first document's `url` if the combined URL is empty (9211). Before 2026-10-29 each document in `documents[]` was downloaded separately; those per-document PDFs do not include the Audit Log (reported by RSFA).
    2. Attach it to Files (9214).
    3. Route on the Client Profile link:
       - Exactly 1 linked Client Profile → read the profile (9220), then:
@@ -475,7 +474,8 @@ This scenario now processes **real client e-signature submissions and signed doc
 | Test | Result | Evidence |
 |---|---|---|
 | New item already Sent, then Completed, with Client Profile link, Slack Sent + Completed messages | `Passed` | Slack screenshot supplied 2026-09-20 (test identity) |
-| Completed submission with multiple documents → each PDF attached to `Files` with `_1`, `_2`, … suffix | `Passed` | Confirmed from live system 2026-10-26 (several Completed items show 2–3 suffixed PDFs) |
+| Completed submission with multiple documents → each PDF attached to `Files` with `_1`, `_2`, … suffix (behaviour before 2026-10-29) | `Passed` |
+| Combined PDF with Audit Log filed to Files and SharePoint (one file per submission) | `Planned` | First completion after 2026-10-29 | Confirmed from live system 2026-10-26 (several Completed items show 2–3 suffixed PDFs) |
 | Completed submission → signed PDF uploaded to client `h. FileInvite and Docusign` folder with expected filename | `Passed` | Confirmed from live system 2026-10-26 (one file located in SharePoint) |
 | Pre-production test cycle reported by RSFA | `Partially verified` | Per RSFA 2026-10-26, "multiple tests were completed". Test cases and results were not supplied. |
 | Naming-convention IML (single, same last name, different last names, email-only, one-word name, adviser excluded, NZ date) | `Passed` | 2026-10-29, isolated temporary Make scenario (deleted after the test) with fictional inputs; outputs matched the expected names |
@@ -591,11 +591,18 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
   - **How it was applied:** built from the live blueprint (backed up first), full blueprint sent through the Make MCP connector, then re-read: 95 modules, only 21 and 22 differ from the backup, both identical to the target. The scenario stayed active.
   - **Existing items:** all 43 items on `5029524384` (including the `Archived` group) were renamed to the convention on 2026-10-29 through the Monday API. Signers were resolved from the item's submitter emails against the linked Client Profile's Contacts (full Contact names), with DocuSeal used to confirm signers where the item was ambiguous. The previous names were kept outside the repository (they contain client names and emails) for rollback.
   - **Rollback:** restore the previous blueprint from this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (commit `a8a744b` or earlier).
+- **Change applied 2026-10-29 (15:32 UTC, approved by RSFA) — file the signed PDF with the Audit Log:**
+  - Filing now downloads `combined_document_url` (the version shown in `Signed Document URL`, which includes DocuSeal's Audit Log) instead of each document's own PDF, and files one combined PDF per submission to `Files` and SharePoint.
+  - Modules changed: 9210 (feeder runs once), 9211 (download URL and filter), 9214, 9230, 9233, 9234 (filename without the `_n` suffix; multi-document submissions use the template name). No modules added. Fallback: if `combined_document_url` is empty, the first document's PDF is filed as before.
+  - **How it was applied:** built from the live blueprint (backed up, unchanged since the naming change), full blueprint sent through the Make MCP connector, re-read: 95 modules, only the 6 listed differ, identical to the target. The scenario stayed active.
+  - **Not retroactive:** PDFs filed before this change (without the Audit Log) were left as they are.
+  - **Rollback:** restore the previous blueprint from this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (commit `9547973` or earlier).
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-10-29 | Filing switched to the combined signed PDF with DocuSeal's Audit Log (`combined_document_url`), one file per submission, for both `Files` and SharePoint (modules 9210, 9211, 9214, 9230, 9233, 9234). Live blueprint verified, export replaced. Not yet observed on a real completion. | Claude (implementation task) |
 | 2026-10-29 | Item naming convention (`LastName_FirstName_Template_DDMonYY` and joint variants) applied to modules 21/22 of `9803640` — this also changes every Slack message title that uses `22.ItemName`. Live blueprint verified (only 21 and 22 changed), export replaced. All 43 existing board items renamed. Limitation for DocuSeal-created submissions without full submitter names recorded in §18. | Claude (implementation task) |
 | 2026-09-20 | Initial canonical documentation created from the RSFA-supplied blueprint export and a corroborating Slack screenshot; several notification-logic and unused-field discrepancies flagged, not silently resolved. | Claude (documentation task) |
 | 2026-10-27 | Module 21 (`NewStatus`): `form.completed` without `opened_at` now maps to Sent instead of Viewed, so the adviser auto-completion from Send Now no longer marks items Viewed. RSFA-approved; live blueprint verified identical to target (only module 21 changed); export replaced. Confirmed from a stored webhook sample that `form.completed` payloads include `opened_at`. | Claude (implementation task) |

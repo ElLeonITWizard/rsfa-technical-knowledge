@@ -3328,7 +3328,7 @@
                                         {
                                             "id": 9210,
                                             "mapper": {
-                                                "array": "{{10.body.documents}}"
+                                                "array": "{{slice(10.body.documents; 0; 1)}}"
                                             },
                                             "module": "builtin:BasicFeeder",
                                             "version": 1,
@@ -3343,7 +3343,7 @@
                                                 "designer": {
                                                     "x": 3900,
                                                     "y": 4950,
-                                                    "name": "Filing: Iterate Signed Documents"
+                                                    "name": "Filing: Single Pass (combined signed PDF)"
                                                 }
                                             },
                                             "parameters": {}
@@ -3351,18 +3351,18 @@
                                         {
                                             "id": 9211,
                                             "filter": {
-                                                "name": "Document has URL",
+                                                "name": "Signed PDF has URL",
                                                 "conditions": [
                                                     [
                                                         {
-                                                            "a": "{{9210.url}}",
+                                                            "a": "{{ifempty(20.SignedDocUrl; 9210.url)}}",
                                                             "o": "exist"
                                                         }
                                                     ]
                                                 ]
                                             },
                                             "mapper": {
-                                                "url": "{{9210.url}}",
+                                                "url": "{{ifempty(20.SignedDocUrl; 9210.url)}}",
                                                 "method": "get",
                                                 "shareCookies": false,
                                                 "parseResponse": false,
@@ -3468,7 +3468,7 @@
                                                 "designer": {
                                                     "x": 4200,
                                                     "y": 4950,
-                                                    "name": "Filing: Download Signed Document (DocuSeal)"
+                                                    "name": "Filing: Download Combined Signed PDF with Audit Log (DocuSeal)"
                                                 }
                                             },
                                             "parameters": {
@@ -3484,7 +3484,7 @@
                                                 "itemId": "{{9204.MondayItemId}}",
                                                 "boardId": "5029524384",
                                                 "columnId": "file_mm7f68r4",
-                                                "filename": "{{replace(replace(replace(ifempty(9210.name; 20.TemplateName); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}{{if(length(10.body.documents) > 1; \"_\"; emptystring)}}{{if(length(10.body.documents) > 1; 9210.__IMTINDEX__; emptystring)}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf"
+                                                "filename": "{{replace(replace(replace(if(length(10.body.documents) > 1; 20.TemplateName; ifempty(9210.name; 20.TemplateName)); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf"
                                             },
                                             "module": "monday:AddFileToFileColumnValueV2",
                                             "onerror": [
@@ -3724,7 +3724,7 @@
                                                                                 "enter": "path",
                                                                                 "folder": "{{decodeURL(first(split(last(split(last(split(9220.mappable_column_values.link5.text; \" - \")); \"/Documents/\")); \"?\")))}}/h. FileInvite and Docusign",
                                                                                 "select": "list",
-                                                                                "filename": "{{replace(replace(replace(ifempty(9210.name; 20.TemplateName); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}{{if(length(10.body.documents) > 1; \"_\"; emptystring)}}{{if(length(10.body.documents) > 1; 9210.__IMTINDEX__; emptystring)}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf",
+                                                                                "filename": "{{replace(replace(replace(if(length(10.body.documents) > 1; 20.TemplateName; ifempty(9210.name; 20.TemplateName)); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf",
                                                                                 "conflictBehavior": "replace"
                                                                             },
                                                                             "module": "microsoft-sharepoint:uploadAFile",
@@ -3851,7 +3851,7 @@
                                                                                 ]
                                                                             },
                                                                             "mapper": {
-                                                                                "text": "⚠️ *DocuSeal Signed Document – Manual SharePoint Filing Required – {{22.ItemName}}*\n\n*Reason:* The linked Client Profile has no valid SP folder link\n*File:* {{replace(replace(replace(ifempty(9210.name; 20.TemplateName); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}{{if(length(10.body.documents) > 1; \"_\"; emptystring)}}{{if(length(10.body.documents) > 1; 9210.__IMTINDEX__; emptystring)}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf\n*Done:* the signed document was added to the Files column of the DocuSeal Submission item\n*Action:* link/fix the Client Profile and file it manually into `h. FileInvite and Docusign`\n*Submission:* <https://rsfa-squad.monday.com/boards/5029524384/pulses/{{9204.MondayItemId}}|Open DocuSeal Submission in Monday>",
+                                                                                "text": "⚠️ *DocuSeal Signed Document – Manual SharePoint Filing Required – {{22.ItemName}}*\n\n*Reason:* The linked Client Profile has no valid SP folder link\n*File:* {{replace(replace(replace(if(length(10.body.documents) > 1; 20.TemplateName; ifempty(9210.name; 20.TemplateName)); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf\n*Done:* the signed document was added to the Files column of the DocuSeal Submission item\n*Action:* link/fix the Client Profile and file it manually into `h. FileInvite and Docusign`\n*Submission:* <https://rsfa-squad.monday.com/boards/5029524384/pulses/{{9204.MondayItemId}}|Open DocuSeal Submission in Monday>",
                                                                                 "parse": false,
                                                                                 "mrkdwn": true,
                                                                                 "channel": "C07R2JNE0J0",
@@ -3935,7 +3935,7 @@
                                                                 ]
                                                             },
                                                             "mapper": {
-                                                                "text": "⚠️ *DocuSeal Signed Document – Manual SharePoint Filing Required – {{22.ItemName}}*\n\n*Reason:* No single Client Profile is linked to this submission\n*File:* {{replace(replace(replace(ifempty(9210.name; 20.TemplateName); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}{{if(length(10.body.documents) > 1; \"_\"; emptystring)}}{{if(length(10.body.documents) > 1; 9210.__IMTINDEX__; emptystring)}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf\n*Done:* the signed document was added to the Files column of the DocuSeal Submission item\n*Action:* link/fix the Client Profile and file it manually into `h. FileInvite and Docusign`\n*Submission:* <https://rsfa-squad.monday.com/boards/5029524384/pulses/{{9204.MondayItemId}}|Open DocuSeal Submission in Monday>",
+                                                                "text": "⚠️ *DocuSeal Signed Document – Manual SharePoint Filing Required – {{22.ItemName}}*\n\n*Reason:* No single Client Profile is linked to this submission\n*File:* {{replace(replace(replace(if(length(10.body.documents) > 1; 20.TemplateName; ifempty(9210.name; 20.TemplateName)); \".pdf\"; emptystring); \"/\"; \"-\"); \":\"; \"-\")}}_Ref{{2.SubmissionId}}_{{formatDate(if(20.CompletedAt; parseDate(20.CompletedAt; \"YYYY-MM-DDTHH:mm:ss.SSSZ\"); now); \"MMMMYY\")}}.pdf\n*Done:* the signed document was added to the Files column of the DocuSeal Submission item\n*Action:* link/fix the Client Profile and file it manually into `h. FileInvite and Docusign`\n*Submission:* <https://rsfa-squad.monday.com/boards/5029524384/pulses/{{9204.MondayItemId}}|Open DocuSeal Submission in Monday>",
                                                                 "parse": false,
                                                                 "mrkdwn": true,
                                                                 "channel": "C07R2JNE0J0",
