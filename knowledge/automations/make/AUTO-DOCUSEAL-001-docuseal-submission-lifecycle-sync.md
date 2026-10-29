@@ -31,8 +31,8 @@ related_scenarios:
   - name: "Outlook: Email Notification after Failed Scenario"
     id: "8732008"
 related_flows: []
-last_modified: 2026-10-27
-last_verified: 2026-10-27
+last_modified: 2026-10-29
+last_verified: 2026-10-29
 documentation_status: partial
 ---
 
@@ -250,7 +250,7 @@ Any failure in a filing step sends a technical email and deletes the filing lock
 
 | DocuSeal / derived field | Monday column (ID) | Written | Notes |
 |---|---|---|---|
-| `TemplateShort` + `RecipientLabel` + `SentDateFormatted` | `name` | Create only | e.g. "Sample Document - Jane Example - 15 September 2026" (fictional example) |
+| `ItemName` (module 22, naming convention — §13) | `name` | Create only | Since 2026-10-29: `LastName_FirstName_Template_DDMonYY`, e.g. `Example_Jane_Kiwibank_AEOI_23Oct26` (fictional). Before: "Template - Recipient - D MMMM YYYY" |
 | Resolved Client Profile (via Contact) | `board_relation_mm4qrrxr` (Client Profiles) | Create only (new item, contact-found branch) | Never re-linked or corrected on later events; a no-contact-found item is never retroactively linked |
 | First submitter's email | `email_mm4qvnap` (Primary Submitter Email) | Create only | |
 | `EarliestSentAt` | `date_mm4q429w` (Sent) | Create only | |
@@ -313,6 +313,20 @@ The `h. FileInvite and Docusign` subfolder is the same target used by `AUTO-DOCU
 | Draft, Sent or Viewed | `group_mm4qa1h0` | `New` |
 
 The scenario never moves items between groups after creation.
+
+**Item naming convention (modules 21 and 22, since 2026-10-29, RSFA-requested).** The same rule is used by `AUTO-DOCUSEAL-002` (Send Now), so items created either way look the same.
+
+| Case | Format | Fictional example |
+|---|---|---|
+| One client | `{LastName}_{FirstName}_{Template}_{DDMonYY}` | `Example_Jane_Kiwibank_AEOI_23Oct26` |
+| Two clients, same last name | `{LastName}_{Initial1}&{Initial2}_{Template}_{DDMonYY}` | `Example_J&S_Kiwibank_AEOI_23Oct26` |
+| Two clients, different last names | `{LastName1}&{LastName2}_{Template}_{DDMonYY}` | `Example&Sample_Kiwibank_AEOI_23Oct26` |
+
+- **Clients:** the first two submitters whose email is not `@rsfa.co.nz` (advisers are excluded), in submitter order (module 21 `Client1FullName` / `Client2FullName`). The submitter's DocuSeal `name` is used, or its email when the name is empty. First name = first word, last name = last word, initial = first letter of the first name. A one-word name is used as-is. Last names are compared case-insensitively.
+- **Template:** DocuSeal `template.name`, with `_{FirstName}_{LastName}` of each client removed when present (so the per-client template `Kiwibank_AEOI_Jane_Example` becomes `Kiwibank_AEOI`). Spaces and other characters are kept.
+- **Date:** submission `created_at` in `Pacific/Auckland`, format `DDMMMYY` (falls back to "now"); module 21 `NameDate`.
+- **No client found** (e.g. only the adviser): `{Template or "DocuSeal Submission {id}"}_{DDMonYY}`.
+- **Where it is used:** the `name` of items created by modules 70/9081, and every Slack message that shows `22.ItemName` (Sent, Completed, Declined — new and existing items — and both Manual Filing messages). For existing items the Slack title is recomputed from DocuSeal data, not read from the Monday item, so a manually renamed item still shows the computed name in Slack.
 
 **Contact/Client Profile resolution (new items only):** the submitter's emails and phones are searched against the Contacts board via the shared subflow (`8518416`). If a Contact is found, its own Client Profile relation column (`board_relation_mkxpzyfq`) is read and copied onto the new DocuSeal Submission item. If no Contact is found, the item is still created, just without a Client Profile link.
 
@@ -411,6 +425,10 @@ Recommended: record this as an incident under `knowledge/incidents/` using `temp
 - **Completed but not filed:** one item with Status `Completed` (created 2026-10-05) has no `Completed` date and no `Files` entry. TODO: verify whether its signed PDF reached SharePoint.
 - **Not filed — completed before filing existed:** two Completed items from 2026-09-15 and 2026-09-21 completed before filing was built. The earliest `Files` attachment observed is from a 2026-09-26 completion (Inference: filing went live around 2026-09-25/26).
 
+### Item naming from DocuSeal-created submissions (Confirmed from live system — DocuSeal, 2026-10-29)
+
+Submissions created directly in DocuSeal often have only a first name, or no name, on the submitter (e.g. only `"Jane"`, or `null`). The naming convention then produces a short or email-based client part (e.g. `Jane_…` or `jane@example.com_…`). Submissions sent from Monday (`AUTO-DOCUSEAL-002`) always carry the full Contact name, so they are not affected. Possible improvement (not implemented): use the matched Contact's name (module 61) on the new-item path. Until then, entering the client's full name in DocuSeal avoids the issue.
+
 ### Group routing
 
 - **Completed items:** items created already-Completed are routed to `group_mm4q8vrz`, which no longer exists on the live board (§9, §13). TODO: verify what Monday does with these creates — reject them, or place them in the top group (`New`). No live failure attributable to this was seen in the execution log page reviewed.
@@ -460,6 +478,8 @@ This scenario now processes **real client e-signature submissions and signed doc
 | Completed submission with multiple documents → each PDF attached to `Files` with `_1`, `_2`, … suffix | `Passed` | Confirmed from live system 2026-10-26 (several Completed items show 2–3 suffixed PDFs) |
 | Completed submission → signed PDF uploaded to client `h. FileInvite and Docusign` folder with expected filename | `Passed` | Confirmed from live system 2026-10-26 (one file located in SharePoint) |
 | Pre-production test cycle reported by RSFA | `Partially verified` | Per RSFA 2026-10-26, "multiple tests were completed". Test cases and results were not supplied. |
+| Naming-convention IML (single, same last name, different last names, email-only, one-word name, adviser excluded, NZ date) | `Passed` | 2026-10-29, isolated temporary Make scenario (deleted after the test) with fictional inputs; outputs matched the expected names |
+| Naming convention on a real DocuSeal-created submission | `Planned` | First live execution after 2026-10-29 |
 | Webhook backlog / concurrent delivery for the same submission | `Failed` | 2026-10-23 burst produced apparent duplicate items and Status/Files mismatches (§18) |
 
 ### Required regression tests
@@ -473,7 +493,7 @@ Status is `Planned` unless marked otherwise.
 - Existing item transitioning to Sent → confirm whether the Sent Slack notification fires (§18).
 - Existing item transitioning to Completed → exactly one Completed Slack message.
 - Existing item transitioning to Declined → confirm the cleared Sync Index fields don't break a later event or filing.
-- Multi-submitter submission (2, and 3+ submitters) → correct `RecipientLabel` text.
+- Multi-submitter submission (1, 2 same last name, 2 different last names, adviser + clients) → item name and Slack titles follow the §13 naming convention.
 - Malformed webhook payload → technical email sent, no Monday item created.
 - **Filing:**
   - Completed with exactly one Client Profile with a valid `SP folder` → PDFs in Files and SharePoint.
@@ -566,11 +586,17 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
     - The scenario stayed active throughout.
   - **Rollback:** restore the previous blueprint from this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (commit `cd10e73` or earlier).
   - **Behaviour not yet observed in a real run:** template link and Alternative Submitter Email on a new item; skipping of a Monday-sent submission. TODO: verify on the first executions.
+- **Change applied 2026-10-29 (15:19 UTC, requested by RSFA) — item naming convention:**
+  - Module 21 gains `Client1FullName`, `Client2FullName` and `NameDate`. Module 22 `ItemName` now builds the §13 convention. No other module changed; Slack messages and the create-item modules pick up the new name through `22.ItemName`.
+  - **How it was applied:** built from the live blueprint (backed up first), full blueprint sent through the Make MCP connector, then re-read: 95 modules, only 21 and 22 differ from the backup, both identical to the target. The scenario stayed active.
+  - **Existing items:** all 43 items on `5029524384` (including the `Archived` group) were renamed to the convention on 2026-10-29 through the Monday API. Signers were resolved from the item's submitter emails against the linked Client Profile's Contacts (full Contact names), with DocuSeal used to confirm signers where the item was ambiguous. The previous names were kept outside the repository (they contain client names and emails) for rollback.
+  - **Rollback:** restore the previous blueprint from this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (commit `a8a744b` or earlier).
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-10-29 | Item naming convention (`LastName_FirstName_Template_DDMonYY` and joint variants) applied to modules 21/22 of `9803640` — this also changes every Slack message title that uses `22.ItemName`. Live blueprint verified (only 21 and 22 changed), export replaced. All 43 existing board items renamed. Limitation for DocuSeal-created submissions without full submitter names recorded in §18. | Claude (implementation task) |
 | 2026-09-20 | Initial canonical documentation created from the RSFA-supplied blueprint export and a corroborating Slack screenshot; several notification-logic and unused-field discrepancies flagged, not silently resolved. | Claude (documentation task) |
 | 2026-10-27 | Module 21 (`NewStatus`): `form.completed` without `opened_at` now maps to Sent instead of Viewed, so the adviser auto-completion from Send Now no longer marks items Viewed. RSFA-approved; live blueprint verified identical to target (only module 21 changed); export replaced. Confirmed from a stored webhook sample that `form.completed` payloads include `opened_at`. | Claude (implementation task) |
 | 2026-10-27 | Applied the approved Lifecycle Sync change to `9803640` (module 60 filter, new template lookup 9250, new columns on 70/9081), verified identical to the target blueprint, and replaced the export snapshot. | Claude (implementation task) |

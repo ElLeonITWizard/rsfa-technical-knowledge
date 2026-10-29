@@ -305,6 +305,18 @@
                                     {
                                         "name": "FallbackItemLabel",
                                         "value": "DocuSeal Submission {{2.SubmissionId}}"
+                                    },
+                                    {
+                                        "name": "Client1FullName",
+                                        "value": "{{trim(first(split(if(ifempty(10.body.submitters[1].email; 10.body.submitters[1].name); if(contains(lower(10.body.submitters[1].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[1].name; 10.body.submitters[1].email)) + \"|\"); emptystring) + if(ifempty(10.body.submitters[2].email; 10.body.submitters[2].name); if(contains(lower(10.body.submitters[2].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[2].name; 10.body.submitters[2].email)) + \"|\"); emptystring) + if(ifempty(10.body.submitters[3].email; 10.body.submitters[3].name); if(contains(lower(10.body.submitters[3].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[3].name; 10.body.submitters[3].email)) + \"|\"); emptystring) + if(ifempty(10.body.submitters[4].email; 10.body.submitters[4].name); if(contains(lower(10.body.submitters[4].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[4].name; 10.body.submitters[4].email)) + \"|\"); emptystring); \"|\")))}}"
+                                    },
+                                    {
+                                        "name": "Client2FullName",
+                                        "value": "{{trim(get(split(if(ifempty(10.body.submitters[1].email; 10.body.submitters[1].name); if(contains(lower(10.body.submitters[1].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[1].name; 10.body.submitters[1].email)) + \"|\"); emptystring) + if(ifempty(10.body.submitters[2].email; 10.body.submitters[2].name); if(contains(lower(10.body.submitters[2].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[2].name; 10.body.submitters[2].email)) + \"|\"); emptystring) + if(ifempty(10.body.submitters[3].email; 10.body.submitters[3].name); if(contains(lower(10.body.submitters[3].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[3].name; 10.body.submitters[3].email)) + \"|\"); emptystring) + if(ifempty(10.body.submitters[4].email; 10.body.submitters[4].name); if(contains(lower(10.body.submitters[4].email); \"@rsfa.co.nz\"); emptystring; trim(ifempty(10.body.submitters[4].name; 10.body.submitters[4].email)) + \"|\"); emptystring); \"|\"); 2))}}"
+                                    },
+                                    {
+                                        "name": "NameDate",
+                                        "value": "{{formatDate(ifempty(10.body.created_at; now); \"DDMMMYY\"; \"Pacific/Auckland\")}}"
                                     }
                                 ]
                             },
@@ -330,7 +342,7 @@
                                 "designer": {
                                     "x": 1800,
                                     "y": 3450,
-                                    "name": "Compute Status, Short Template Name & Recipient Label"
+                                    "name": "Compute Status, Short Template Name, Recipient Label & Client Names"
                                 }
                             },
                             "parameters": {}
@@ -350,7 +362,7 @@
                                     },
                                     {
                                         "name": "ItemName",
-                                        "value": "{{ifempty(21.TemplateShort;21.FallbackItemLabel)}} - {{ifempty(21.RecipientLabel;\"Unknown submitter\")}} - {{ifempty(21.SentDateFormatted;formatDate(now;\"D MMMM YYYY\"))}}"
+                                        "value": "{{if(length(trim(21.Client1FullName)) > 0; if(length(trim(21.Client2FullName)) > 0; if(lower(last(split(trim(21.Client1FullName); \" \"))) = lower(last(split(trim(21.Client2FullName); \" \"))); last(split(trim(21.Client1FullName); \" \")) + \"_\" + substring(first(split(trim(21.Client1FullName); \" \")); 0; 1) + \"&\" + substring(first(split(trim(21.Client2FullName); \" \")); 0; 1); last(split(trim(21.Client1FullName); \" \")) + \"&\" + last(split(trim(21.Client2FullName); \" \"))); if(first(split(trim(21.Client1FullName); \" \")) = last(split(trim(21.Client1FullName); \" \")); trim(21.Client1FullName); last(split(trim(21.Client1FullName); \" \")) + \"_\" + first(split(trim(21.Client1FullName); \" \")))) + \"_\" + trim(if(length(trim(21.Client2FullName)) > 0; replace(if(length(trim(21.Client1FullName)) > 0; replace(20.TemplateName; \"_\" + first(split(trim(21.Client1FullName); \" \")) + \"_\" + last(split(trim(21.Client1FullName); \" \")); emptystring); 20.TemplateName); \"_\" + first(split(trim(21.Client2FullName); \" \")) + \"_\" + last(split(trim(21.Client2FullName); \" \")); emptystring); if(length(trim(21.Client1FullName)) > 0; replace(20.TemplateName; \"_\" + first(split(trim(21.Client1FullName); \" \")) + \"_\" + last(split(trim(21.Client1FullName); \" \")); emptystring); 20.TemplateName))) + \"_\" + 21.NameDate; ifempty(20.TemplateName; 21.FallbackItemLabel) + \"_\" + 21.NameDate)}}"
                                     }
                                 ]
                             },
