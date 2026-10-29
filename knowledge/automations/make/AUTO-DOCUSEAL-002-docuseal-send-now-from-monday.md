@@ -333,7 +333,7 @@ Test identities only (fictional test Client Profiles and contacts with internal 
 | 3b | Client Profile with two contacts, only one with a Primary Email → sent to that one only, no error | `Planned` | Logic changed 2026-10-28 (module 4); not yet run on a real item |
 | 4 | Each NSA-only template | `Partially verified` | `NSA_v4_Rod Schubert_26` passed (3 above, and RSFA live run `12805951`); the Seth and Kathleen NSA-only templates not yet sent |
 | 4b | Live run by Rod Schubert on manually created items | `Passed` | Submissions `12805951` and `12807405` (2026-10-28) reached `Completed`; it showed the items were not renamed, which led to the 2026-10-29 naming change |
-| 10 | Item renamed to the naming convention on Send Now | `Planned` | Formula `Passed` in an isolated temporary scenario with fictional inputs, and the `name` column write `Passed` on an archived test item (2026-10-29); first real Send Now pending |
+| 10 | Item renamed to the naming convention on Send Now | `Passed` | 2026-10-29, test submission `12880590` (fictional test client): item renamed to `{LastName}_{FirstName}_Rod_NSA_v4 A&D_v3_30Oct26`, Status Sent, no duplicate; signed → Completed and filed with the Audit Log (`AUTO-DOCUSEAL-001` §20) |
 5. Validation:
    - no Client Profile
    - two Client Profiles
@@ -393,7 +393,7 @@ Test identities only (fictional test Client Profiles and contacts with internal 
 - **Template metadata:** Created Date / Last Updated / Created By / Example File for the 5 templates — TODO: fill from DocuSeal.
 - **Adviser FSP:** Kathleen Schubert's FSP number — TODO: verify.
 - **Monday webhook registration:** the team's standard method — TODO: verify.
-- **Untested paths:** §20 tests 3b, 4 (Seth and Kathleen NSA-only), 5–9 and 10.
+- **Untested paths:** §20 tests 3b, 4 (Seth and Kathleen NSA-only) and 5–9.
 - **Naming of DocuSeal-created submissions:** depends on the submitter names entered in DocuSeal — see `AUTO-DOCUSEAL-001` §18.
 
 ## 25. Change history

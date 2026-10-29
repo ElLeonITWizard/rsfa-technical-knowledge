@@ -475,7 +475,8 @@ This scenario now processes **real client e-signature submissions and signed doc
 |---|---|---|
 | New item already Sent, then Completed, with Client Profile link, Slack Sent + Completed messages | `Passed` | Slack screenshot supplied 2026-09-20 (test identity) |
 | Completed submission with multiple documents → each PDF attached to `Files` with `_1`, `_2`, … suffix (behaviour before 2026-10-29) | `Passed` |
-| Combined PDF with Audit Log filed to Files and SharePoint (one file per submission) | `Planned` | First completion after 2026-10-29 | Confirmed from live system 2026-10-26 (several Completed items show 2–3 suffixed PDFs) |
+| Combined PDF with Audit Log filed to Files and SharePoint (one file per submission) | `Passed` | 2026-10-29, test submission `12880590` (fictional test client, template `Rod_NSA_v4 A&D_v3`, 2 documents): one 15-page PDF (both documents + Audit Log with Event Log) in Files and in the client's `h. FileInvite and Docusign` folder; all executions successful. Monday stores the filename with `&` replaced by `_`; SharePoint keeps `&` |
+| Item naming via Send Now | `Passed` | Same test: item renamed to the convention on send; no duplicate item | Confirmed from live system 2026-10-26 (several Completed items show 2–3 suffixed PDFs) |
 | Completed submission → signed PDF uploaded to client `h. FileInvite and Docusign` folder with expected filename | `Passed` | Confirmed from live system 2026-10-26 (one file located in SharePoint) |
 | Pre-production test cycle reported by RSFA | `Partially verified` | Per RSFA 2026-10-26, "multiple tests were completed". Test cases and results were not supplied. |
 | Naming-convention IML (single, same last name, different last names, email-only, one-word name, adviser excluded, NZ date) | `Passed` | 2026-10-29, isolated temporary Make scenario (deleted after the test) with fictional inputs; outputs matched the expected names |
