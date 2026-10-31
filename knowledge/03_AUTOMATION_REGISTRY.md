@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-20
+last_modified: 2026-10-31
 last_verified: 2026-09-05
 ---
 
@@ -140,6 +140,9 @@ The call graph previously resolved 20 of 22 chained scenarios, with two parent s
 | M.Com: Unsubscribe Client Level (May 26) | `9229914` | Active | Webhook (custom webhook) | Email Campaigns | parent | Webhook Gateway, Monday.com | Unsubscribe / Email Preference | 2026-05-14 | — |
 | M.com: Update Dependents (Dec25) | `8260037` | Active | Webhook (custom webhook) | Leads and Client Profiles | standalone | Webhook Gateway, Monday.com | Leads and Client Profiles | 2026-02-25 | — |
 | M.com: Update Existing Mortgages Name from Borrowers (Dec25) | `1228763` | Active | Monday.com instant trigger (watch) | Mortgage Applications | standalone | Monday.com | Mortgage Applications | 2025-12-12 | — |
+| M.com: Update Mortgage Pipeline Name from Borrowers (Dec25) | `1232945` | Active | Monday.com instant trigger (watch) | Mortgage Applications | standalone | Monday.com | Mortgage Applications | 2025-12-12 | Added 2026-10-31 (Confirmed from live system). Canonical owner: `AUTO-NAMING-001` |
+| RSFA – End Forms: Client Profile link and record name sync | `10037840` | Active | Scheduled, every 900 s | Masterboard / End Forms | standalone | Monday.com | Masterboard / Bank Change Sync | 2026-10-25 | Added 2026-10-31 (Confirmed from live system). Keeps SOP Masterboard `5026186805` CP link and item name in sync; reads the first 500 items only. Not yet documented in a canonical automation file |
+| M.com: Lead Rename by ClientProfile (Mar 2026) | `9711585` | Inactive | Webhook (custom webhook, hook `4335040`) | Leads and Client Profiles | standalone | Webhook Gateway | Leads and Client Profiles | 2026-08-25 | Added 2026-10-31 (Confirmed from live system). Unfinished shell: webhook module only; no Monday webhook targets it |
 | M.com: Updates profile name when participants added | `1054932` | Active | Monday.com instant trigger (watch) | Leads and Client Profiles | standalone | Monday.com | Leads and Client Profiles | 2025-12-09 | — |
 | M.com: Verification in Pigeon to Mortgage Pipeline (Dec 25) | `8356342` | Active | Webhook (custom webhook) | Pigeon | standalone | Webhook Gateway, Microsoft Outlook/Email, Monday.com | Pigeon Integration Suite | 2026-01-21 | — |
 | M.com: AffordX item Need Sync to Existing Mortgages (Aug 2026) | `9721689` | Active | Webhook (custom webhook) | Mortgage Applications | parent | Webhook Gateway, Monday.com | AffordX Mortgage Application Sync | 2026-09-04 | New 2026-09-05. Calls `9662353` as a bridge subflow; confirmed live via blueprint inspection — see `AUTO-AFFORDX-001` §10a |
@@ -172,7 +175,7 @@ The call graph previously resolved 20 of 22 chained scenarios, with two parent s
 | Leads and Client Profiles | `M.com: Update Dependents (Dec25)` (`8260037`)<br>`M.com: Updates profile name when participants added` (`1054932`)<br>`M.com: CRM Migration - Connect Client Profiles and Pipelines (Dec25)` (`8264526`)<br>`M.com: Move to Pipeline (Sep 2026)` (`9756260`, new — supersedes the native Monday Workflow `AUTO-MONDAY-WF-001` per RSFA) |
 | MacroForge End-Forms Trigger | `Macroforge to M.com: End Forms Filled (May 2026)` (`9254149`)<br>`M.com to Macroforge: Trigger Macroforge End Forms Filling Flow (Feb 2026)` (`8731317`) |
 | Masterboard / Bank Change Sync | `M.com: Banks to send change in Masterboard v2 (Feb 26)` (`8666173`)<br>`M.com: New Adviser Assigned in Masterboard (Mar 26)` (`8890068`)<br>`M.com: New item in Mortgage App Copy to Masterboard End Forms (Jan 26)` (`8410524`) |
-| Mortgage Applications | `M.com: Mortgage renewals board, assign adviser and support` (`722853`)<br>`M.com: Update Existing Mortgages Name from Borrowers (Dec25)` (`1228763`) |
+| Mortgage Applications | `M.com: Mortgage renewals board, assign adviser and support` (`722853`)<br>`M.com: Update Existing Mortgages Name from Borrowers (Dec25)` (`1228763`)<br>`M.com: Update Mortgage Pipeline Name from Borrowers (Dec25)` (`1232945`, added 2026-10-31) |
 | Mortgage Fixed-Rate Expiry Alerts | `M.com: Fixed Rate Expiry Email Alert (May25)` (`4840595`) |
 | Pigeon Integration Suite | `M.com: Pigeon Board to Mortgage Pipeline (Nov 25)` (`7950443`)<br>`M.com: Pigeon Documents to Mortgage Pipeline (Dec 25)` (`8367350`)<br>`M.com: Pigeon Notes to Mortgage Pipeline (Dec 25)` (`8399114`)<br>`M.com: Verification in Pigeon to Mortgage Pipeline (Dec 25)` (`8356342`)<br>`Pigeon to M.com: Request Creation (Nov25)` (`7883004`) |
 | SharePoint and Documents | `M.com: Branded SOP Filling and Filing (Jul 2026)` (`9555578`)<br>`M.com: Review Broken SP Links on CP Board (May 2026)` (`9277255`) |
@@ -301,6 +304,7 @@ Board-level recipes should initially be documented by business process. Create a
 | Make.com | M.com: Review Broken SP Links on CP Board (May 2026) | Inactive | Retain as maintenance utility and verify future need |
 | Power Automate | OLD Outlook SENT Email Filling - Jet v2 | Active - Planned Retirement | Remove after Jet mailbox processes are retired |
 | Power Automate | Outlook Email Filing - Jet v2 | Active - Planned Retirement | Remove after Jet mailbox processes are retired |
+| Make.com | M.com: Lead Rename by ClientProfile (Mar 2026) (`9711585`) | Inactive (unfinished shell) | Retain; a completed version is proposed in `rsfa-automation-development/projects/client-profile-related-assets-renaming/` (not deployed) |
 | Make.com | Aircall Transcript Summary | Inactive (changed since 2026-07-30) | Retain as historical utility; likely superseded by `9627699`/`9627714` — not confirmed, see `AUTO-AIRCALL-001` §18 |
 
 ---
@@ -320,6 +324,8 @@ Board-level recipes should initially be documented by business process. Create a
 - Most Make scenarios do not yet have a verified canonical automation document.
 - **New 2026-09-05:** a new Make scenario, `M.com: Move to Pipeline (Sep 2026)` (`9756260`, created 2026-09-03), performs the same Leads → Pipeline routing function as the pre-existing native Monday Workflow `AUTO-MONDAY-WF-001` (board `5025429617`, unchanged since 2025-12-04). Per RSFA, the Make scenario is now the active implementation and the Monday Workflow is superseded/replaced — not independently verified beyond the Make blueprint and the unchanged state of the Workflow's own board; see `knowledge/automations/monday/AUTO-MONDAY-WF-001-move-to-pipeline.md`.
 - **New 2026-09-20:** a new Make scenario, `M.com: DocuSeal Submission Lifecycle Sync (Sep 2026)` (`9803640`), was added directly via an RSFA-supplied blueprint export rather than a live Make MCP query — its presence in `Valid scenarios/working` and its exact creation date have not been independently confirmed live. Several notification-logic discrepancies were found reading its blueprint directly — see `AUTO-DOCUSEAL-001` §18. RSFA also reported a planned DocuSign → DocuSeal migration (October–November 2026) — see `knowledge/decisions/ADR-002-docusign-to-docuseal-migration.md`.
+
+- **New 2026-10-31 (live, read-only):** naming conflict — `M.com: CP and Deals Renaming after Contact Renaming` (`1054927`) names Mortgage Pipeline and Existing Mortgages items with the Client Profile name, while `1228763` / `1232945` name them from Borrowers (RSFA: Borrowers is intended). No automation reacts to a Client Profile rename except the Power Automate SharePoint folder rename. See `AUTO-NAMING-001` §10b.
 
 ### 10.1 Contradictions and unresolved discrepancies found while drafting detailed automation documents (2026-07-30)
 

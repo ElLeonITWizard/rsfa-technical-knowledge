@@ -22,6 +22,14 @@ related_boards:
     id: "5024672364"
   - name: "✔️ Existing Insurance"
     id: "5024672437"
+  - name: "💲Mortgage Pipeline"
+    id: "5025201889"
+  - name: "➕Insurance Pipeline"
+    id: "5025201920"
+  - name: "📈 KiwiSaver Pipeline"
+    id: "5025201954"
+  - name: "Existing KiwiSaver"
+    id: "5024672484"
 related_scenarios:
   - name: "M.com: CP and Deals Renaming after Contact Renaming"
     id: "1054927"
@@ -31,9 +39,11 @@ related_scenarios:
     id: "1228763"
   - name: "M.com: Updates profile name when participants added"
     id: "1054932"
+  - name: "M.com: Update Mortgage Pipeline Name from Borrowers (Dec25)"
+    id: "1232945"
 related_flows: []
-last_modified: 2026-07-30
-last_verified: 2026-07-30
+last_modified: 2026-10-31
+last_verified: 2026-10-31
 documentation_status: partial
 ---
 
@@ -106,6 +116,9 @@ Monday.com only (Client Profiles, Contacts, Existing Mortgages, Existing Insuran
 | `1215342` | M.com: Renaming after Insurance Policy Added or Owner/Provider Change (Feb 2026) | Parent | Active | Webhook (custom webhook) | `Outlook: Email Notification after Failed Scenario` (`8732008`) | None confirmed | Current (registry + call graph) only; no dedicated source-material walkthrough |
 | `1228763` | M.com: Update Existing Mortgages Name from Borrowers (Dec25) | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) only; no dedicated source-material walkthrough |
 | `1054932` | M.com: Updates profile name when participants added | Standalone | Active | Monday.com instant trigger (watch) | None confirmed | None confirmed | Current (registry + call graph) only; no dedicated source-material walkthrough |
+| `1232945` | M.com: Update Mortgage Pipeline Name from Borrowers (Dec25) | Standalone | Active | Monday.com instant trigger (watch, Borrowers column) | None | None | **Confirmed from live system, 2026-10-31** (blueprint read). Added to this family 2026-10-31 |
+
+Live blueprint inspection on 2026-10-31 (read-only, Make API) confirmed the configuration of all five scenarios — see §10b, §12 and §13. This is a configuration check, not a behaviour test.
 
 No `source-material/make/` file exists for any of these four scenarios — this documentation is built entirely from the registry and call-graph exports.
 
@@ -125,6 +138,27 @@ Not applicable.
 
 `COMP-MAKE-ERROR-001` — called by `1054927` and `1215342`. `1228763` and `1054932` show no confirmed call to the shared error handler — TODO: verify whether this is a genuine gap.
 
+## 10b. Live configuration verification (2026-10-31)
+
+**Confirmed from live system, 2026-10-31** (Make API blueprint reads; Monday GraphQL reads; nothing executed):
+
+- `1054927` (trigger: Monday "watch item name" on Contacts `2074688484`; last edited 2026-10-25) does, in order:
+  1. Writes first/last name columns `text_mkxdmy0m` / `text_mkxdw5rs` on the Contact (first and last word of the name).
+  2. Renames the Contact's Client Profile (`board_relation_mkxpzyfq`) to its Contacts (`board_relation38`), with `","` → `" &"`.
+  3. Renames every linked **Mortgage Pipeline** (`board_relation_mkyebcmw`), **Existing Mortgage** (`board_relation_mkycc37a`), **KiwiSaver Pipeline** (`board_relation_mkye5k1h`) and **Existing KiwiSaver** (`board_relation_mkyeyfwe`, board `5024672484`) item to that same Client Profile name.
+  4. POSTs each of the Contact's Insurance Pipeline (`board_relation_mm0v33yp`) and Existing Insurance (`board_relation_mm0vv3md`) items to `1215342`'s webhook.
+- **Discrepancy:** step 3 names mortgage items with the Client Profile name, while `1228763` / `1232945` name them from **Borrowers**. Per RSFA (2026-10-31), Borrowers is the intended rule. The current production behaviour is unchanged; a change is proposed in `rsfa-automation-development/projects/client-profile-related-assets-renaming/`.
+- `1054932` renames the Client Profile only when its name has no `&`, or when more than 1 contact is linked. Its error handlers are `Break` retries (no failure email).
+- `1228763` / `1232945` have no error handler.
+- **No scenario reacts to a Client Profile being renamed.** Only the Power Automate folder rename (`AUTO-SP-FOLDER-001`) does. A Client Profile renamed manually leaves its related items unchanged.
+- Naming done outside this family (at creation or by other families), for reference:
+  - Leads: CP name, at creation, by `8800779`.
+  - Mortgage App: CP name, by `8410524`.
+  - Insurance / KiwiSaver Questionnaire: Contact name, by `9447215`.
+  - SOP Masterboard `5026186805`: CP name, every 900 s, by `10037840` "RSFA – End Forms: Client Profile link and record name sync" (first 500 items only).
+  - Aircall `5026308494`: linked Contact name, by `9869454`; `Unknown` when the caller is not matched.
+- `9711585` "M.com: Lead Rename by ClientProfile (Mar 2026)" exists but is **inactive** and holds only a webhook module (hook `4335040`). No Monday webhook points to it: the Leads board has no webhook on `board_relation_mm7c1wcw`.
+
 ## 11. End-to-end process
 
 ```mermaid
@@ -141,11 +175,22 @@ flowchart LR
 
 ## 12. Data mapping
 
-TODO: complete mapping from current production configuration. No field-level naming-format rules (e.g. how multiple borrower/participant names are concatenated) are confirmed from available evidence.
+**Confirmed from live system, 2026-10-31** (blueprint formulas):
+
+| Target | Name formula (Make) | Scenario |
+|---|---|---|
+| Client Profile `5024661649` | `replace(Contacts.text; ","; " &")` — Contacts `board_relation38` | `1054927`, `1054932` |
+| Mortgage Pipeline `5025201889` | `replace(Borrowers.text; ","; " &")` — Borrowers `board_relation_mkyf123a` | `1232945` |
+| Existing Mortgages `5024672364` | `replace(Borrowers.text; ","; " &")` — Borrowers `board_relation_mkyjjs0w` | `1228763` |
+| Mortgage Pipeline, Existing Mortgages, KiwiSaver Pipeline, Existing KiwiSaver | Client Profile name (as above) | `1054927` (see §10b discrepancy) |
+| Insurance Pipeline `5025201920` | Policy Owner names (`board_relation_mkyjddgg`, in link order) joined `" & "` + `" \| " + Provider` (`color_mkxpxs6j`) when not empty | `1215342` |
+| Existing Insurance `5024672437` | Policy Owner names (`board_relation_mkyjvgra`) joined `" & "` + `" \| " + Insurance Provider` (`label9`) when not empty | `1215342` |
+
+In the Monday API the board-relation `text` field is `null`; Make builds `.text` itself. API consumers should use `display_value` (same order as the links).
 
 ## 13. Decision and routing logic
 
-Not confirmed in detail for any of the four scenarios. TODO: verify the exact naming-format rules (ordering, separators, truncation) applied when combining multiple names into a single item title.
+Confirmed 2026-10-31 (§12): names are joined in link order with `" & "`; no truncation or de-duplication is applied; an empty relation leaves the item unchanged (`1228763`/`1232945` filter on linked IDs existing; `1215342` filters on owners not empty).
 
 ## 14. Dependencies
 
@@ -214,7 +259,9 @@ Disable the affected Make.com scenario(s). No automated rollback of already-appl
 
 ## 25. Known gaps
 
-- No implementation walkthrough exists for any of the four scenarios; naming-format rules and edge-case handling are unconfirmed.
+- ~~Naming-format rules unconfirmed~~ — confirmed from live blueprints 2026-10-31 (§12).
+- Mortgage naming conflict between `1054927` (Client Profile name) and `1228763`/`1232945` (Borrowers) — §10b. Unresolved in production.
+- No automation cascades a **Client Profile** rename to related items. Proposed in `rsfa-automation-development/projects/client-profile-related-assets-renaming/` (not deployed).
 - Missing shared-error-handler call for two of the four scenarios is unexplained.
 - Manual-edit survivability is unconfirmed.
 
@@ -223,3 +270,4 @@ Disable the affected Make.com scenario(s). No automated rollback of already-appl
 | Date | Change | Author |
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and call-graph evidence only; no source-material walkthrough available for any scenario in this family. | Claude (documentation task) |
+| 2026-10-31 | Live configuration verification (read-only blueprint reads): added `1232945` and the pipeline boards, confirmed naming formulas (§12, §13), documented what `1054927` actually renames, the mortgage-rule discrepancy, the absence of a Client-Profile-rename cascade, and the inactive `9711585` shell (§10b). Behaviour not re-tested. | Claude (Client Profile renaming project) |

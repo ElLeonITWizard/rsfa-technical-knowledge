@@ -6,7 +6,7 @@ owner: RSFA
 workspace_id: "2308685"
 workspace_name: Real Savvy_CRM
 source_export_date: 2026-07-30
-last_modified: 2026-09-20
+last_modified: 2026-10-31
 last_verified: 2026-09-05
 ---
 
@@ -105,7 +105,7 @@ A Monday board marked `active` may still be historical, experimental, unused or 
 | `5026525627` | [ASB: End Forms](https://rsfa-squad.monday.com/boards/5026525627) | Macroforge Boards | Active | public | Document Generation | Medium | 142 | Bank-specific end-form view and mirror layer sourced from Masterboard: End Forms. | `knowledge/schemas/monday/5026525627-asb-end-forms.md` |
 | `5026525749` | [BNZ: End Forms](https://rsfa-squad.monday.com/boards/5026525749) | Macroforge Boards | Active | public | Document Generation | Medium | 104 | Bank-specific end-form view and mirror layer sourced from Masterboard: End Forms. | `knowledge/schemas/monday/5026525749-bnz-end-forms.md` |
 | `5026525794` | [KB: End Forms](https://rsfa-squad.monday.com/boards/5026525794) | Macroforge Boards | Active | public | Document Generation | Medium | 91 | Kiwibank-specific end-form view and mirror layer sourced from Masterboard: End Forms. | `knowledge/schemas/monday/5026525794-kb-end-forms.md` |
-| `5026186805` | [Masterboard: End Forms](https://rsfa-squad.monday.com/boards/5026186805) | Macroforge Boards | Active | public | Document Generation | Critical | 400 | Consolidates mortgage, client, contact, ROMA and manual information for MacroForge bank end-form completion. | `knowledge/schemas/monday/5026186805-masterboard-end-forms.md` |
+| `5026186805` | [Masterboard: End Forms](https://rsfa-squad.monday.com/boards/5026186805) | Macroforge Boards | Active | public | Document Generation | Critical | 400 | Consolidates mortgage, client, contact, ROMA and manual information for MacroForge bank end-form completion. **Confirmed live 2026-10-31: the board is now named `SOP Masterboard`**, and has a `Client Profile` board-relation column `board_relation_mm8fc6yd` (single item) kept in sync, together with the item name, by Make `10037840` (every 900 s). Registry name not changed here, per `06_NAMING_AND_ID_CONVENTIONS.md` §23. | `knowledge/schemas/monday/5026186805-masterboard-end-forms.md` |
 | `5026525927` | [WBC: End Forms](https://rsfa-squad.monday.com/boards/5026525927) | Macroforge Boards | Active | public | Document Generation | Medium | 123 | Westpac-specific end-form view and mirror layer sourced from Masterboard: End Forms. | `knowledge/schemas/monday/5026525927-wbc-end-forms.md` |
 | `2074688483` | [Quotes & Invoices](https://rsfa-squad.monday.com/boards/2074688483) | No folder | Active | public | Operations | Medium | 8 | Operational Monday board; detailed business purpose requires verification. | `knowledge/schemas/monday/2074688483-quotes-invoices.md` |
 | `1982102193` | [Subitems of Automations](https://rsfa-squad.monday.com/boards/1982102193) | No folder | Active | public | Subitem Board | Inherited | 4 | Subitem storage associated with `Automations`. | `knowledge/schemas/monday/1982102193-subitems-of-automations.md` |
