@@ -58,11 +58,12 @@ Submissions sent from Monday (`AUTO-DOCUSEAL-002`, Send Now) were **not** affect
 
 - **Process rule:** when updating a Make blueprint through the API, keep every module's existing `metadata` (including `expect`/`parameters`/`interface`) and re-test any create-item path, not only the path being changed. Recorded in `AUTO-DOCUSEAL-001` §22.
 - **Other modules still lack editor metadata** (they run correctly). Opening and saving them in the Make editor restores it; low priority.
-- **Viewed from adviser signing:** module 21 treats `form.completed` with `opened_at` as Viewed even when the completing submitter is the adviser (`@rsfa.co.nz`). Proposed fix: only count `opened_at` from non-RSFA submitters — not applied, awaiting RSFA approval.
+- **Viewed from adviser signing:** module 21 treated `form.viewed`/`form.started`/`form.completed` from an adviser (`@rsfa.co.nz`) as Viewed. **Fixed 2026-11-02** (RSFA-approved): those events from an adviser now map to Sent (`AUTO-DOCUSEAL-001` §13).
 - **Naming when the template starts with the client name:** e.g. template `Jane_Example_Medical_Information` gives `Example_Jane_Jane_Example_Medical_Information_02Nov26`, because only `_First_Last` (with a leading underscore) is stripped. Proposed fix: also strip a leading `First_Last_` — not applied, awaiting RSFA approval.
 
 ## Change history
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-11-02 | Adviser-viewed follow-up fixed in module 21. | Claude (incident task) |
 | 2026-11-02 | Incident recorded after fix, recovery and verification. | Claude (incident task) |

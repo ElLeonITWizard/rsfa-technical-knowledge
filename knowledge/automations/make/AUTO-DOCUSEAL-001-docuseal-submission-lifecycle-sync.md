@@ -296,9 +296,9 @@ The `h. FileInvite and Docusign` subfolder is the same target used by `AUTO-DOCU
 | `submission.completed` | Completed |
 | `submission.expired` | Expired |
 | `form.declined` | Declined |
-| `form.viewed`, `form.started` | Viewed |
+| `form.viewed`, `form.started` | Viewed — unless the submitter who opened the form has an `@rsfa.co.nz` email (an adviser), then Sent (since 2026-11-02) |
 | `submission.created` | Sent if any submitter status contains "sent", else Draft |
-| `form.completed` | Completed if the submission body's own `status` is "completed"; otherwise Viewed if the completing submitter has `opened_at` (a person opened the form), else Sent. Since 2026-10-27, the API auto-completed adviser role from `AUTO-DOCUSEAL-002` never opens the form, so it no longer moves the item to Viewed |
+| `form.completed` | Completed if the submission body's own `status` is "completed"; otherwise Sent if the completing submitter is an adviser (`@rsfa.co.nz`, since 2026-11-02 — covers advisers signing their part directly in DocuSeal); otherwise Viewed if the submitter has `opened_at`, else Sent (since 2026-10-27 — covers the API auto-completed adviser from `AUTO-DOCUSEAL-002`) |
 | any other value | Derived from the submission body: Completed / Declined / Expired if the body's `status` says so; otherwise Viewed if any submitter is "completed" or "opened", Sent if any submitter is "sent", else Draft |
 
 **Forward-only guard:** each status is ranked (Draft=0, Sent=1, Viewed=2, Completed/Declined/Expired=4). An existing item is only updated if the new event's rank is `>=` the last known rank, so a late-arriving "viewed" webhook can never revert an already-Completed item back to Viewed.
@@ -605,6 +605,7 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-11-02 | Module 21 (`NewStatus`): `form.viewed`, `form.started` and `form.completed` from an `@rsfa.co.nz` submitter (adviser opening/signing in DocuSeal) map to Sent instead of Viewed, at RSFA's request. Webhook `data.email` confirmed from a stored `form.completed` sample. Live blueprint verified (only module 21 changed; create-item metadata kept); export replaced. | Claude (implementation task) |
 | 2026-11-02 | Fixed `INC-DOCUSEAL-001`: restored create-item column definitions (`metadata.expect`/`parameters`) on modules 70 and 9081, tested in a temporary scenario, applied and verified (only 70/9081 changed); replayed the 7 failed executions; export replaced. | Claude (incident task) |
 | 2026-10-29 | Filing switched to the combined signed PDF with DocuSeal's Audit Log (`combined_document_url`), one file per submission, for both `Files` and SharePoint (modules 9210, 9211, 9214, 9230, 9233, 9234). Live blueprint verified, export replaced. Not yet observed on a real completion. | Claude (implementation task) |
 | 2026-10-29 | Item naming convention (`LastName_FirstName_Template_DDMonYY` and joint variants) applied to modules 21/22 of `9803640` — this also changes every Slack message title that uses `22.ItemName`. Live blueprint verified (only 21 and 22 changed), export replaced. All 43 existing board items renamed. Limitation for DocuSeal-created submissions without full submitter names recorded in §18. | Claude (implementation task) |
