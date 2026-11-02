@@ -31,8 +31,8 @@ related_scenarios:
   - name: "Outlook: Email Notification after Failed Scenario"
     id: "8732008"
 related_flows: []
-last_modified: 2026-10-29
-last_verified: 2026-10-29
+last_modified: 2026-11-02
+last_verified: 2026-11-02
 documentation_status: partial
 ---
 
@@ -523,6 +523,7 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
 
 - **Stopping the automation:** disable the DocuSeal webhook and/or the Make scenario. While the scenario is stopped, incoming webhooks queue (§17) and are processed in a burst on restart. Read §18 before restarting after a long stop.
 - **Already-created data:** no automated rollback exists for Monday items, Files attachments, Sync Index records or SharePoint uploads. Affected items and files need manual review.
+- **Applying blueprint changes through the API (lesson from `INC-DOCUSEAL-001`):** keep every module's existing `metadata` (`expect`, `parameters`, `interface`). The Monday create-item modules (70, 9081) need `metadata.expect` (column definitions) at runtime. After any change, test the DocuSeal-created (create-item) path too, not only Send Now.
 - **Previous blueprint version:** available in this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (the 2026-09-20 version, without filing).
 
 ## 23. Troubleshooting guide
@@ -598,11 +599,13 @@ Use a dedicated fictional test DocuSeal submission, test Client Profile/Contact 
   - **How it was applied:** built from the live blueprint (backed up, unchanged since the naming change), full blueprint sent through the Make MCP connector, re-read: 95 modules, only the 6 listed differ, identical to the target. The scenario stayed active.
   - **Not retroactive:** PDFs filed before this change (without the Audit Log) were left as they are.
   - **Rollback:** restore the previous blueprint from this repository's Git history for `exports/make/blueprints/9803640-docuseal-submission-lifecycle-sync.blueprint.json` (commit `9547973` or earlier).
+- **Incident 2026-10-27 → 2026-11-02 (`knowledge/incidents/INC-DOCUSEAL-001-create-item-column-definitions-missing.md`):** create-item modules 70/9081 failed for every DocuSeal-created submission because their editor metadata was dropped by the 2026-10-27 API update. Fixed 2026-11-02 (metadata restored on 70/9081, with definitions for the two new columns); 3 affected submissions recovered by replaying the 7 failed executions.
 
 ## 26. Change history
 
 | Date | Change | Author |
 |---|---|---|
+| 2026-11-02 | Fixed `INC-DOCUSEAL-001`: restored create-item column definitions (`metadata.expect`/`parameters`) on modules 70 and 9081, tested in a temporary scenario, applied and verified (only 70/9081 changed); replayed the 7 failed executions; export replaced. | Claude (incident task) |
 | 2026-10-29 | Filing switched to the combined signed PDF with DocuSeal's Audit Log (`combined_document_url`), one file per submission, for both `Files` and SharePoint (modules 9210, 9211, 9214, 9230, 9233, 9234). Live blueprint verified, export replaced. Not yet observed on a real completion. | Claude (implementation task) |
 | 2026-10-29 | Item naming convention (`LastName_FirstName_Template_DDMonYY` and joint variants) applied to modules 21/22 of `9803640` — this also changes every Slack message title that uses `22.ItemName`. Live blueprint verified (only 21 and 22 changed), export replaced. All 43 existing board items renamed. Limitation for DocuSeal-created submissions without full submitter names recorded in §18. | Claude (implementation task) |
 | 2026-09-20 | Initial canonical documentation created from the RSFA-supplied blueprint export and a corroborating Slack screenshot; several notification-logic and unused-field discrepancies flagged, not silently resolved. | Claude (documentation task) |

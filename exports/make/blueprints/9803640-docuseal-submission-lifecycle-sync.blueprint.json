@@ -2144,6 +2144,221 @@
                                                             ],
                                                             "version": 2,
                                                             "metadata": {
+                                                                "expect": [
+                                                                    {
+                                                                        "name": "name",
+                                                                        "type": "text",
+                                                                        "label": "Item Name",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "boardId",
+                                                                        "type": "select",
+                                                                        "label": "Board",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "create_labels_if_missing",
+                                                                        "type": "boolean",
+                                                                        "label": "Create Labels if Missing",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "groupId",
+                                                                        "type": "select",
+                                                                        "label": "Group"
+                                                                    },
+                                                                    {
+                                                                        "name": "columnIds",
+                                                                        "type": "select",
+                                                                        "label": "Columns",
+                                                                        "multiple": true
+                                                                    },
+                                                                    {
+                                                                        "name": "columnValues",
+                                                                        "spec": [
+                                                                            {
+                                                                                "name": "board_relation_mm4qrrxr",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "item_ids",
+                                                                                        "spec": {
+                                                                                            "rpc": {
+                                                                                                "url": "rpc://monday/2/idFinderItem?boardIds=5024661649",
+                                                                                                "label": "ID Finder",
+                                                                                                "parameters": [
+                                                                                                    {
+                                                                                                        "text": "If you don't see the result you're looking for, try more specific search criteria.",
+                                                                                                        "type": "banner",
+                                                                                                        "theme": "info"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "name": "query",
+                                                                                                        "type": "text",
+                                                                                                        "label": "Item name contains"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            "name": "value",
+                                                                                            "type": "uinteger",
+                                                                                            "label": "Item ID",
+                                                                                            "required": true
+                                                                                        },
+                                                                                        "type": "array",
+                                                                                        "label": "Item IDs"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Client Profiles",
+                                                                                "metadata": {
+                                                                                    "mondayType": "board_relation"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "text_mm4qr3yv",
+                                                                                "type": "text",
+                                                                                "label": "DocuSeal Submission ID",
+                                                                                "metadata": {
+                                                                                    "mondayType": "text"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "email_mm4qvnap",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "email",
+                                                                                        "type": "email",
+                                                                                        "label": "Email"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "text",
+                                                                                        "type": "text",
+                                                                                        "label": "Text"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Primary Submitter Email",
+                                                                                "metadata": {
+                                                                                    "mondayType": "email"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "date_mm4q429w",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "dateOrDatetime",
+                                                                                        "type": "select",
+                                                                                        "label": "Date / Datetime",
+                                                                                        "validate": {
+                                                                                            "enum": [
+                                                                                                "date",
+                                                                                                "datetime"
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "date",
+                                                                                        "type": "text",
+                                                                                        "label": "Date",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Sent At",
+                                                                                "metadata": {
+                                                                                    "mondayType": "date"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "color_mm4qhhhc",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "index",
+                                                                                        "type": "select",
+                                                                                        "label": "Index"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "label",
+                                                                                        "type": "select",
+                                                                                        "label": "Label"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Status",
+                                                                                "metadata": {
+                                                                                    "mondayType": "status"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "text_mm4qr449",
+                                                                                "type": "text",
+                                                                                "label": "Template Name",
+                                                                                "metadata": {
+                                                                                    "mondayType": "text"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "email_mm8hpzzs",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "email",
+                                                                                        "type": "email",
+                                                                                        "label": "Email"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "text",
+                                                                                        "type": "text",
+                                                                                        "label": "Text"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Alternative Submitter Email",
+                                                                                "metadata": {
+                                                                                    "mondayType": "email"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "board_relation_mm8hgw4t",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "item_ids",
+                                                                                        "spec": {
+                                                                                            "rpc": {
+                                                                                                "url": "rpc://monday/2/idFinderItem?boardIds=5032131811",
+                                                                                                "label": "ID Finder",
+                                                                                                "parameters": [
+                                                                                                    {
+                                                                                                        "text": "If you don't see the result you're looking for, try more specific search criteria.",
+                                                                                                        "type": "banner",
+                                                                                                        "theme": "info"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "name": "query",
+                                                                                                        "type": "text",
+                                                                                                        "label": "Item name contains"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            "name": "value",
+                                                                                            "type": "uinteger",
+                                                                                            "label": "Item ID",
+                                                                                            "required": true
+                                                                                        },
+                                                                                        "type": "array",
+                                                                                        "label": "Item IDs"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Template",
+                                                                                "metadata": {
+                                                                                    "mondayType": "board_relation"
+                                                                                }
+                                                                            }
+                                                                        ],
+                                                                        "type": "collection",
+                                                                        "label": "Column Values"
+                                                                    }
+                                                                ],
                                                                 "restore": {
                                                                     "expect": {
                                                                         "boardId": {
@@ -2209,7 +2424,15 @@
                                                                     "x": 3900,
                                                                     "y": 2850,
                                                                     "name": "Monday: Create DocuSeal Submission Item"
-                                                                }
+                                                                },
+                                                                "parameters": [
+                                                                    {
+                                                                        "name": "__IMTCONN__",
+                                                                        "type": "account:monday",
+                                                                        "label": "Connection",
+                                                                        "required": true
+                                                                    }
+                                                                ]
                                                             },
                                                             "parameters": {
                                                                 "__IMTCONN__": 240128
@@ -2332,6 +2555,184 @@
                                                             "module": "monday:createItem2V2",
                                                             "version": 2,
                                                             "metadata": {
+                                                                "expect": [
+                                                                    {
+                                                                        "name": "name",
+                                                                        "type": "text",
+                                                                        "label": "Item Name",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "boardId",
+                                                                        "type": "select",
+                                                                        "label": "Board",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "create_labels_if_missing",
+                                                                        "type": "boolean",
+                                                                        "label": "Create Labels if Missing",
+                                                                        "required": true
+                                                                    },
+                                                                    {
+                                                                        "name": "groupId",
+                                                                        "type": "select",
+                                                                        "label": "Group"
+                                                                    },
+                                                                    {
+                                                                        "name": "columnIds",
+                                                                        "type": "select",
+                                                                        "label": "Columns",
+                                                                        "multiple": true
+                                                                    },
+                                                                    {
+                                                                        "name": "columnValues",
+                                                                        "spec": [
+                                                                            {
+                                                                                "name": "text_mm4qr3yv",
+                                                                                "type": "text",
+                                                                                "label": "DocuSeal Submission ID",
+                                                                                "metadata": {
+                                                                                    "mondayType": "text"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "email_mm4qvnap",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "email",
+                                                                                        "type": "email",
+                                                                                        "label": "Email"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "text",
+                                                                                        "type": "text",
+                                                                                        "label": "Text"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Primary Submitter Email",
+                                                                                "metadata": {
+                                                                                    "mondayType": "email"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "date_mm4q429w",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "dateOrDatetime",
+                                                                                        "type": "select",
+                                                                                        "label": "Date / Datetime",
+                                                                                        "validate": {
+                                                                                            "enum": [
+                                                                                                "date",
+                                                                                                "datetime"
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "date",
+                                                                                        "type": "text",
+                                                                                        "label": "Date",
+                                                                                        "required": true
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Sent At",
+                                                                                "metadata": {
+                                                                                    "mondayType": "date"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "color_mm4qhhhc",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "index",
+                                                                                        "type": "select",
+                                                                                        "label": "Index"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "label",
+                                                                                        "type": "select",
+                                                                                        "label": "Label"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Status",
+                                                                                "metadata": {
+                                                                                    "mondayType": "status"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "text_mm4qr449",
+                                                                                "type": "text",
+                                                                                "label": "Template Name",
+                                                                                "metadata": {
+                                                                                    "mondayType": "text"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "email_mm8hpzzs",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "email",
+                                                                                        "type": "email",
+                                                                                        "label": "Email"
+                                                                                    },
+                                                                                    {
+                                                                                        "name": "text",
+                                                                                        "type": "text",
+                                                                                        "label": "Text"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Alternative Submitter Email",
+                                                                                "metadata": {
+                                                                                    "mondayType": "email"
+                                                                                }
+                                                                            },
+                                                                            {
+                                                                                "name": "board_relation_mm8hgw4t",
+                                                                                "spec": [
+                                                                                    {
+                                                                                        "name": "item_ids",
+                                                                                        "spec": {
+                                                                                            "rpc": {
+                                                                                                "url": "rpc://monday/2/idFinderItem?boardIds=5032131811",
+                                                                                                "label": "ID Finder",
+                                                                                                "parameters": [
+                                                                                                    {
+                                                                                                        "text": "If you don't see the result you're looking for, try more specific search criteria.",
+                                                                                                        "type": "banner",
+                                                                                                        "theme": "info"
+                                                                                                    },
+                                                                                                    {
+                                                                                                        "name": "query",
+                                                                                                        "type": "text",
+                                                                                                        "label": "Item name contains"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            "name": "value",
+                                                                                            "type": "uinteger",
+                                                                                            "label": "Item ID",
+                                                                                            "required": true
+                                                                                        },
+                                                                                        "type": "array",
+                                                                                        "label": "Item IDs"
+                                                                                    }
+                                                                                ],
+                                                                                "type": "collection",
+                                                                                "label": "Template",
+                                                                                "metadata": {
+                                                                                    "mondayType": "board_relation"
+                                                                                }
+                                                                            }
+                                                                        ],
+                                                                        "type": "collection",
+                                                                        "label": "Column Values"
+                                                                    }
+                                                                ],
                                                                 "restore": {
                                                                     "expect": {
                                                                         "boardId": {
@@ -2389,7 +2790,15 @@
                                                                     "x": 3600,
                                                                     "y": 3600,
                                                                     "name": "Monday: Create DocuSeal Submission Item"
-                                                                }
+                                                                },
+                                                                "parameters": [
+                                                                    {
+                                                                        "name": "__IMTCONN__",
+                                                                        "type": "account:monday",
+                                                                        "label": "Connection",
+                                                                        "required": true
+                                                                    }
+                                                                ]
                                                             },
                                                             "parameters": {
                                                                 "__IMTCONN__": 240128
