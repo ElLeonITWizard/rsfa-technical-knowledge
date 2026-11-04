@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-05
+last_modified: 2026-11-04
 last_verified: 2026-09-05
 ---
 
@@ -37,6 +37,9 @@ Document IDs use the `DOC-` prefix per `knowledge/06_NAMING_AND_ID_CONVENTIONS.m
 | `DOC-PA-SYS-003` | `knowledge/systems/power-automate/environments.md` | System documentation | Active | 2026-07-30 |
 | `DOC-PA-SYS-004` | `knowledge/systems/power-automate/connection-references.md` | System documentation | Active | 2026-07-30 |
 | `ADR-001` | `knowledge/decisions/ADR-001-deprecate-monday-workflows.md` | Decision record | Active | 2026-09-05 |
+| `ADR-003` | `knowledge/decisions/ADR-003-email-drafting-agent-architecture.md` | Decision record | Proposed | Not verified — pending approval |
+| `AUTO-EMAIL-DRAFT-001` | `knowledge/automations/power-automate/AUTO-EMAIL-DRAFT-001-email-drafting-agent.md` | Automation design (planned) | Planned | Not verified — not built |
+| `BOARD-EMAIL-DRAFTS-001` | `knowledge/schemas/monday/BOARD-EMAIL-DRAFTS-001-email-drafting-agent-boards.md` | Board schema (proposed) | Planned | Not verified — boards not created |
 
 ## 4. Maintenance rule
 

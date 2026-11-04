@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-20
+last_modified: 2026-11-04
 last_verified: 2026-09-05
 ---
 
@@ -83,6 +83,7 @@ This registry is an index. Detailed implementation logic belongs under `knowledg
 | `AUTO-MONDAY-WF-002` | Leads App 2 Creation + CP Name | Monday Workflow | Deprecated (deactivated 2026-09-05, per RSFA, no replacement) | High | Leads Form application contains two applicants | Creates second lead and supports Client Profile naming | Monday.com | Partially documented | knowledge/automations/monday/AUTO-MONDAY-WF-002-second-applicant.md |
 | `AUTO-DOCUSEAL-001` | DocuSeal Submission Lifecycle Sync | Make.com | Active | High | DocuSeal webhook event (submission created/sent/viewed/completed/declined/expired) | Creates/updates a Monday tracking item per DocuSeal submission, links Client Profile where possible, sends Slack milestone notifications | DocuSeal, Make.com, Monday.com, Slack | Partially documented | knowledge/automations/make/AUTO-DOCUSEAL-001-docuseal-submission-lifecycle-sync.md |
 | `COMP-MAKE-ERROR-001` | Shared Make Failure Email Notification | Make.com shared component | Active | High | Error branch or validation failure | Sends a standard Outlook failure notification | Make.com, Outlook | Partially documented | knowledge/automations/make/components/COMP-MAKE-ERROR-001-failure-email.md |
+| `AUTO-EMAIL-DRAFT-001` | Email Drafting Agent (AI-assisted client reply drafts) | Power Automate | Planned | High | Client email received in an enabled adviser mailbox and matched to a Client Profile by `AUTO-EMAIL-001` | Creates a reviewed-before-send reply draft in the adviser's Outlook Drafts and tracks it on a Monday board; never sends automatically | Outlook, Power Automate, OpenAI, Monday.com, SharePoint | Not documented (design only, 2026-11-04 — nothing built) | knowledge/automations/power-automate/AUTO-EMAIL-DRAFT-001-email-drafting-agent.md |
 
 ---
 
@@ -211,12 +212,21 @@ Power Automate remains the principal platform for Outlook, SharePoint and other 
 | Massive SP Files Renaming | Instant | `AUTO-SP-FOLDER-001` | Active | Bulk maintenance flow; execute only with explicit approval. |
 | Email Back Up Generator | Manual | `AUTO-EMAIL-BACKUP-001` | Active | — |
 | Moves Client Folder to Recycle Bin | Automated | `AUTO-SP-FOLDER-001` | Active | — |
+| Email Drafting Agent - Intake | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
+| Email Drafting Agent - Generate Draft | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
+| Email Drafting Agent - Monday Action Handler | Instant (HTTP, Monday webhook) | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
+| Email Drafting Agent - Sent Items Sync | Automated | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
+| Email Drafting Agent - Draft Reconciliation | Scheduled | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
 
 ### Power Automate automation families
 
 #### AUTO-EMAIL-001 — Client Email Filing and Overflow Processing
 
 Includes mailbox-specific received and sent flows, the central `Main Outlook Inbox Email Filling` child flow and Overflow Email matching/reprocessing. It matches Client Profiles, files `.eml` and attachments in SharePoint, updates Monday and Emails & Activities, sends Slack notifications and routes unmatched messages to adviser overflow workflows.
+
+#### AUTO-EMAIL-DRAFT-001 — Email Drafting Agent (Planned)
+
+Proposed 2026-11-04, not built. Called from `Outlook Email Filling - Rod v2` after `Main Outlook Inbox Email Filling` confirms a client-folder match on a received email (requires additive response fields on the child flow and an isolated scope in the Rod flow — production changes to `AUTO-EMAIL-001` pending approval). Generates an OpenAI reply draft in Outlook Drafts and tracks it on the proposed `✉️ Email Drafts` board. See `knowledge/decisions/ADR-003-email-drafting-agent-architecture.md`.
 
 #### AUTO-SP-FOLDER-001 — Client SharePoint Folder Lifecycle
 
