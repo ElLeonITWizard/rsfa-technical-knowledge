@@ -76,6 +76,10 @@ One item per client email processed by the agent. Item name = email subject (max
 | `eda_last_run` | Last Run | link | | Flows |
 | `eda_pa_run` | Power Automate Run | board_relation → `5030408927` | | Flows |
 
+### Demo items (fictional — delete before go-live)
+
+13 items prefixed `[DEMO]` were created on 2026-11-04 (IDs `2899395556`–`2899395568`) to show Rod the board. All data is fictional (`@example.com` senders, invented names, no Client Profile links, no people assigned so nobody was notified). They cover every main status: Draft ready (incl. two `Review carefully` cases: advice request and complaint), Edited in Monday, Conflict, Failed, Sent from Outlook, Sent from Monday, Superseded, Discarded in Outlook, No reply needed and two Skipped reasons. **Delete all `[DEMO]` items before `rod@rsfa.co.nz` is enabled**, so they do not count towards the daily cap or appear in metrics.
+
 Webhook: not yet created (needs the HTTP URL of `Monday - Email Drafting Agent - Adviser Action Handler`). Webhook ID: TODO.
 
 ---
@@ -119,3 +123,4 @@ The fixed RSFA safety rules are in the Generate Draft flow, not on this board, s
 |---|---|---|
 | 2026-11-04 | Initial proposed schemas. | Claude (design task, requested by Leonardo Melman) |
 | 2026-11-04 | Both boards created in Monday (private, Real Savvy_CRM › Daily Boards/Ops) with fixed column IDs, groups and two settings items; schema read back from the API. Board names made explicit (`Email Drafting Agent: …`) at Leonardo Melman's request. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | Added 13 fictional `[DEMO]` items to the Drafts board for the Rod demo (to be deleted before go-live). | Claude (requested by Leonardo Melman) |
