@@ -245,6 +245,8 @@ flowchart TD
 
 Depth is chosen per draft. The default for automatic drafts comes from the settings board (proposed default: `Basic`). The adviser can regenerate any draft at a higher depth from Monday — this is how token spend and research effort stay under the adviser's control, as Rod proposed.
 
+> **v1 build scope (2026-11-04):** only **Basic** (automatic drafts) and **Medium** (Regenerate) are built. The Deep column below, including the SharePoint file index, is kept for a later version.
+
 | Context | Basic | Medium | Deep |
 |---|:-:|:-:|:-:|
 | Incoming email `uniqueBody` + subject + sender | ✔ | ✔ | ✔ |
@@ -520,3 +522,4 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 | 2026-11-04 | Simplified status model (6 Draft Status labels + Status Detail), Research Depth column deleted (depth recorded in Model / Depth, chosen via two Regenerate actions), Stale status removed; §13 renumbered. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Second simplification: statuses `Sent from Outlook` / `Sent from Monday` restored (7 labels); adviser actions reduced to Approve & send / Regenerate / Discard; Regenerate = Medium + new `Instructions for AI` column; automatic signature (§14.4); always Reply all (D3 decided); model moved to env var; removed edited flags, reply category, reply mode, model and stale columns; Adviser View added. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | `eds_default_depth` (Default Depth) removed from Mailbox Settings by Leonardo Melman: automatic drafts are always **Basic**, Regenerate is always **Medium**; Deep is not used in v1. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | Noted that v1 builds Basic and Medium only (Deep/SharePoint deferred); implementation guide rewritten as a phase-by-phase walkthrough. | Claude (requested by Leonardo Melman) |
