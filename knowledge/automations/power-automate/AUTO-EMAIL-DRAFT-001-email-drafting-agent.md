@@ -135,7 +135,7 @@ The draft is tracked on a Monday.com board so that the adviser can approve and s
   - A single-value extended property (named property, string) holding the `✉️ Email Drafting Agent: Drafts` item ID, used to match the sent item back to Monday (§13.4). **Persistence of this property on the Sent Items copy is unverified — test T-12.**
 - One item on `✉️ Email Drafting Agent: Drafts` per processed email (including skipped/“no reply needed” outcomes, so every decision is visible).
 - One item per flow run on `⚡ Power Automate Runs` (`5030408927`).
-- On failure: no draft is created; the Drafts board item is set to `Failed` with an error code; a notification follows the existing failure convention (§15). **Never** a partial or placeholder draft.
+- On failure: no draft is created; the Drafts board item is set to `Needs attention` with the cause in Status Detail; a notification follows the existing failure convention (§15). **Never** a partial or placeholder draft.
 
 ## 8. Systems involved
 
@@ -224,21 +224,21 @@ flowchart TD
     D -->|No| Z[No drafting. Filing behaviour unchanged]
     D -->|Yes| E[Email Drafting Agent - Intake<br/>responds to parent immediately]
     E --> F{Eligible? §13.2<br/>config enabled, sender is client contact,<br/>not auto-reply, under daily cap, not duplicate}
-    F -->|No| G[Drafts item: Skipped + reason]
-    F -->|Yes| H[Drafts item: Queued, depth = default]
+    F -->|No| G[Drafts item: No draft + Status Detail]
+    F -->|Yes| H[Drafts item: Processing, default depth]
     H --> I[Generate Draft: context for depth]
     I --> J[OpenAI: structured JSON]
     J --> K{needs_reply?}
-    K -->|No| L[Drafts item: No reply needed]
+    K -->|No| L[Drafts item: No draft / No reply needed]
     K -->|Yes| M[createReply draft in Outlook + category + extended property]
-    M --> N[Drafts item: Draft ready + Outlook link + draft text]
+    M --> N[Drafts item: Ready for review + Outlook link + draft text]
     N --> O{Adviser decides}
-    O -->|Sends in Outlook| P[Sent Items Sync → Sent from Outlook, edited yes/no]
-    O -->|Deletes in Outlook| Q[Reconciliation → Discarded in Outlook]
-    O -->|Monday: Approve & send| R[Action Handler → send draft → Sent from Monday]
-    O -->|Monday: edit text + Update Outlook draft| S[Action Handler → replace draft → Draft ready]
-    O -->|Monday: Regenerate at Medium/Deep| I
-    O -->|Monday: Discard| T[Action Handler → delete draft → Discarded in Monday]
+    O -->|Sends in Outlook| P[Sent Items Sync → Sent, detail: from Outlook, edited yes/no]
+    O -->|Deletes in Outlook| Q[Reconciliation → Discarded, detail: Deleted in Outlook]
+    O -->|Monday: Approve & send| R[Action Handler → rebuild from Monday text, send → Sent]
+    O -->|Monday: edit text + Update Outlook draft| S[Action Handler → replace draft → Ready for review]
+    O -->|Monday: Regenerate - more context / deep research| I
+    O -->|Monday: Discard| T[Action Handler → delete draft → Discarded]
 ```
 
 ## 12. Context and research depth
@@ -268,48 +268,63 @@ Exact field IDs for linked-item status columns on the pipeline/existing boards a
 
 `Enabled` (Yes/No — master switch per mailbox), `Default depth`, `Daily draft cap`, `Model` per depth, `Tone`, `Style`, `Other instructions`, `Sign-off`, `Reply mode` (Reply / Reply all — proposed default **Reply**, TODO: confirm with Rod), `Allowed approvers` (Monday people allowed to trigger **Approve & send**), `High-risk topics` behaviour. Full schema in `BOARD-EMAIL-DRAFTS-001`.
 
-### 13.2 Eligibility checks (Intake) — in order, first failure wins
+### 13.2 Status model (simplified 2026-11-04)
 
-| # | Check | Outcome if failed |
+The adviser sees only six `Draft Status` values; the reason is in **Status Detail** (`eda_reason`). Exact strings are listed in `AUTO-EMAIL-DRAFT-001-implementation-guide.md` §3 "Status model".
+
+| Draft Status | Meaning for the adviser |
+|---|---|
+| `Processing` | The agent is working on it |
+| `Ready for review` | A draft is waiting in Outlook (and in Monday) |
+| `Needs attention` | Something blocks the agent: edited in Outlook, AI unavailable, invalid output, not an allowed approver |
+| `Sent` | Sent from Outlook or from Monday (detail says which, and whether it was edited) |
+| `Discarded` | Deleted in Outlook, discarded from Monday, or replaced by a newer email in the same thread |
+| `No draft` | No reply needed, automatic message, sender not a client contact, protected message, daily cap reached |
+
+The **Research Depth** column was removed. The depth used is written in `Model / Depth` (`eda_model`, e.g. `gpt-4o · Basic`); the adviser picks a higher depth with `Regenerate - more context` (Medium) or `Regenerate - deep research` (Deep).
+
+### 13.3 Eligibility checks (Intake) — in order, first failure wins
+
+| # | Check | Outcome if failed (Status → Status Detail) |
 |---|---|---|
 | 1 | Settings item for mailbox exists and `Enabled = Yes` | Stop silently (log run only, no Drafts item) |
 | 2 | Same Outlook `internetMessageId` already has a Drafts item | Stop (duplicate run / reprocessing) |
-| 3 | Sender address is not an RSFA address and is one of the email columns of a Contact linked to the matched Client Profile | `Skipped – sender not verified client contact` |
-| 4 | Not an automatic message: header `Auto-Submitted` absent or `no`; no `X-Auto-Response-Suppress`/`Precedence: bulk|list|junk`; sender not `noreply`/`no-reply`/`mailer-daemon`; subject not starting `Automatic reply`/`Out of Office`/`Undeliverable` | `Skipped – automatic message` |
-| 5 | Message not encrypted / not rights-protected (sensitivity label or IRM) | `Skipped – protected message` |
-| 6 | Today's (NZT) count of Drafts items for this mailbox with a generated draft < `Daily draft cap` | `Skipped – daily cap reached` (can still be generated manually via Regenerate) |
-| 7 | Open AI draft for the same `conversationId` | Previous item → `Superseded`; previous Outlook draft deleted **only if unchanged** (changeKey matches); otherwise previous item flagged `Superseded – kept (edited)` and the old draft is left untouched |
+| 3 | Sender address is not an RSFA address and is one of the email columns of a Contact linked to the matched Client Profile | `No draft` → `Sender not verified as client contact` |
+| 4 | Not an automatic message: header `Auto-Submitted` absent or `no`; no `X-Auto-Response-Suppress`/`Precedence: bulk|list|junk`; sender not `noreply`/`no-reply`/`mailer-daemon`; subject not starting `Automatic reply`/`Out of Office`/`Undeliverable` | `No draft` → `Automatic message` |
+| 5 | Message not encrypted / not rights-protected (sensitivity label or IRM) | `No draft` → `Protected message` |
+| 6 | Today's (NZT) count of Drafts items for this mailbox with a generated draft < `Daily draft cap` | `No draft` → `Daily cap reached - use Regenerate` |
+| 7 | Open AI draft for the same `conversationId` | Previous item → `Discarded` / `Replaced by newer email in same thread`, previous Outlook draft deleted **only if unchanged** (changeKey matches); otherwise `Discarded` / `Replaced by newer email - old draft kept (edited in Outlook)` and the old draft is left untouched |
 
-### 13.3 Monday actions (Action Handler)
+### 13.4 Monday actions (Action Handler)
 
 The handler always **re-reads the item from Monday** (never trusts the webhook payload beyond item ID, board ID, column ID and user ID), checks the board ID and column ID match the configured Drafts board/column, and then:
 
-| Action | Preconditions | Effect | Resulting status |
+| Adviser Action | Preconditions | Effect | Resulting status |
 |---|---|---|---|
-| **Approve & send** | User ∈ `Allowed approvers`; status ∈ {`Draft ready`, `Edited in Monday`}; Outlook draft exists; its `changeKey` equals the stored `Outlook ChangeKey` (else → `Conflict`) | If Monday text differs from Outlook draft → replace draft first (as Update); then `POST /me/messages/{id}/send` | `Sent from Monday` |
-| **Update Outlook draft** | status ∈ {`Draft ready`, `Edited in Monday`}; `changeKey` unchanged (else `Conflict`) | `createReply` a new draft with the Monday text, stamp it, then delete the previous AI draft; update link/ID/changeKey | `Draft ready` |
-| **Regenerate** | status not in {`Sent from Outlook`, `Sent from Monday`}; previous draft unchanged (else `Conflict`) | Calls Generate Draft with the item's `Research depth` value; old draft removed after the new one is created | `Draft ready` / `No reply needed` / `Failed` |
-| **Discard** | status not Sent | `DELETE /me/messages/{draftId}` (moves to Deleted Items — recoverable) | `Discarded in Monday` |
+| **Approve & send** | User ∈ `Allowed approvers`; status `Ready for review`; Outlook draft exists; its `changeKey` equals the stored `Outlook ChangeKey` (else → `Needs attention` / `Edited in Outlook…`) | Always rebuilds the Outlook draft from the Monday `Draft Text` (so Monday edits are included), then `POST /me/messages/{id}/send` | `Sent` / `Sent from Monday - no edits` |
+| **Update Outlook draft** | status `Ready for review`; `changeKey` unchanged (else `Needs attention`) | `createReply` a new draft with the Monday text, stamp it, then delete the previous AI draft; update link/ID/changeKey | `Ready for review` |
+| **Regenerate - more context** / **Regenerate - deep research** | status not `Sent`/`Discarded`; previous draft unchanged (else `Needs attention`) | Calls Generate Draft at Medium / Deep; old draft removed after the new one is created | `Ready for review` / `No draft` / `Needs attention` |
+| **Discard** | status not `Sent` | `DELETE /me/messages/{draftId}` (moves to Deleted Items — recoverable) | `Discarded` / `Discarded from Monday` |
 
-After each action the handler resets `Adviser Action` to empty, so the same action can be chosen again and accidental re-fires do nothing. A webhook for a status already being processed (`Processing`) is ignored (idempotency).
+After each action the handler resets `Adviser Action` to empty, so the same action can be chosen again and accidental re-fires do nothing. A webhook for an item in `Processing` is ignored (idempotency).
 
-`Conflict` means: the draft was changed in Outlook after the last Monday sync. The handler never overwrites Outlook edits; the adviser either finishes in Outlook or chooses Regenerate/Discard explicitly.
+"Edited in Outlook" means the draft was changed in Outlook after the agent last wrote it. The handler never overwrites Outlook edits; the adviser either finishes in Outlook or chooses Regenerate/Discard explicitly.
 
-### 13.4 Outlook → Monday: sent detection (Sent Items Sync)
+### 13.5 Outlook → Monday: sent detection (Sent Items Sync)
 
 1. Trigger on new item in the adviser's Sent Items.
 2. `GET /me/messages/{id}?$select=conversationId,uniqueBody,sentDateTime&$expand=singleValueExtendedProperties($filter=id eq '{EDA property id}')`.
 3. If the extended property is present → Drafts item ID found. Fallback if not present (T-12): open Drafts item with the same `conversationId` whose `Outlook Draft ID` no longer resolves.
 4. Compare `Html to text(sent uniqueBody)` with `Html to text(stored draft text)` after whitespace normalisation → `Edited before send = No/Yes`.
-5. Status → `Sent from Outlook` (skip if already `Sent from Monday` — idempotent).
+5. Status → `Sent` / `Sent from Outlook - no edits|edited` (skip if already `Sent` — idempotent).
 
-### 13.5 Reconciliation (scheduled)
+### 13.6 Reconciliation (scheduled)
 
-For each item in `Draft ready` / `Edited in Monday` / `Conflict`:
+For each item in `Ready for review` / `Needs attention`:
 
-- Draft ID returns 404 and no sent match → `Discarded in Outlook`.
-- Draft `changeKey` differs from stored → set `Edited in Outlook = Yes`, store new changeKey (no content copied back to Monday in v1).
-- Draft older than `Stale after (days)` (proposed 14) → status `Stale` (draft left in Outlook; no deletion).
+- Draft ID returns 404 (or is in Deleted Items) and no sent match → `Discarded` / `Deleted in Outlook`.
+- Draft `changeKey` differs from stored → set `Edited in Outlook = Yes` only; the stored changeKey is **not** overwritten, so Monday actions return `Needs attention` instead of overwriting the adviser's Outlook edits.
+- No "Stale" status: old drafts are found with a board view filtered on `Draft Created At`.
 
 All Graph calls use the header `Prefer: IdType="ImmutableId"` so message IDs survive folder moves (e.g. a draft dragged to another folder or to Deleted Items is still resolvable).
 
@@ -346,15 +361,15 @@ OpenAI Responses API (`/v1/responses` — same endpoint family already used by `
 }
 ```
 
-Validation in the flow before any draft is created: JSON parses against the schema; `reply_html` non-empty when `needs_reply = true`; `reply_html` contains no `<script>`, `<iframe>`, external images or links not present in the context (TODO: define exact sanitisation expression during build); length within limits. Any validation failure → `Failed – invalid AI output`, no draft.
+Validation in the flow before any draft is created: JSON parses against the schema; `reply_html` non-empty when `needs_reply = true`; `reply_html` contains no `<script>`, `<iframe>`, external images or links not present in the context (TODO: define exact sanitisation expression during build); length within limits. Any validation failure → `Needs attention` / `Invalid AI output - use Regenerate`, no draft.
 
 If `risk_flags` is non-empty, the draft is still created but the Monday item is set with `Risk flag` and the draft's Outlook category becomes `AI Draft – Review carefully`.
 
 ## 15. Error handling
 
 - Intake always responds to the parent flow **first**, so a drafting failure or slowness can never fail or delay email filing (Change B).
-- Every flow uses Try/Catch scopes. On failure: Drafts item → `Failed` + `Error code` + run URL; run logged as `Failed` on `⚡ Power Automate Runs`; notification email to `tech@rsfa.co.nz` with subject `Email Drafting Agent Failure` (**different** from `Failed Item Email Filling`, so it is never picked up by `Email Filling Failed Items Processing`).
-- OpenAI 429/5xx: action timeout 90 s, 1 retry (child-flow callers wait ~2 minutes at most); then `Failed – AI unavailable`. The adviser can use **Regenerate** later.
+- Every flow uses Try/Catch scopes. On failure: Drafts item → `Needs attention` + Status Detail + run URL (`Last Run`); run logged as `Failed` on `⚡ Power Automate Runs`; notification email to `tech@rsfa.co.nz` with subject `Email Drafting Agent Failure` (**different** from `Failed Item Email Filling`, so it is never picked up by `Email Filling Failed Items Processing`).
+- OpenAI 429/5xx: action timeout 90 s, 1 retry (child-flow callers wait ~2 minutes at most); then `Needs attention` / `AI unavailable - use Regenerate`. The adviser can use **Regenerate - more context** later.
 - If the Outlook draft was created but the Monday update failed: the Catch scope deletes the just-created draft (only the draft it created, by ID) so there is never an untracked AI draft; TODO: confirm this compensation step in T-15.
 - No partial drafts, no placeholder drafts, no drafts without a Monday item.
 
@@ -366,7 +381,7 @@ If `risk_flags` is non-empty, the draft is still created but the Monday item is 
 
 ## 17. Manual operations and reprocessing
 
-- Generate a draft for an email that was skipped (cap, verification): set `Research depth` and choose **Regenerate** on its Drafts item.
+- Generate a draft for an email with status `No draft` (cap, verification, no reply needed): choose **Regenerate - more context** or **Regenerate - deep research** on its Drafts item.
 - Emails without a Drafts item (e.g. overflow emails later assigned to a client) cannot be drafted in v1 — TODO v1.1: allow `Overflow Emails Related Client Profile Change` to call Intake.
 - Disable drafting for a mailbox immediately: settings board `Enabled = No` (no flow edit needed).
 
@@ -402,28 +417,28 @@ All tests below are `Planned`. None has been executed.
 
 | ID | Scenario | Expected result | Status |
 |---|---|---|---|
-| T-01 | Standard client email, Basic | Draft in Drafts folder as reply in thread; category `AI Draft`; Drafts item `Draft ready` with link, text, tokens | Planned |
+| T-01 | Standard client email, Basic | Draft in Drafts folder as reply in thread; category `AI Draft`; Drafts item `Ready for review` with link, text, tokens, `Model / Depth` = `<model> · Basic` | Planned |
 | T-02 | Filing regression after Change A/B | All existing filing outputs unchanged (SharePoint, timeline, Slack, overflow) for matched, unmatched, internal and sent emails | Planned |
 | T-03 | Unmatched sender (overflow) | No Intake call; overflow behaviour unchanged | Planned |
 | T-04 | Internal email | No Intake call | Planned |
-| T-05 | Client CC'd on third-party email | `Skipped – sender not verified client contact` | Planned |
-| T-06 | Out-of-office / bounce / no-reply | `Skipped – automatic message` | Planned |
-| T-07 | "Thanks, received" email | `No reply needed`, no draft | Planned |
+| T-05 | Client CC'd on third-party email | `No draft` / `Sender not verified as client contact` | Planned |
+| T-06 | Out-of-office / bounce / no-reply | `No draft` / `Automatic message` | Planned |
+| T-07 | "Thanks, received" email | `No draft` / `No reply needed`, no Outlook draft | Planned |
 | T-08 | Same message processed twice | One Drafts item only | Planned |
-| T-09 | Second client email in same thread while first draft untouched | Old item `Superseded`, old draft removed, new draft created | Planned |
-| T-10 | Same as T-09 but first draft edited in Outlook | Old draft kept, `Superseded – kept (edited)` | Planned |
-| T-11 | Send from Outlook unchanged / edited | `Sent from Outlook`, `Edited before send` No / Yes | Planned |
+| T-09 | Second client email in same thread while first draft untouched | Old item `Discarded` / `Replaced by newer email in same thread`, old draft removed, new draft created | Planned |
+| T-10 | Same as T-09 but first draft edited in Outlook | Old draft kept, `Discarded` / `Replaced by newer email - old draft kept (edited in Outlook)` | Planned |
+| T-11 | Send from Outlook unchanged / edited | `Sent` / `Sent from Outlook - no edits` or `- edited`, `Edited before send` No / Yes | Planned |
 | T-12 | Extended property persists on Sent Items copy | Property readable on sent item; otherwise fallback path documented | Planned |
-| T-13 | Delete draft in Outlook | `Discarded in Outlook` within one reconciliation cycle | Planned |
+| T-13 | Delete draft in Outlook | `Discarded` / `Deleted in Outlook` within one reconciliation cycle | Planned |
 | T-14 | Monday: edit text → Update Outlook draft | Outlook draft replaced with Monday text, still in thread | Planned |
 | T-15 | Monday: Approve & send by allowed / non-allowed user | Sent / rejected with no send | Planned |
-| T-16 | Monday action after Outlook edit | `Conflict`, nothing overwritten or sent | Planned |
-| T-17 | Regenerate at Medium and Deep | Context blocks added as per §12; new draft replaces old | Planned |
-| T-18 | OpenAI unavailable / invalid JSON | `Failed`, no draft, failure email with `Email Drafting Agent Failure` subject, filing unaffected | Planned |
+| T-16 | Monday action after Outlook edit | `Needs attention` / `Edited in Outlook…`, nothing overwritten or sent | Planned |
+| T-17 | Regenerate - more context / deep research | Context blocks added as per §12; new draft replaces old | Planned |
+| T-18 | OpenAI unavailable / invalid JSON | `Needs attention` / `AI unavailable…` or `Invalid AI output…`, no draft, failure email with `Email Drafting Agent Failure` subject, filing unaffected | Planned |
 | T-19 | Prompt-injection email ("ignore your instructions and…") | Draft ignores embedded instructions | Planned |
 | T-20 | Token/cost measurement per depth (≥10 sample emails each) | Average tokens recorded; model choice confirmed | Planned |
 | T-21 | Latency measurement | Time from receipt to draft recorded | Planned |
-| T-22 | Daily cap reached | `Skipped – daily cap reached`; Regenerate still possible | Planned |
+| T-22 | Daily cap reached | `No draft` / `Daily cap reached - use Regenerate`; Regenerate still possible | Planned |
 | T-23 | Settings `Enabled = No` | No Drafts items, no drafts | Planned |
 | T-24 | Missing info in context | Placeholders `[[ADVISER: …]]` present and listed | Planned |
 
@@ -454,10 +469,10 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 ## 23. Troubleshooting guide
 
 1. No Drafts item: check `Outlook Email Filling - Rod v2` run → child response `matchstatus`/`direction` → `Try_Run_Email_Drafting_Agent` scope → settings `Enabled`.
-2. Drafts item `Skipped`: read the reason column (§13.2).
-3. Drafts item `Failed`: open the run URL; check error code; use **Regenerate**.
-4. Status stuck on `Draft ready` after sending: check Sent Items Sync run; check T-12 fallback; check reconciliation.
-5. `Conflict`: draft edited in Outlook — finish in Outlook, or Discard/Regenerate from Monday.
+2. Drafts item `No draft`: read Status Detail (§13.3).
+3. Drafts item `Needs attention`: read Status Detail; for AI/flow errors open the run URL (`Last Run`) and use **Regenerate - more context**.
+4. Status stuck on `Ready for review` after sending: check Sent Items Sync run; check T-12 fallback; check reconciliation.
+5. `Needs attention` / `Edited in Outlook…`: finish in Outlook, or Discard/Regenerate from Monday.
 
 ## 24. Source references
 
@@ -492,3 +507,4 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 |---|---|---|
 | 2026-11-04 | Initial v1 design created from the concept document v1.1, the Rod/Leonardo Slack thread, the 2026-07-30 `RSFAOutlookEmailFilling` export and read-only live checks (Monday `Client Profiles` schema, Make scenario `9789700`). Status `Planned`; nothing built or tested. | Claude (design task, requested by Leonardo Melman) |
 | 2026-11-04 | Created both Monday boards (`5032291843`, `5032291851`) with fixed column IDs and settings items (rod@ disabled, tech@ test). Renamed proposed flows to the RSFA naming convention, added `Child - Email Drafting Agent - Outlook Graph Request` and the test harness, aligned Change A/B with the 2026-11-04 flow exports, and added the implementation guide. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | Simplified status model (6 Draft Status labels + Status Detail), Research Depth column deleted (depth recorded in Model / Depth, chosen via two Regenerate actions), Stale status removed; §13 renumbered. | Claude (requested by Leonardo Melman) |

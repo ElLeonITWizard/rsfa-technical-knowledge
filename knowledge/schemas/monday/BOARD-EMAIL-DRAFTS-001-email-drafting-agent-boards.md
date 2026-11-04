@@ -31,19 +31,18 @@ One item per client email processed by the agent. Item name = email subject (max
 
 | Group ID | Title | Used for |
 |---|---|---|
-| `topics` | Needs Review | Draft ready, Edited in Monday, Conflict, Failed |
-| `group_mm8sfnf` | Processing | Queued, Processing |
-| `group_mm8sta8g` | Done (Sent / Discarded / Superseded) | Sent…, Discarded…, Superseded…, Stale |
-| `group_mm8s3hhz` | Skipped / No Reply Needed | Skipped, No reply needed |
+| `topics` | Needs Review | Ready for review, Needs attention |
+| `group_mm8sfnf` | Processing | Processing |
+| `group_mm8sta8g` | Done (Sent / Discarded) | Sent, Discarded |
+| `group_mm8s3hhz` | No Draft | No draft |
 
 ### Columns
 
 | Column ID | Title | Type | Labels / notes | Written by |
 |---|---|---|---|---|
 | `name` | Name | name | Email subject | Intake |
-| `eda_draft_status` | Draft Status | status | `Processing`, `Sent from Outlook`, `Failed`, `Draft ready`, `Edited in Monday`, `Queued`, `Sent from Monday`, `Conflict`, `No reply needed`, `Skipped`, `Discarded in Outlook`, `Discarded in Monday`, `Superseded`, `Superseded - kept`, `Stale` | Flows only |
-| `eda_adviser_action` | Adviser Action | status | `Regenerate`, `Approve & send`, `Discard`, `Update Outlook draft`. **Webhook trigger column**; reset to empty by the handler | Adviser |
-| `eda_research_depth` | Research Depth | status | `Basic`, `Medium`, `Deep` | Intake / Adviser |
+| `eda_draft_status` | Draft Status | status | `Processing`, `Ready for review`, `Needs attention`, `Sent`, `Discarded`, `No draft` (simplified 2026-11-04; cause in Status Detail) | Flows only |
+| `eda_adviser_action` | Adviser Action | status | `Approve & send`, `Update Outlook draft`, `Regenerate - more context` (Medium), `Regenerate - deep research` (Deep), `Discard`. **Webhook trigger column**; reset to empty by the handler | Adviser |
 | `eda_client_profile` | Client Profile | board_relation → `5024661649` | | Intake |
 | `eda_mailbox` | Mailbox | dropdown | `rod@rsfa.co.nz` (id 1), `tech@rsfa.co.nz` (id 2) | Intake |
 | `eda_adviser` | Adviser | people | | Intake |
@@ -60,8 +59,8 @@ One item per client email processed by the agent. Item name = email subject (max
 | `eda_confidence` | Confidence | status | `low`, `medium`, `high` | Generate |
 | `eda_edited_outlook` | Edited in Outlook | status | `No`, `Yes` | Reconciliation |
 | `eda_edited_on_send` | Edited Before Send | status | `No`, `Yes`, `Unknown` | Sent Items Sync |
-| `eda_reason` | Skip / Error Reason | text | | Flows |
-| `eda_model` | Model | text | | Generate |
+| `eda_reason` | Status Detail | text | Why the item has its status — exact values in the implementation guide §3 "Status model" | Flows |
+| `eda_model` | Model / Depth | text | `<model> · <Basic|Medium|Deep>`, e.g. `gpt-4o · Basic` | Generate |
 | `eda_input_tokens` | Input Tokens | numbers | cumulative | Generate |
 | `eda_output_tokens` | Output Tokens | numbers | cumulative | Generate |
 | `eda_gen_count` | Generation Count | numbers | | Generate |
@@ -78,7 +77,7 @@ One item per client email processed by the agent. Item name = email subject (max
 
 ### Demo items (fictional — delete before go-live)
 
-13 items prefixed `[DEMO]` were created on 2026-11-04 (IDs `2899395556`–`2899395568`) to show Rod the board. All data is fictional (`@example.com` senders, invented names, no Client Profile links, no people assigned so nobody was notified). They cover every main status: Draft ready (incl. two `Review carefully` cases: advice request and complaint), Edited in Monday, Conflict, Failed, Sent from Outlook, Sent from Monday, Superseded, Discarded in Outlook, No reply needed and two Skipped reasons. **Delete all `[DEMO]` items before `rod@rsfa.co.nz` is enabled**, so they do not count towards the daily cap or appear in metrics.
+13 items prefixed `[DEMO]` were created on 2026-11-04 (IDs `2899395556`–`2899395568`) to show Rod the board. All data is fictional (`@example.com` senders, invented names, no Client Profile links, no people assigned so nobody was notified). After the 2026-11-04 simplification they cover all six statuses: Ready for review (incl. two `Review carefully` cases — advice request and complaint — and one `Edited in Monday` detail), Needs attention (edited in Outlook; AI unavailable), Sent (from Outlook; from Monday), Discarded (replaced by newer email; deleted in Outlook) and No draft (no reply needed; automatic message; sender not a client contact). **Delete all `[DEMO]` items before `rod@rsfa.co.nz` is enabled**, so they do not count towards the daily cap or appear in metrics.
 
 Webhook: not yet created (needs the HTTP URL of `Monday - Email Drafting Agent - Adviser Action Handler`). Webhook ID: TODO.
 
@@ -103,7 +102,7 @@ One item per mailbox; item name = mailbox address (lookup key). Group `topics` =
 | `eds_style` | Style | long_text | Rod's prompt input |
 | `eds_other_instr` | Other Instructions | long_text | Rod's prompt input |
 | `eds_signoff` | Sign-off | long_text | Outlook signature is not added to drafts created via Graph — TODO: verify T-01 |
-| `eds_stale_days` | Stale After (days) | numbers | |
+| `eds_stale_days` | Stale After (days) | numbers | Not used since the 2026-11-04 status simplification (no Stale status) — candidate for deletion |
 | `eds_change_note` | Last Changed Note | text | |
 
 ### Items created 2026-11-04
@@ -124,3 +123,4 @@ The fixed RSFA safety rules are in the Generate Draft flow, not on this board, s
 | 2026-11-04 | Initial proposed schemas. | Claude (design task, requested by Leonardo Melman) |
 | 2026-11-04 | Both boards created in Monday (private, Real Savvy_CRM › Daily Boards/Ops) with fixed column IDs, groups and two settings items; schema read back from the API. Board names made explicit (`Email Drafting Agent: …`) at Leonardo Melman's request. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Added 13 fictional `[DEMO]` items to the Drafts board for the Rod demo (to be deleted before go-live). | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | Simplified Draft Status to 6 labels; renamed `eda_reason` → Status Detail and `eda_model` → Model / Depth; Adviser Action now has `Regenerate - more context` / `Regenerate - deep research`; **deleted column `eda_research_depth` (Research Depth)** at Leonardo Melman's request; groups renamed `Done (Sent / Discarded)` and `No Draft`; demo items migrated. | Claude (requested by Leonardo Melman) |

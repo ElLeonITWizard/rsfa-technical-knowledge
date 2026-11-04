@@ -173,7 +173,22 @@ Naming follows `knowledge/06_NAMING_AND_ID_CONVENTIONS.md` §7 (`[Source] - [Act
 
 **Monday "update Drafts item" pattern** (used everywhere): `change_multiple_column_values(board_id: rsfa_EDA_DraftsBoardId, item_id: X, column_values: JSON, create_labels_if_missing: false)`. Move between groups with `move_item_to_group`.
 
-Drafts board group IDs: `topics` = **Needs Review**, `group_mm8sfnf` = **Processing**, `group_mm8sta8g` = **Done (Sent / Discarded / Superseded)**, `group_mm8s3hhz` = **Skipped / No Reply Needed**.
+Drafts board group IDs: `topics` = **Needs Review**, `group_mm8sfnf` = **Processing**, `group_mm8sta8g` = **Done (Sent / Discarded)**, `group_mm8s3hhz` = **No Draft**.
+
+**Status model (simplified 2026-11-04 at Leonardo Melman's request — authoritative).** `eda_draft_status` has only six adviser-facing labels; the reason goes in `eda_reason` (**Status Detail**, text). Flows must use these exact strings:
+
+| `eda_draft_status` | Group | `eda_reason` (Status Detail) values written by flows |
+|---|---|---|
+| `Processing` | `group_mm8sfnf` | *(empty)* |
+| `Ready for review` | `topics` | empty · `Regenerated with more context` · `Regenerated with deep research` · `Edited in Monday - not yet pushed to Outlook` |
+| `Needs attention` | `topics` | `Edited in Outlook - finish there, or Discard / Regenerate` · `AI unavailable - use Regenerate` · `Invalid AI output - use Regenerate` · `Intake error` · `Generate error` · `Not an allowed approver` |
+| `Sent` | `group_mm8sta8g` | `Sent from Outlook - no edits` · `Sent from Outlook - edited` · `Sent from Monday - no edits` |
+| `Discarded` | `group_mm8sta8g` | `Deleted in Outlook` · `Discarded from Monday` · `Replaced by newer email in same thread` · `Replaced by newer email - old draft kept (edited in Outlook)` |
+| `No draft` | `group_mm8s3hhz` | `No reply needed` · `Automatic message` · `Sender not verified as client contact` · `Protected message` · `Daily cap reached - use Regenerate` |
+
+- There is no "Stale" status: old drafts are found with a board view filtered on `Draft Created At`.
+- The flows decide on **status + Status Detail + `eda_edited_outlook` + `eda_change_key`**, never on removed labels. An Outlook edit is detected by a changeKey mismatch (→ `Needs attention`). An edit of `Draft Text` in Monday is not detected on its own (it would need a second webhook), which is why **Approve & send always rebuilds the Outlook draft from the Monday text before sending** (§3.3). The `Edited in Monday - not yet pushed to Outlook` detail is only written by the handler while it runs `Update Outlook draft`.
+- The **Research Depth** column was deleted. The depth used is written into `eda_model` (**Model / Depth**) as `<model> · <Basic|Medium|Deep>`. Depth is chosen by the adviser through `eda_adviser_action`: `Regenerate - more context` = Medium, `Regenerate - deep research` = Deep. Automatic drafts use `eds_default_depth` from the settings board.
 
 ---
 
@@ -234,7 +249,7 @@ Try_Intake [Scope]
               ... on BoardRelationValue { linked_items { column_values(ids:["contact_email","email_mkxd41p7","email_mkxdantz"]) { text } } } } } }
   Compose_Client_Emails_Text    → toLower(string(body)) (used with contains())
   Create_Drafts_Item            [HTTP Monday] create_item(board_id: DraftsBoardId, group_id: "group_mm8sfnf", item_name: <subject, max 120, 'No Subject'>,
-        column_values: eda_draft_status=Queued, eda_research_depth=<defaultdepth>, eda_client_profile={item_ids:[clientprofileid]},
+        column_values: eda_draft_status=Processing, eda_client_profile={item_ids:[clientprofileid]},
         eda_mailbox={labels:[mailbox]}, eda_sender_email, eda_received_at (NZT), eda_original_link={url: webLink, text:"Open email"},
         eda_message_id=<immutable id>, eda_internet_msg_id, eda_conversation_id, eda_pa_run={item_ids:[run log id]})
   Set_DraftItemId
@@ -242,33 +257,33 @@ Try_Intake [Scope]
   Eligibility checks — first failure sets SkipReason (exact texts):
    1 Sender_Not_RSFA_and_Is_Client_Contact
         not(contains(toLower(from), 'rsfa.co.nz')) AND contains(Compose_Client_Emails_Text, toLower(from))
-        else 'Skipped – sender not verified client contact'
+        else 'Sender not verified as client contact'
    2 Is_Automatic_Message   any of:
         internetMessageHeaders has Auto-Submitted ≠ 'no' | X-Auto-Response-Suppress | Precedence in (bulk,list,junk)
         from startsWith/contains 'noreply','no-reply','mailer-daemon','postmaster'
         subject startsWith 'Automatic reply','Out of Office','Undeliverable','Delivery Status Notification'
-        → 'Skipped – automatic message'
+        → 'Automatic message'
         (headers: Filter array on internetMessageHeaders where toLower(item()?['name']) equals 'auto-submitted', etc.)
-   3 Is_Protected_Message   sensitivity in ('private','confidential') → 'Skipped – protected message'   (TODO verify IRM detection in testing)
+   3 Is_Protected_Message   sensitivity in ('private','confidential') → 'Protected message'   (TODO verify IRM detection in testing)
    4 Daily_Cap_Reached      [HTTP Monday] items_page(limit:500, query_params:{rules:[
           {column_id:"eda_mailbox", compare_value:[<dropdown label id>], operator:any_of},
           {column_id:"eda_draft_created", compare_value:["TODAY"], operator:any_of}]})
-        length(items) >= dailycap → 'Skipped – daily cap reached'
+        length(items) >= dailycap → 'Daily cap reached - use Regenerate'
   Has_Skip_Reason [Condition] SkipReason not empty
-     True  → Update Drafts item: eda_draft_status=Skipped, eda_reason=SkipReason; move_item_to_group group_mm8s3hhz
+     True  → Update Drafts item: eda_draft_status='No draft', eda_reason=SkipReason; move_item_to_group group_mm8s3hhz
      False → Supersede_Previous_Drafts (below) → Run_Generate_Draft [Run Child: Generate Draft]
                  draftitemid, mailbox, depth=<defaultdepth>, parentlogid=<this run log id>, advisername
 
   Supersede_Previous_Drafts:
      Get_Open_Drafts_Same_Conversation [HTTP Monday] items_page rules eda_conversation_id = conversationId
-          AND eda_draft_status any_of [Draft ready, Edited in Monday, Conflict]  (exclude current item)
+          AND eda_draft_status any_of [Ready for review, Needs attention]  (exclude current item)
      Apply_to_each_Open_Draft:
         Get_Previous_Draft [Graph] GET /me/messages/<eda_draft_id>?$select=id,changeKey
         Draft_Unchanged [Condition] statuscode == 200 AND changeKey == eda_change_key
-          True  → Delete_Previous_Draft [Graph] DELETE /me/messages/<id>; status=Superseded; group Done
-          False → status='Superseded - kept' (do NOT delete)
+          True  → Delete_Previous_Draft [Graph] DELETE /me/messages/<id>; status='Discarded', eda_reason='Replaced by newer email in same thread'; group Done
+          False → status='Discarded', eda_reason='Replaced by newer email - old draft kept (edited in Outlook)' (do NOT delete)
 Catch_Intake [Scope] runAfter Try_Intake Failed/TimedOut
-  If DraftItemId not empty → status=Failed, eda_reason='Failed – intake error', eda_last_run=<run url>
+  If DraftItemId not empty → status='Needs attention', eda_reason='Intake error', eda_last_run=<run url>
   Update_Log_Column_Values → Failed
   Send_Failure_Notification → To tech@rsfa.co.nz, Subject 'Email Drafting Agent Failure', body: run URL + Drafts item link ONLY (no email content)
 ```
@@ -281,7 +296,7 @@ Note: the Intake has already responded, so a failure here never returns `Failed`
 
 ### 3.2 `Child - Email Drafting Agent - Generate Draft`
 
-Inputs: `draftitemid`, `mailbox`, `depth` (`Basic`/`Medium`/`Deep`), `parentlogid`, `advisername`, `mode` (`New` / `Regenerate` / `MondayText`).
+Inputs: `draftitemid`, `mailbox`, `depth` (`Basic`/`Medium`/`Deep`), `parentlogid`, `advisername`, `mode` (`New` / `Regenerate` / `MondayText`). On `Regenerate` the handler passes depth `Medium` or `Deep` from the chosen action.
 
 Unlike Intake, this flow responds **at the end** (`Respond_Result` with `result` = `DraftReady` / `NoReplyNeeded` / `Conflict` / `Failed`, plus `draftid`), because the Action Handler must wait for the rebuilt draft before sending it. The caller of a child flow waits for roughly 2 minutes at most (TODO: confirm the limit in testing — T-21). Therefore: OpenAI action timeout `PT90S` with 1 retry; and callers that do not need the result (Intake, Regenerate) must have their `Run a Child Flow` action followed by a step that runs after `Succeeded, Failed, TimedOut`. A caller timeout does **not** cancel the child, which keeps updating Monday itself. `mode=MondayText` makes no OpenAI call and returns in seconds.
 
@@ -338,7 +353,7 @@ Try_Generate [Scope]
   Parse_AI_JSON                  [Parse JSON] with the schema below → on failure → Catch (Failed – invalid AI output)
   Validate_AI_Output [Condition]  needs_reply=true requires length(reply_html) > 0 and no '<script', '<iframe', '<img' (toLower contains)
   Needs_Reply [Condition]
-     False → status 'No reply needed', group group_mm8s3hhz, tokens/model/category written → Respond
+     False → status 'No draft', eda_reason 'No reply needed', group group_mm8s3hhz, tokens/model/category written → Respond
      True  → Create_Outlook_Draft
 
   Create_Outlook_Draft:
@@ -349,16 +364,16 @@ Try_Generate [Scope]
            "categories":["AI Draft"]  (or ["AI Draft – Review carefully"] when risk_flags not empty),
            "singleValueExtendedProperties":[{"id":"<rsfa_EDA_ExtPropId>","value":"<draftitemid>"}]}
      Previous_Draft_Exists [Condition] eda_draft_id not empty (Regenerate / MondayText):
-          Get previous draft changeKey → if unchanged → DELETE previous draft; if changed → do not delete, set status Conflict and stop
+          Get previous draft changeKey → if unchanged → DELETE previous draft; if changed → do not delete, set status 'Needs attention' + reason 'Edited in Outlook - finish there, or Discard / Regenerate' and stop
           (check BEFORE Create_Reply so no orphan draft is produced)
-     Update_Drafts_Item       eda_draft_status='Draft ready', group 'topics', eda_draft_link={url: webLink, text:'Open draft'},
+     Update_Drafts_Item       eda_draft_status='Ready for review', eda_reason ('' / 'Regenerated with more context' / 'Regenerated with deep research'), group 'topics', eda_draft_link={url: webLink, text:'Open draft'},
                               eda_draft_text=<html-to-text of reply_html (Content Conversion › Html to text)>, eda_missing_info, eda_adviser_notes,
-                              eda_reply_category, eda_risk_flag (None | Review carefully), eda_risk_details, eda_confidence, eda_model,
+                              eda_reply_category, eda_risk_flag (None | Review carefully), eda_risk_details, eda_confidence, eda_model = '<model> · <depth>',
                               eda_input_tokens += usage.input_tokens, eda_output_tokens += usage.output_tokens, eda_gen_count += 1,
                               eda_draft_created=now NZT, eda_draft_id=<patched id>, eda_change_key=<patched changeKey>, eda_edited_outlook='No'
 Catch_Generate [Scope]
   If a new draft id was created but Update_Drafts_Item failed → DELETE that draft id (compensation, only the id this run created)
-  status=Failed, eda_reason ('Failed – AI unavailable' if OpenAI status 429/5xx, 'Failed – invalid AI output', else 'Failed – generate error')
+  status='Needs attention', eda_reason ('AI unavailable - use Regenerate' if OpenAI status 429/5xx or timeout, 'Invalid AI output - use Regenerate', else 'Generate error')
   Log Failed + 'Email Drafting Agent Failure' email (run URL + item link only)
 ```
 
@@ -402,22 +417,23 @@ Is_Busy             eda_draft_status == 'Processing' → reset action, Terminate
 Switch_Adviser_Action on label:
   'Approve & send':
      Is_Allowed_Approver   userId ∈ eds_approvers person ids            else → reset action + eda_reason 'Not an allowed approver'
-     Status_Allows_Send    status ∈ {Draft ready, Edited in Monday}
+     Status_Allows_Send    status == 'Ready for review'
      Get_Draft             [Graph] GET /me/messages/<eda_draft_id>?$select=id,changeKey,isDraft,parentFolderId
-     Draft_Unchanged       statuscode 200 AND isDraft AND changeKey == eda_change_key   else → status Conflict
+     Draft_Unchanged       statuscode 200 AND isDraft AND changeKey == eda_change_key   else → status 'Needs attention' + reason 'Edited in Outlook - finish there, or Discard / Regenerate'
      Rebuild_From_Monday   Run Child Generate Draft (mode=MondayText) — ALWAYS, so what is sent is exactly the
                            current Monday `Draft Text` (safe because the changeKey check proved there are no Outlook edits);
                            then re-read the item (new eda_draft_id / eda_change_key)
      Send_Draft            [Graph] POST /me/messages/<new draft id>/send   (expects 202)
-     Update                status 'Sent from Monday', eda_final_status_at, eda_actioned_by=userId, group Done
+     Update                status 'Sent', eda_reason 'Sent from Monday - no edits', eda_final_status_at, eda_actioned_by=userId, group Done
   'Update Outlook draft':
      → Run Child Generate Draft (mode=MondayText). Conflict handling is inside Generate Draft.
-     status before call: 'Edited in Monday'
-  'Regenerate':
-     status ∉ {Sent from Outlook, Sent from Monday} → Run Child Generate Draft (mode=Regenerate, depth=eda_research_depth)
+     status before call: 'Ready for review' + reason 'Edited in Monday - not yet pushed to Outlook'; after success the reason is cleared
+  'Regenerate - more context' / 'Regenerate - deep research':
+     status ∉ {Sent, Discarded} → Run Child Generate Draft (mode=Regenerate, depth = Medium / Deep respectively)
+     (also allowed on 'No draft', e.g. daily cap reached or a 'No reply needed' the adviser disagrees with)
   'Discard':
      status not Sent → [Graph] DELETE /me/messages/<eda_draft_id> (404 = already gone, treat as success)
-     status 'Discarded in Monday', eda_final_status_at, eda_actioned_by, group Done
+     status 'Discarded', eda_reason 'Discarded from Monday', eda_final_status_at, eda_actioned_by, group Done
 Finally (runAfter all): Reset_Adviser_Action  change_multiple_column_values eda_adviser_action = null ("{\"eda_adviser_action\":null}"),
                          eda_last_run=<run url>
 ```
@@ -431,16 +447,15 @@ Monday user ID → people column value: `{"personsAndTeams":[{"id":<userId>,"kin
 Trigger: Recurrence, every 30 minutes, time zone `New Zealand Standard Time`, hours 7–20.
 
 ```
-Get_Open_Draft_Items  Monday items_page rules eda_draft_status any_of [Draft ready, Edited in Monday, Conflict] (limit 200)
+Get_Open_Draft_Items  Monday items_page rules eda_draft_status any_of [Ready for review, Needs attention] (limit 200)
 Get_Deleted_Items_Folder_Id per mailbox  [Graph] GET /me/mailFolders/deleteditems?$select=id
 Apply_to_each (concurrency 1):
   Get_Draft  [Graph] GET /me/messages/<eda_draft_id>?$select=id,changeKey,isDraft,parentFolderId,createdDateTime
   404 OR parentFolderId == DeletedItems id  → (Sent Items Sync may have already handled it) re-read status; if still open →
-        status 'Discarded in Outlook', eda_final_status_at, group Done
+        status 'Discarded', eda_reason 'Deleted in Outlook', eda_final_status_at, group Done
   200 AND changeKey ≠ eda_change_key       → eda_edited_outlook 'Yes' only. Do NOT overwrite eda_change_key:
                                               it is the last version written by the agent, and Monday actions use the
-                                              mismatch to return Conflict instead of overwriting the adviser's Outlook edits.
-  Draft older than eds_stale_days         → status 'Stale' (no deletion)
+                                              mismatch to return Needs attention instead of overwriting the adviser's Outlook edits.
 ```
 
 `isDraft = false` on a message that still resolves means it was sent between runs — leave it for Sent Items Sync.
@@ -460,10 +475,10 @@ Get_Sent_Message  [Graph] GET /me/messages/<id>?$select=id,conversationId,sentDa
                     &$expand=singleValueExtendedProperties($filter=id eq '<rsfa_EDA_ExtPropId>')   (bodytextonly=true)
 Compose_Draft_Item_Id   first(body?['singleValueExtendedProperties'])?['value']
 Fallback (empty id): Monday items_page eda_conversation_id = conversationId AND status ∈ open → newest item
-Get_Drafts_Item → Already_Sent [Condition] status startsWith 'Sent' → Terminate (idempotent with Monday send)
+Get_Drafts_Item → Already_Sent [Condition] status == 'Sent' → Terminate (idempotent with Monday send)
 Compare_Text  normalised(uniqueBody.content) vs normalised(eda_draft_text)
    normalise = toLower + replace CR, LF, tab, non-breaking space and spaces with ''
-Update  status 'Sent from Outlook', eda_edited_on_send Yes/No, eda_final_status_at, group Done
+Update  status 'Sent', eda_reason 'Sent from Outlook - no edits' / 'Sent from Outlook - edited', eda_edited_on_send Yes/No, eda_final_status_at, group Done
 ```
 
 Additional mailbox later = duplicate this flow with that mailbox's connection (`… - Sent Items Sync - Kathleen`).
@@ -506,3 +521,4 @@ Settings items: `rod@rsfa.co.nz` (`2899339258`, **Enabled = No**), `tech@rsfa.co
 | Date | Change | Author |
 |---|---|---|
 | 2026-11-04 | Initial build guide based on the 2026-11-04 flow exports supplied in chat. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | Simplified the status model: 6 Draft Status labels + Status Detail text; Research Depth column deleted (depth in Model / Depth); depth selected via `Regenerate - more context` / `Regenerate - deep research`; Stale status removed. | Claude (requested by Leonardo Melman) |
