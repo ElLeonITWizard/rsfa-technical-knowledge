@@ -63,6 +63,7 @@ Boards `✉️ Email Drafting Agent: Drafts` (`5032291843`) and `⚙️ Email Dr
 | `rsfa_EDA_RunsBoardId` | `5030408927` |
 | `rsfa_EDA_RunsGroupId` | `group_mm5xsbsv` |
 | `rsfa_EDA_ExtPropId` | `String {90e70716-23a1-4f23-84e2-f97649d4df7d} Name RSFAEmailDraftItemId` |
+| `rsfa_EDA_OpenAIModel` | `gpt-4o` (initial; confirm in T-20). Not adviser-editable since 2026-11-04 |
 | `rsfa_EDA_OpenAIKey` / `rsfa_EDA_MondayToken` | Secret (Option A only) |
 
 The GUID above is fixed for this project — never change it, or sent drafts can no longer be matched.
@@ -175,20 +176,24 @@ Naming follows `knowledge/06_NAMING_AND_ID_CONVENTIONS.md` §7 (`[Source] - [Act
 
 Drafts board group IDs: `topics` = **Needs Review**, `group_mm8sfnf` = **Processing**, `group_mm8sta8g` = **Done (Sent / Discarded)**, `group_mm8s3hhz` = **No Draft**.
 
-**Status model (simplified 2026-11-04 at Leonardo Melman's request — authoritative).** `eda_draft_status` has only six adviser-facing labels; the reason goes in `eda_reason` (**Status Detail**, text). Flows must use these exact strings:
+**Status model (simplified 2026-11-04 at Leonardo Melman's request — authoritative).** `eda_draft_status` has seven adviser-facing labels; the reason goes in `eda_reason` (**Status Detail**, text). Flows must use these exact strings:
 
 | `eda_draft_status` | Group | `eda_reason` (Status Detail) values written by flows |
 |---|---|---|
 | `Processing` | `group_mm8sfnf` | *(empty)* |
-| `Ready for review` | `topics` | empty · `Regenerated with more context` · `Regenerated with deep research` · `Edited in Monday - not yet pushed to Outlook` |
+| `Ready for review` | `topics` | empty · `Regenerated with adviser instructions` · `Regenerated` |
 | `Needs attention` | `topics` | `Edited in Outlook - finish there, or Discard / Regenerate` · `AI unavailable - use Regenerate` · `Invalid AI output - use Regenerate` · `Intake error` · `Generate error` · `Not an allowed approver` |
-| `Sent` | `group_mm8sta8g` | `Sent from Outlook - no edits` · `Sent from Outlook - edited` · `Sent from Monday - no edits` |
+| `Sent from Outlook` | `group_mm8sta8g` | `No edits` · `Edited before sending` |
+| `Sent from Monday` | `group_mm8sta8g` | *(empty)* — Monday sends exactly the current `Draft Text` |
 | `Discarded` | `group_mm8sta8g` | `Deleted in Outlook` · `Discarded from Monday` · `Replaced by newer email in same thread` · `Replaced by newer email - old draft kept (edited in Outlook)` |
 | `No draft` | `group_mm8s3hhz` | `No reply needed` · `Automatic message` · `Sender not verified as client contact` · `Protected message` · `Daily cap reached - use Regenerate` |
 
 - There is no "Stale" status: old drafts are found with a board view filtered on `Draft Created At`.
-- The flows decide on **status + Status Detail + `eda_edited_outlook` + `eda_change_key`**, never on removed labels. An Outlook edit is detected by a changeKey mismatch (→ `Needs attention`). An edit of `Draft Text` in Monday is not detected on its own (it would need a second webhook), which is why **Approve & send always rebuilds the Outlook draft from the Monday text before sending** (§3.3). The `Edited in Monday - not yet pushed to Outlook` detail is only written by the handler while it runs `Update Outlook draft`.
-- The **Research Depth** column was deleted. The depth used is written into `eda_model` (**Model / Depth**) as `<model> · <Basic|Medium|Deep>`. Depth is chosen by the adviser through `eda_adviser_action`: `Regenerate - more context` = Medium, `Regenerate - deep research` = Deep. Automatic drafts use `eds_default_depth` from the settings board.
+- The flows decide on **status + Status Detail + `eda_change_key`**. An Outlook edit is detected live by a changeKey mismatch (→ `Needs attention`). An edit of `Draft Text` in Monday needs no detection: **Approve & send always rebuilds the Outlook draft from the Monday text before sending** (§3.3).
+- **Adviser actions (reduced 2026-11-04): `Approve & send`, `Regenerate`, `Discard`.** There is no "Update Outlook draft" action any more.
+- **Regenerate** = new draft at **Medium** depth (adds linked business + client timeline) using the adviser's **Instructions for AI** (`eda_ai_instructions`) when filled. Without instructions it only adds context, so the board help text tells the adviser to write instructions first. Depth used is written in `eda_model` (**Model / Depth**). `Deep` remains available only as a mailbox default (`eds_default_depth`).
+- **Signature:** the flow appends `eds_signoff` (**Email Signature (HTML)**) to every draft automatically (§3.2). `Draft Text` in Monday never contains the signature, so it is never duplicated when Monday text is pushed.
+- **Recipients:** drafts are always created with `createReplyAll` (Reply mode column removed). CC recipients are listed in `Notes for Adviser` so they are visible in Monday before Approve & send.
 
 ---
 
@@ -234,8 +239,8 @@ Try_Intake [Scope]
   Get_Mailbox_Settings          [HTTP Monday]
       query { items_page_by_column_values(board_id: <SettingsBoardId>, limit: 1,
               columns: [{column_id: "name", column_values: ["<mailbox>"]}]) {
-              items { id column_values(ids:["eds_enabled","eds_default_depth","eds_daily_cap","eds_reply_mode"]) { id text } } } }
-  Compose_Settings              → object {enabled, defaultdepth, dailycap, replymode} from column_values text
+              items { id column_values(ids:["eds_enabled","eds_default_depth","eds_daily_cap"]) { id text } } } }
+  Compose_Settings              → object {enabled, defaultdepth, dailycap} from column_values text
   Mailbox_Enabled               [Condition] enabled == 'Yes'
      False → Update_Log (Succeeded, Developer Notes "mailbox disabled") → Terminate Succeeded
   Check_Duplicate_Message       [HTTP Monday] items_page_by_column_values on eda_internet_msg_id = internetmessageid
@@ -296,9 +301,9 @@ Note: the Intake has already responded, so a failure here never returns `Failed`
 
 ### 3.2 `Child - Email Drafting Agent - Generate Draft`
 
-Inputs: `draftitemid`, `mailbox`, `depth` (`Basic`/`Medium`/`Deep`), `parentlogid`, `advisername`, `mode` (`New` / `Regenerate` / `MondayText`). On `Regenerate` the handler passes depth `Medium` or `Deep` from the chosen action.
+Inputs: `draftitemid`, `mailbox`, `depth` (`Basic`/`Medium`/`Deep`), `parentlogid`, `advisername`, `mode` (`New` / `Regenerate` / `MondayText`). `Regenerate` is always called with depth `Medium` and reads `eda_ai_instructions`.
 
-Unlike Intake, this flow responds **at the end** (`Respond_Result` with `result` = `DraftReady` / `NoReplyNeeded` / `Conflict` / `Failed`, plus `draftid`), because the Action Handler must wait for the rebuilt draft before sending it. The caller of a child flow waits for roughly 2 minutes at most (TODO: confirm the limit in testing — T-21). Therefore: OpenAI action timeout `PT90S` with 1 retry; and callers that do not need the result (Intake, Regenerate) must have their `Run a Child Flow` action followed by a step that runs after `Succeeded, Failed, TimedOut`. A caller timeout does **not** cancel the child, which keeps updating Monday itself. `mode=MondayText` makes no OpenAI call and returns in seconds.
+Unlike Intake, this flow responds **at the end** (`Respond_Result` with `result` = `DraftReady` / `NoReplyNeeded` / `EditedInOutlook` / `Failed`, plus `draftid`), because the Action Handler must wait for the rebuilt draft before sending it. The caller of a child flow waits for roughly 2 minutes at most (TODO: confirm the limit in testing — T-21). Therefore: OpenAI action timeout `PT90S` with 1 retry; and callers that do not need the result (Intake, Regenerate) must have their `Run a Child Flow` action followed by a step that runs after `Succeeded, Failed, TimedOut`. A caller timeout does **not** cancel the child, which keeps updating Monday itself. `mode=MondayText` makes no OpenAI call and returns in seconds.
 
 ```
 Log create (as above)
@@ -307,9 +312,9 @@ Try_Generate [Scope]
   Get_Drafts_Item                [HTTP Monday] items(ids:[draftitemid]) { column_values(ids:[eda_message_id, eda_conversation_id,
                                    eda_client_profile, eda_sender_email, eda_draft_text, eda_draft_id, eda_change_key, eda_input_tokens,
                                    eda_output_tokens, eda_gen_count]) { id text value } }
-  Get_Mailbox_Settings           (tone, style, other instr, sign-off, reply mode, model + max chars for <depth>)
+  Get_Mailbox_Settings           (eds_tone, eds_style, eds_other_instr, eds_signoff, max chars for <depth>); model = parameters('rsfa_EDA_OpenAIModel')
 
-  Mode_is_MondayText [Condition]  — used by "Update Outlook draft": skip AI, ReplyHtml = Monday text with
+  Mode_is_MondayText [Condition]  — used by Approve & send: skip AI, ReplyHtml = Monday text with
         replace(eda_draft_text, decodeUriComponent('%0A'), '<br>')  → jump to Create_Outlook_Draft
 
   Build context (Compose_* actions, each truncated with substring(x, 0, min(length(x), N))):
@@ -338,11 +343,11 @@ Try_Generate [Scope]
   Call_OpenAI_Responses          [HTTP] POST https://api.openai.com/v1/responses   (Secure in/out ON, timeout PT90S, retry fixed 1)
      body:
      {
-       "model": "<model for depth>",
+       "model": "@{parameters('rsfa_EDA_OpenAIModel')}",
        "max_output_tokens": 1500,
        "input": [
          {"role":"system","content":[{"type":"input_text","text":"<FIXED SAFETY PROMPT — AUTO-EMAIL-DRAFT-001 §14.2 item 1>"}]},
-         {"role":"developer","content":[{"type":"input_text","text":"Tone: …\nStyle: …\nOther instructions: …\nSign-off: …"}]},
+         {"role":"developer","content":[{"type":"input_text","text":"Tone: …\nStyle: …\nOther instructions: …\nDo NOT write a sign-off, name or signature — it is added automatically.\n<adviser_instructions_for_this_email>…eda_ai_instructions (Regenerate only)…</adviser_instructions_for_this_email>"}]},
          {"role":"user","content":[{"type":"input_text","text":"<Compose_User_Context>"}]}
        ],
        "text": {"format": {"type":"json_schema","name":"eda_reply","strict":true,"schema": <schema below>}}
@@ -357,8 +362,8 @@ Try_Generate [Scope]
      True  → Create_Outlook_Draft
 
   Create_Outlook_Draft:
-     Create_Reply             [Graph] POST /me/messages/<eda_message_id>/createReply   (or /createReplyAll if Reply Mode = Reply all), body {}
-     Compose_Draft_Body_Html  concat(<reply_html>, '<br>', body('Create_Reply')?['body']?['content'])   (keeps the quoted thread)
+     Create_Reply             [Graph] POST /me/messages/<eda_message_id>/createReplyAll, body {}   (always Reply all)
+     Compose_Draft_Body_Html  concat(<reply_html>, '<br>', <eds_signoff>, '<br>', body('Create_Reply')?['body']?['content'])   (signature always appended; keeps the quoted thread)
      Patch_Draft              [Graph] PATCH /me/messages/<new draft id>
           {"body":{"contentType":"HTML","content":"<Compose_Draft_Body_Html>"},
            "categories":["AI Draft"]  (or ["AI Draft – Review carefully"] when risk_flags not empty),
@@ -366,11 +371,11 @@ Try_Generate [Scope]
      Previous_Draft_Exists [Condition] eda_draft_id not empty (Regenerate / MondayText):
           Get previous draft changeKey → if unchanged → DELETE previous draft; if changed → do not delete, set status 'Needs attention' + reason 'Edited in Outlook - finish there, or Discard / Regenerate' and stop
           (check BEFORE Create_Reply so no orphan draft is produced)
-     Update_Drafts_Item       eda_draft_status='Ready for review', eda_reason ('' / 'Regenerated with more context' / 'Regenerated with deep research'), group 'topics', eda_draft_link={url: webLink, text:'Open draft'},
+     Update_Drafts_Item       eda_draft_status='Ready for review', eda_reason ('' / 'Regenerated with adviser instructions' / 'Regenerated'), group 'topics', eda_draft_link={url: webLink, text:'Open draft'},
                               eda_draft_text=<html-to-text of reply_html (Content Conversion › Html to text)>, eda_missing_info, eda_adviser_notes,
-                              eda_reply_category, eda_risk_flag (None | Review carefully), eda_risk_details, eda_confidence, eda_model = '<model> · <depth>',
+                              eda_risk_flag (None | Review carefully), eda_confidence, eda_model = '<model> · <depth>',
                               eda_input_tokens += usage.input_tokens, eda_output_tokens += usage.output_tokens, eda_gen_count += 1,
-                              eda_draft_created=now NZT, eda_draft_id=<patched id>, eda_change_key=<patched changeKey>, eda_edited_outlook='No'
+                              eda_draft_created=now NZT, eda_draft_id=<patched id>, eda_change_key=<patched changeKey>
 Catch_Generate [Scope]
   If a new draft id was created but Update_Drafts_Item failed → DELETE that draft id (compensation, only the id this run created)
   status='Needs attention', eda_reason ('AI unavailable - use Regenerate' if OpenAI status 429/5xx or timeout, 'Invalid AI output - use Regenerate', else 'Generate error')
@@ -383,10 +388,9 @@ AI output JSON schema (strict mode requires every property in `required` and `ad
 {
   "type": "object",
   "additionalProperties": false,
-  "required": ["needs_reply","reply_category","risk_flags","reply_html","missing_information","notes_for_adviser","confidence"],
+  "required": ["needs_reply","risk_flags","reply_html","missing_information","notes_for_adviser","confidence"],
   "properties": {
     "needs_reply": {"type":"boolean"},
-    "reply_category": {"type":"string","enum":["information_request","document_sent","scheduling","thanks_ack","advice_request","complaint","other"]},
     "risk_flags": {"type":"array","items":{"type":"string","enum":["complaint","hardship","claim","cancellation","legal","vulnerable_client","advice_request"]}},
     "reply_html": {"type":"string"},
     "missing_information": {"type":"array","items":{"type":"string"}},
@@ -396,7 +400,7 @@ AI output JSON schema (strict mode requires every property in `required` and `ad
 }
 ```
 
-The `reply_category` and `confidence` enum values are identical to the status labels on the Drafts board, so they can be written as `{"label": "<value>"}` directly.
+The `confidence` enum values are identical to the status labels on the Drafts board, so they can be written as `{"label": "<value>"}` directly. `notes_for_adviser` must also list CC recipients when present (instruction in the system prompt). `reply_category` was removed on 2026-11-04 together with its board column.
 
 ---
 
@@ -424,12 +428,9 @@ Switch_Adviser_Action on label:
                            current Monday `Draft Text` (safe because the changeKey check proved there are no Outlook edits);
                            then re-read the item (new eda_draft_id / eda_change_key)
      Send_Draft            [Graph] POST /me/messages/<new draft id>/send   (expects 202)
-     Update                status 'Sent', eda_reason 'Sent from Monday - no edits', eda_final_status_at, eda_actioned_by=userId, group Done
-  'Update Outlook draft':
-     → Run Child Generate Draft (mode=MondayText). Conflict handling is inside Generate Draft.
-     status before call: 'Ready for review' + reason 'Edited in Monday - not yet pushed to Outlook'; after success the reason is cleared
-  'Regenerate - more context' / 'Regenerate - deep research':
-     status ∉ {Sent, Discarded} → Run Child Generate Draft (mode=Regenerate, depth = Medium / Deep respectively)
+     Update                status 'Sent from Monday', eda_reason '', eda_final_status_at, eda_actioned_by=userId, group Done
+  'Regenerate':
+     status ∉ {Sent from Outlook, Sent from Monday, Discarded} → Run Child Generate Draft (mode=Regenerate, depth=Medium; uses eda_ai_instructions)
      (also allowed on 'No draft', e.g. daily cap reached or a 'No reply needed' the adviser disagrees with)
   'Discard':
      status not Sent → [Graph] DELETE /me/messages/<eda_draft_id> (404 = already gone, treat as success)
@@ -453,7 +454,7 @@ Apply_to_each (concurrency 1):
   Get_Draft  [Graph] GET /me/messages/<eda_draft_id>?$select=id,changeKey,isDraft,parentFolderId,createdDateTime
   404 OR parentFolderId == DeletedItems id  → (Sent Items Sync may have already handled it) re-read status; if still open →
         status 'Discarded', eda_reason 'Deleted in Outlook', eda_final_status_at, group Done
-  200 AND changeKey ≠ eda_change_key       → eda_edited_outlook 'Yes' only. Do NOT overwrite eda_change_key:
+  200 AND changeKey ≠ eda_change_key       → write nothing. Do NOT overwrite eda_change_key:
                                               it is the last version written by the agent, and Monday actions use the
                                               mismatch to return Needs attention instead of overwriting the adviser's Outlook edits.
 ```
@@ -475,10 +476,10 @@ Get_Sent_Message  [Graph] GET /me/messages/<id>?$select=id,conversationId,sentDa
                     &$expand=singleValueExtendedProperties($filter=id eq '<rsfa_EDA_ExtPropId>')   (bodytextonly=true)
 Compose_Draft_Item_Id   first(body?['singleValueExtendedProperties'])?['value']
 Fallback (empty id): Monday items_page eda_conversation_id = conversationId AND status ∈ open → newest item
-Get_Drafts_Item → Already_Sent [Condition] status == 'Sent' → Terminate (idempotent with Monday send)
-Compare_Text  normalised(uniqueBody.content) vs normalised(eda_draft_text)
+Get_Drafts_Item → Already_Sent [Condition] status ∈ {Sent from Outlook, Sent from Monday} → Terminate (idempotent with Monday send)
+Compare_Text  normalised(uniqueBody.content minus Html-to-text(eds_signoff)) vs normalised(eda_draft_text)
    normalise = toLower + replace CR, LF, tab, non-breaking space and spaces with ''
-Update  status 'Sent', eda_reason 'Sent from Outlook - no edits' / 'Sent from Outlook - edited', eda_edited_on_send Yes/No, eda_final_status_at, group Done
+Update  status 'Sent from Outlook', eda_reason 'No edits' / 'Edited before sending', eda_final_status_at, group Done
 ```
 
 Additional mailbox later = duplicate this flow with that mailbox's connection (`… - Sent Items Sync - Kathleen`).
@@ -496,7 +497,7 @@ Manual trigger with inputs `mailbox` (default `tech@rsfa.co.nz`), `messageid`, `
 3. Build 3.3 + webhook (§5) → T-14…T-16. Build 3.5 for tech (temporary `… - Sent Items Sync - Tech`) + 3.4 → T-11…T-13.
 4. Change A in `Main` → T-02 regression on live traffic for 1 working day (drafting not yet connected).
 5. Change B in `Rod v2` with Rod's settings item still `Enabled = No` → confirm `Try_Run_Email_Drafting_Agent` runs and Intake exits "mailbox disabled".
-6. Rod approval of D1–D5, fill Tone/Style/Other Instructions/Sign-off → set `Enabled = Yes` (Phase 1, Basic, cap 20).
+6. Rod approval of D1–D5, fill Tone/Style/Other Instructions and paste Rod's **Email Signature (HTML)** → set `Enabled = Yes` (Phase 1, Basic, cap 20).
 
 ## 5. Monday webhook (after 3.3 is saved)
 
@@ -522,3 +523,4 @@ Settings items: `rod@rsfa.co.nz` (`2899339258`, **Enabled = No**), `tech@rsfa.co
 |---|---|---|
 | 2026-11-04 | Initial build guide based on the 2026-11-04 flow exports supplied in chat. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Simplified the status model: 6 Draft Status labels + Status Detail text; Research Depth column deleted (depth in Model / Depth); depth selected via `Regenerate - more context` / `Regenerate - deep research`; Stale status removed. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | Second simplification: statuses `Sent from Outlook` / `Sent from Monday` restored; actions reduced to Approve & send / Regenerate / Discard; Regenerate = Medium + `Instructions for AI`; signature appended automatically from `Email Signature (HTML)`; always Reply all; model moved to env var `rsfa_EDA_OpenAIModel`; removed reply_category, edited flags, reply mode, stale. | Claude (requested by Leonardo Melman) |
