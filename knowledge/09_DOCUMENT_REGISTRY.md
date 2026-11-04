@@ -39,7 +39,8 @@ Document IDs use the `DOC-` prefix per `knowledge/06_NAMING_AND_ID_CONVENTIONS.m
 | `ADR-001` | `knowledge/decisions/ADR-001-deprecate-monday-workflows.md` | Decision record | Active | 2026-09-05 |
 | `ADR-003` | `knowledge/decisions/ADR-003-email-drafting-agent-architecture.md` | Decision record | Proposed | Not verified — pending approval |
 | `AUTO-EMAIL-DRAFT-001` | `knowledge/automations/power-automate/AUTO-EMAIL-DRAFT-001-email-drafting-agent.md` | Automation design (planned) | Planned | Not verified — not built |
-| `BOARD-EMAIL-DRAFTS-001` | `knowledge/schemas/monday/BOARD-EMAIL-DRAFTS-001-email-drafting-agent-boards.md` | Board schema (proposed) | Planned | Not verified — boards not created |
+| `BOARD-EMAIL-DRAFTS-001` | `knowledge/schemas/monday/BOARD-EMAIL-DRAFTS-001-email-drafting-agent-boards.md` | Board schema | Active | 2026-11-04 |
+| `DOC-EMAIL-DRAFT-002` | `knowledge/automations/power-automate/AUTO-EMAIL-DRAFT-001-implementation-guide.md` | Implementation guide (planned build) | Planned | Not verified — not built |
 
 ## 4. Maintenance rule
 

@@ -212,11 +212,13 @@ Power Automate remains the principal platform for Outlook, SharePoint and other 
 | Massive SP Files Renaming | Instant | `AUTO-SP-FOLDER-001` | Active | Bulk maintenance flow; execute only with explicit approval. |
 | Email Back Up Generator | Manual | `AUTO-EMAIL-BACKUP-001` | Active | — |
 | Moves Client Folder to Recycle Bin | Automated | `AUTO-SP-FOLDER-001` | Active | — |
-| Email Drafting Agent - Intake | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
-| Email Drafting Agent - Generate Draft | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
-| Email Drafting Agent - Monday Action Handler | Instant (HTTP, Monday webhook) | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
-| Email Drafting Agent - Sent Items Sync | Automated | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
-| Email Drafting Agent - Draft Reconciliation | Scheduled | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. |
+| Child - Email Drafting Agent - Outlook Graph Request | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
+| Child - Email Drafting Agent - Intake | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
+| Child - Email Drafting Agent - Generate Draft | Instant child flow | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
+| Monday - Email Drafting Agent - Adviser Action Handler | Instant (HTTP, Monday webhook) | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
+| Scheduled - Email Drafting Agent - Draft Reconciliation | Scheduled | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
+| Outlook - Email Drafting Agent - Sent Items Sync - Rod | Automated | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
+| Manual - Email Drafting Agent - Test Harness | Manual (testing only) | `AUTO-EMAIL-DRAFT-001` | Planned | Proposed 2026-11-04 in new Solution `RSFAEmailDraftingAgent`; not built. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. |
 
 ### Power Automate automation families
 
@@ -226,7 +228,7 @@ Includes mailbox-specific received and sent flows, the central `Main Outlook Inb
 
 #### AUTO-EMAIL-DRAFT-001 — Email Drafting Agent (Planned)
 
-Proposed 2026-11-04, not built. Called from `Outlook Email Filling - Rod v2` after `Main Outlook Inbox Email Filling` confirms a client-folder match on a received email (requires additive response fields on the child flow and an isolated scope in the Rod flow — production changes to `AUTO-EMAIL-001` pending approval). Generates an OpenAI reply draft in Outlook Drafts and tracks it on the proposed `✉️ Email Drafts` board. See `knowledge/decisions/ADR-003-email-drafting-agent-architecture.md`.
+Proposed 2026-11-04, not built. Called from `Outlook Email Filling - Rod v2` after `Main Outlook Inbox Email Filling` confirms a client-folder match on a received email (requires additive response fields on the child flow and an isolated scope in the Rod flow — production changes to `AUTO-EMAIL-001` pending approval). Generates an OpenAI reply draft in Outlook Drafts and tracks it on `✉️ Email Drafting Agent: Drafts` (`5032291843`, created 2026-11-04). See `knowledge/decisions/ADR-003-email-drafting-agent-architecture.md`.
 
 #### AUTO-SP-FOLDER-001 — Client SharePoint Folder Lifecycle
 

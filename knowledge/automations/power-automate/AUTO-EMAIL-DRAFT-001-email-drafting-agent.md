@@ -28,22 +28,25 @@ related_boards:
     id: "2074688484"
   - name: ⚡ Power Automate Runs
     id: "5030408927"
-  - name: ✉️ Email Drafts (proposed, not yet created)
-    id: "TODO: assign on creation"
-  - name: ⚙️ Email Drafting Agent Settings (proposed, not yet created)
-    id: "TODO: assign on creation"
+  - name: ✉️ Email Drafting Agent: Drafts
+    id: "5032291843"
+  - name: ⚙️ Email Drafting Agent: Mailbox Settings
+    id: "5032291851"
 related_flows:
   - name: Outlook Email Filling - Rod v2 (existing — modification proposed)
   - name: Main Outlook Inbox Email Filling (existing — modification proposed)
-  - name: Email Drafting Agent - Intake (proposed)
-  - name: Email Drafting Agent - Generate Draft (proposed)
-  - name: Email Drafting Agent - Monday Action Handler (proposed)
-  - name: Email Drafting Agent - Sent Items Sync (proposed)
-  - name: Email Drafting Agent - Draft Reconciliation (proposed)
+  - name: Child - Email Drafting Agent - Outlook Graph Request (proposed)
+  - name: Child - Email Drafting Agent - Intake (proposed)
+  - name: Child - Email Drafting Agent - Generate Draft (proposed)
+  - name: Monday - Email Drafting Agent - Adviser Action Handler (proposed)
+  - name: Scheduled - Email Drafting Agent - Draft Reconciliation (proposed)
+  - name: Outlook - Email Drafting Agent - Sent Items Sync - Rod (proposed)
+  - name: Manual - Email Drafting Agent - Test Harness (proposed, testing only)
 related_decisions:
   - ADR-003
 related_schemas:
   - BOARD-EMAIL-DRAFTS-001
+implementation_guide: knowledge/automations/power-automate/AUTO-EMAIL-DRAFT-001-implementation-guide.md
 source_documents:
   - RSFA_Email_Drafting_Agent_Concept_v1_1.docx (Leonardo Melman, September 2026 — shared in chat 2026-11-04, not stored in this repository)
   - Slack thread between Rod Schubert and Leonardo Melman (shared in chat 2026-11-04 as pasted text)
@@ -54,7 +57,7 @@ documentation_status: design — not implemented
 
 # AUTO-EMAIL-DRAFT-001 — Email Drafting Agent
 
-> **Status: Planned (v1 design).** Nothing in this document is built or deployed yet. Every flow, board and column below is a **proposal**. No test has been executed — all tests in §20 are `Planned`.
+> **Status: Planned (v1 design).** No flow is built or deployed yet. The two Monday boards **exist** since 2026-11-04 (`BOARD-EMAIL-DRAFTS-001`) but nothing writes to them yet. No test has been executed — all tests in §20 are `Planned`. Step-by-step build instructions: `AUTO-EMAIL-DRAFT-001-implementation-guide.md`.
 
 ## 1. Purpose
 
@@ -78,9 +81,9 @@ The draft is tracked on a Monday.com board so that the adviser can approve and s
 - Emails **received** in Rod's Inbox that `Main Outlook Inbox Email Filling` has filed into a matched client's SharePoint folder (the `Respond_to_a_Parent_Flow_Success_02` path — see §5).
 - Draft generation with OpenAI from controlled context at three depth levels (Basic / Medium / Deep — §12).
 - Outlook draft creation as a reply in the original conversation (`createReply`), in Rod's Drafts folder.
-- A Monday board (`✉️ Email Drafts`) with one item per draft and adviser actions: **Approve & send**, **Update Outlook draft** (push edits made in Monday), **Regenerate** (optionally at a different depth), **Discard**.
+- A Monday board (`✉️ Email Drafting Agent: Drafts`) with one item per draft and adviser actions: **Approve & send**, **Update Outlook draft** (push edits made in Monday), **Regenerate** (optionally at a different depth), **Discard**.
 - Outlook → Monday sync: detecting a draft sent from Outlook (with or without edits) and a draft deleted in Outlook.
-- A configuration board (`⚙️ Email Drafting Agent Settings`) holding per-mailbox enablement, tone/style/instructions, default depth, daily cap and model.
+- A configuration board (`⚙️ Email Drafting Agent: Mailbox Settings`) holding per-mailbox enablement, tone/style/instructions, default depth, daily cap and model.
 - Execution logging to `⚡ Power Automate Runs` (`5030408927`).
 
 ### Excluded from v1
@@ -110,7 +113,7 @@ The draft is tracked on a Monday.com board so that the adviser can approve and s
 - A matched client email that was filed into the client's SharePoint folder ends at `Respond_to_a_Parent_Flow_Success_02`.
 - **Gap:** the child currently returns only `{status: "Success", slackbackupchannels}` on **every** success path — including the unmatched "Emails to Sort"/overflow path (`Respond_to_a_Parent_Flow_Success_03`) and the old-site path (`Respond_to_a_Parent_Flow_Success_RSFA_Team_Old_Site`). The parent therefore cannot currently tell a matched client email from an overflow email. This is why §10.2 proposes extending the child response.
 
-**Proposed v1 trigger:** in `Outlook Email Filling - Rod v2`, after a successful child response where `matchstatus = ClientFolder` and `direction = Received`, call the new child flow `Email Drafting Agent - Intake`.
+**Proposed v1 trigger:** in `Outlook Email Filling - Rod v2`, after a successful child response where `matchstatus = ClientFolder` and `direction = Received`, call the new child flow `Child - Email Drafting Agent - Intake`.
 
 ## 6. Inputs
 
@@ -120,7 +123,7 @@ The draft is tracked on a Monday.com board so that the adviser can approve and s
 | Mailbox address | `MailConnection` variable (`rod@rsfa.co.nz`) | Used to select config and connection |
 | Client Profile item ID | New `clientprofileid` field in the filing child response | Monday item on `Client Profiles` (`5024661649`) |
 | Direction | New `direction` field in the filing child response | `Received` only proceeds |
-| Agent configuration | `⚙️ Email Drafting Agent Settings` board | Per mailbox — §13.1 |
+| Agent configuration | `⚙️ Email Drafting Agent: Mailbox Settings` board | Per mailbox — §13.1 |
 | Email + thread | Microsoft Graph via the Office 365 Outlook connector `Send an HTTP request` | `uniqueBody`, headers, `conversationId` |
 | Client context | Monday API (`Client Profiles`, `Contacts`, timeline) | Depth-dependent — §12 |
 | SharePoint file index | SharePoint `Get files (properties only)` on the client folder | Deep only |
@@ -129,8 +132,8 @@ The draft is tracked on a Monday.com board so that the adviser can approve and s
 
 - An Outlook **draft reply** in the adviser mailbox's Drafts folder, created with `POST /me/messages/{id}/createReply`, tagged with:
   - Outlook category `AI Draft` (visible to the adviser, filterable).
-  - A single-value extended property (named property, string) holding the `✉️ Email Drafts` item ID, used to match the sent item back to Monday (§13.4). **Persistence of this property on the Sent Items copy is unverified — test T-12.**
-- One item on `✉️ Email Drafts` per processed email (including skipped/“no reply needed” outcomes, so every decision is visible).
+  - A single-value extended property (named property, string) holding the `✉️ Email Drafting Agent: Drafts` item ID, used to match the sent item back to Monday (§13.4). **Persistence of this property on the Sent Items copy is unverified — test T-12.**
+- One item on `✉️ Email Drafting Agent: Drafts` per processed email (including skipped/“no reply needed” outcomes, so every decision is visible).
 - One item per flow run on `⚡ Power Automate Runs` (`5030408927`).
 - On failure: no draft is created; the Drafts board item is set to `Failed` with an error code; a notification follows the existing failure convention (§15). **Never** a partial or placeholder draft.
 
@@ -145,8 +148,8 @@ Outlook / Microsoft Graph (source and draft destination), Power Automate (execut
 | Client Profiles | `5024661649` | Client context (name, preferred names via mirror `lookup_mkypams8`, client type `color_mm08t3w8`, adviser(s) `multiple_person_mm5ky9nz`, linked pipelines/existing business, SP folder `link5`). Confirmed live 2026-11-04 (schema only). | Existing |
 | Contacts | `2074688484` | Sender verification: sender address must be one of `contact_email`, `email_mkxd41p7`, `email_mkxdantz` of a contact linked to the matched Client Profile. Column IDs confirmed from export (`Contact_LookUp_on_Monday.com`). | Existing |
 | ⚡ Power Automate Runs | `5030408927` | Run logging. Requires a new `Solution` dropdown label `Email Drafting Agent` — TODO: add on build. | Existing |
-| ✉️ Email Drafts | TODO | Draft tracking and adviser actions | Proposed — `BOARD-EMAIL-DRAFTS-001` |
-| ⚙️ Email Drafting Agent Settings | TODO | Per-mailbox configuration and prompt rules | Proposed — `BOARD-EMAIL-DRAFTS-001` |
+| ✉️ Email Drafting Agent: Drafts | `5032291843` | Draft tracking and adviser actions | Created 2026-11-04 (private) — `BOARD-EMAIL-DRAFTS-001` |
+| ⚙️ Email Drafting Agent: Mailbox Settings | `5032291851` | Per-mailbox configuration and prompt rules | Created 2026-11-04 (private) — `BOARD-EMAIL-DRAFTS-001` |
 
 ## 10. Platform implementation
 
@@ -156,17 +159,19 @@ Proposed Solution: `RSFAEmailDraftingAgent` (display name `Email Drafting Agent`
 
 | Proposed flow name | Type / trigger | Role |
 |---|---|---|
-| Email Drafting Agent - Intake | Child flow (manual/HTTP, called by the mailbox filing flow) | Responds to the parent immediately, then runs eligibility checks (§13.2), creates the `✉️ Email Drafts` item and calls Generate Draft |
-| Email Drafting Agent - Generate Draft | Child flow | Builds context for the chosen depth, calls OpenAI, validates the output, creates the Outlook draft, updates Monday |
-| Email Drafting Agent - Monday Action Handler | HTTP trigger, called by a Monday webhook on the `Adviser Action` column of `✉️ Email Drafts` | Executes Approve & send / Update Outlook draft / Regenerate / Discard (§13.3) |
-| Email Drafting Agent - Sent Items Sync | `When a new email arrives (V3)` on the adviser's **Sent Items** folder | Detects that an AI draft was sent from Outlook and records whether it was edited (§13.4) |
-| Email Drafting Agent - Draft Reconciliation | Recurrence (proposed every 30 minutes, 07:00–20:00 NZT) | Detects drafts deleted or edited in Outlook; expires stale drafts (§13.5) |
+| Child - Email Drafting Agent - Outlook Graph Request | Child flow | Single place mapping mailbox → Outlook connection for all Graph calls (adding a mailbox = one new case) |
+| Child - Email Drafting Agent - Intake | Child flow, called by `Outlook Email Filling - Rod v2` | Responds to the parent immediately, then runs eligibility checks (§13.2), creates the Drafts item and calls Generate Draft |
+| Child - Email Drafting Agent - Generate Draft | Child flow | Builds context for the chosen depth, calls OpenAI, validates output, creates the Outlook draft, updates Monday; also rebuilds a draft from Monday text |
+| Monday - Email Drafting Agent - Adviser Action Handler | HTTP trigger ← Monday webhook on `eda_adviser_action` | Approve & send / Update Outlook draft / Regenerate / Discard (§13.3) |
+| Scheduled - Email Drafting Agent - Draft Reconciliation | Recurrence, 30 min, 07:00–20:00 NZT | Drafts deleted or edited in Outlook; stale drafts (§13.5) |
+| Outlook - Email Drafting Agent - Sent Items Sync - Rod | When a new email arrives (V3), Rod Sent Items | Sent-from-Outlook detection and edit detection (§13.4) |
+| Manual - Email Drafting Agent - Test Harness | Manual | Phase 0 testing on `tech@` without involving the filing flows; turned off after go-live |
 
 Proposed connection references (new, inside the new Solution — names are proposals):
 
 | Proposed logical name | Connector | Account |
 |---|---|---|
-| `rsfa_EDA_Outlook_Rod` | Office 365 Outlook | Same account as `Outlook_Rod_RSFA` — TODO: verify which account `rsfa_sharedoffice365_91c50` is authenticated as (draft must be created in Rod's mailbox; `/me/` calls resolve to the connection account) |
+| `rsfa_EDA_Outlook_Rod` | Office 365 Outlook | Same connection as `Outlook_Rod_RSFA`. Inference from export (2026-11-04): `Get_Email_Body_Rod` reads Rod's Inbox messages via `GET /me/messages/{id}` through `rsfa_sharedoffice365_91c50`, so `/me` resolves to Rod's mailbox |
 | `rsfa_EDA_SharePoint` | SharePoint | Same account as `rsfa_sharedsharepointonline_8fd5d` |
 | `rsfa_EDA_KeyVault` | Azure Key Vault | TODO: verify availability (§19) |
 
@@ -175,6 +180,8 @@ Proposed environment variables: `EDA_DraftsBoardId`, `EDA_SettingsBoardId`, `EDA
 Build files (flow definitions) belong in `../rsfa-automation-development/projects/email-drafting-agent/power-automate/` per `CLAUDE.md` (that repository is not available in the session that wrote this document — TODO: create the project folder there). Nothing under `exports/` is modified by this design.
 
 ### 10.2 Changes to existing `AUTO-EMAIL-001` flows (proposed — production change)
+
+> **Superseded detail (2026-11-04):** the flow exports supplied on 2026-11-04 are newer than the 2026-07-30 snapshot. All seven Response actions in `Main` now share the schema `{status, slackbackupchannels, contactmatchingdetails}`; Change A therefore adds **four** fields (`matchstatus`, `clientprofileid`, `direction`, `resolvedmessageid`) to **all seven** Response actions, and Change B is placed after `Flow_Has_Failed`, outside `Try_Run_Main_Filling_Flow`. The exact, current instructions are in `AUTO-EMAIL-DRAFT-001-implementation-guide.md` §1–§2 and take precedence over the text below.
 
 **Change A — `Main Outlook Inbox Email Filling` (additive response fields).**
 Add three properties to the response schema and body of `Respond_to_a_Parent_Flow_Success_02`, `Respond_to_a_Parent_Flow_Success_03`, `Respond_to_a_Parent_Flow_Success_RSFA_Team_Old_Site` and `Respond_to_a_Parent_Flow_Success`:
@@ -193,7 +200,7 @@ TODO: verify that `Respond_to_a_Parent_Flow_Success_02` runs inside `Were_File_P
 Add a new scope `Try_Run_Email_Drafting_Agent` **after** `Flow_Has_Failed`, configured to run after `Succeeded`, `Failed`, `Skipped` and `TimedOut` of the previous step, containing:
 
 1. Condition: `FailedFlag = false` **and** `body('Run_a_Main_Email_Filling_Flow')?['matchstatus'] = 'ClientFolder'` **and** `body('Run_a_Main_Email_Filling_Flow')?['direction'] = 'Received'`.
-2. If true: `Run a Child Flow` → `Email Drafting Agent - Intake` with `messageid`, `mailbox`, `clientprofileid`, `parentrunid` (`workflow()?['run']?['name']`).
+2. If true: `Run a Child Flow` → `Child - Email Drafting Agent - Intake` with `messageid`, `mailbox`, `clientprofileid`, `parentrunid` (`workflow()?['run']?['name']`).
 3. A sibling `Catch_Email_Drafting_Agent` scope that only **logs** (Power Automate Runs board). It must **not** set `FailedFlag`, must **not** forward the email to `tech@`/`fails_ai_emails`, and must **not** delete anything.
 
 Why this matters: the existing failure path forwards the email to `tech@rsfa.co.nz` with subject `Failed Item Email Filling`, which `Email Filling Failed Items Processing` then re-files. A drafting failure must never enter that path, or the email would be re-filed and could produce duplicate timeline entries.
@@ -204,7 +211,7 @@ Not used. Note: the Make scenario `Monitor Microsoft email messages and generate
 
 ### Monday native automations or workflows
 
-One Monday webhook integration on `✉️ Email Drafts` → `Adviser Action` column change → HTTP trigger URL of `Email Drafting Agent - Monday Action Handler`. No Monday Workflows (see `ADR-001`).
+One Monday webhook integration on `✉️ Email Drafting Agent: Drafts` → `Adviser Action` column change → HTTP trigger URL of `Monday - Email Drafting Agent - Adviser Action Handler`. No Monday Workflows (see `ADR-001`).
 
 ## 11. End-to-end process
 
@@ -347,13 +354,13 @@ If `risk_flags` is non-empty, the draft is still created but the Monday item is 
 
 - Intake always responds to the parent flow **first**, so a drafting failure or slowness can never fail or delay email filing (Change B).
 - Every flow uses Try/Catch scopes. On failure: Drafts item → `Failed` + `Error code` + run URL; run logged as `Failed` on `⚡ Power Automate Runs`; notification email to `tech@rsfa.co.nz` with subject `Email Drafting Agent Failure` (**different** from `Failed Item Email Filling`, so it is never picked up by `Email Filling Failed Items Processing`).
-- OpenAI 429/5xx: retry policy exponential, 3 attempts; then `Failed – AI unavailable`. The adviser can use **Regenerate** later.
+- OpenAI 429/5xx: action timeout 90 s, 1 retry (child-flow callers wait ~2 minutes at most); then `Failed – AI unavailable`. The adviser can use **Regenerate** later.
 - If the Outlook draft was created but the Monday update failed: the Catch scope deletes the just-created draft (only the draft it created, by ID) so there is never an untracked AI draft; TODO: confirm this compensation step in T-15.
 - No partial drafts, no placeholder drafts, no drafts without a Monday item.
 
 ## 16. Logging and observability
 
-- `✉️ Email Drafts` item per email: status, depth, model, input/output tokens (from the OpenAI `usage` object), reply category, risk flags, timestamps, Outlook link, error code.
+- `✉️ Email Drafting Agent: Drafts` item per email: status, depth, model, input/output tokens (from the OpenAI `usage` object), reply category, risk flags, timestamps, Outlook link, error code.
 - `⚡ Power Automate Runs` item per run with `Parent Runs` relation to the `Outlook Email Filling - Rod v2` run, following the existing convention.
 - Proposed Monday dashboard/view (v1.1): drafts per day, sent unchanged vs edited vs discarded, failures, tokens per day. "Sent unchanged" ratio is the main quality signal for Rod's testing.
 
@@ -377,7 +384,7 @@ If `risk_flags` is non-empty, the draft is still created but the Monday item is 
 - Secure Inputs/Outputs must be enabled on every OpenAI and Monday HTTP action and on the email-body Graph calls, so client content is not visible in run history to every flow co-owner.
 - **Data sent to OpenAI:** client email content and selected client context. This is new processing of client data by a third party compared with today's filing flows, which only send attachment content for renaming (confirmed from export: `HTTP_GPT_API_call_for_PDFS/TXTS/Docx`). Requires Rod's explicit approval (D2). TODO: confirm the OpenAI account's data-retention/zero-data-retention setting and that API data is not used for training.
 - **Data stored in Monday:** the draft text (needed for editing and sending from Monday) and a short subject line. The incoming email body is **not** copied to the Drafts board; it is reachable through the Outlook link and the existing Client Profile timeline. Decision D1.
-- `✉️ Email Drafts` must be a **private** board (Rod + tech@ only in v1), unlike `⚡ Power Automate Runs`, which is public.
+- `✉️ Email Drafting Agent: Drafts` must be a **private** board (Rod + tech@ only in v1), unlike `⚡ Power Automate Runs`, which is public.
 - Monday webhook → Power Automate HTTP trigger: the trigger URL is a secret (store in 1Password, item name TODO); the handler validates board/column/user and re-reads state from Monday.
 - No real client data in test cases — use the fictional test Client Profile described in §20.
 
@@ -465,15 +472,16 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 
 | # | Decision / gap | Proposed default | Owner |
 |---|---|---|---|
-| D1 | Store AI draft text in the `✉️ Email Drafts` board (required for editing/sending from Monday) | Yes, private board, draft text only — no incoming body | Rod |
+| D1 | Store AI draft text in the `✉️ Email Drafting Agent: Drafts` board (required for editing/sending from Monday) | Yes, private board, draft text only — no incoming body | Rod |
 | D2 | Approve sending client email content to OpenAI for drafting | Required for the project; confirm OpenAI data-retention settings first | Rod |
 | D3 | Reply vs Reply all when the client email has CCs | Reply (sender only), CCs listed in `notes_for_adviser` | Rod |
 | D4 | Default depth for automatic drafts and daily cap | Basic, 20/day | Rod |
 | D5 | Tone / Style / Other instructions / Sign-off text for Rod | To be written with Rod; initial draft from his recent sent emails | Rod |
 | D6 | Slack as a context source and which channels | Excluded from v1 | Rod |
 | G1 | Key Vault / secret store availability | TODO: verify — blocker | Tech |
-| G2 | Account behind `rsfa_sharedoffice365_91c50` (`/me/` resolution) | TODO: verify | Tech |
-| G3 | Live state of `Main` and `Rod v2` vs the 2026-07-30 export | TODO: fresh export before build | Tech |
+| G2 | Account behind `rsfa_sharedoffice365_91c50` (`/me/` resolution) | Resolved by inference from export (2026-11-04): `/me` = Rod's mailbox — confirm in T-01 | Tech |
+| G3 | Live state of `Main` and `Rod v2` vs the 2026-07-30 export | Partially resolved: flow exports dated 2026-11-04 supplied in chat and used for the implementation guide; full Solution export still required before replacing `exports/…/current` | Tech |
+| G7 | Monday API token still hardcoded in the 2026-11-04 exports of `Main`, `Rod v2` and `SENT Rod v2` (now also in the Power Automate Runs logging actions) — rotation not yet done | Rotate; migrate to secret store | Tech |
 | G4 | Extended property persistence on sent copy | TODO: T-12 | Tech |
 | G5 | Exact status column IDs on linked pipeline/existing boards for Medium context | TODO: verify | Tech |
 | G6 | Make scenario `9789700` (auto-send template) — delete/archive | Recommend delete after Rod confirms | Rod / Tech |
@@ -483,3 +491,4 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 | Date | Change | Author |
 |---|---|---|
 | 2026-11-04 | Initial v1 design created from the concept document v1.1, the Rod/Leonardo Slack thread, the 2026-07-30 `RSFAOutlookEmailFilling` export and read-only live checks (Monday `Client Profiles` schema, Make scenario `9789700`). Status `Planned`; nothing built or tested. | Claude (design task, requested by Leonardo Melman) |
+| 2026-11-04 | Created both Monday boards (`5032291843`, `5032291851`) with fixed column IDs and settings items (rod@ disabled, tech@ test). Renamed proposed flows to the RSFA naming convention, added `Child - Email Drafting Agent - Outlook Graph Request` and the test harness, aligned Change A/B with the 2026-11-04 flow exports, and added the implementation guide. | Claude (requested by Leonardo Melman) |

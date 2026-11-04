@@ -28,7 +28,7 @@ Evidence:
 1. Generate drafts in Power Automate, triggered from `Outlook Email Filling - Rod v2` only after the filing child confirms a client-folder match on a received email (additive response fields on `Main Outlook Inbox Email Filling`; drafting runs in an isolated scope that can never fail filing).
 2. Use the OpenAI Responses API with a structured JSON output and a fixed safety system prompt; adviser tone/style rules live on a Monday settings board.
 3. Output is always an Outlook **draft** (`createReply`) in the adviser's mailbox. Sending requires an explicit adviser action in Outlook or Monday (`Approve & send`).
-4. A private Monday board `✉️ Email Drafts` is part of v1 (not optional, per the 2026-11-04 request), with two-way status sync.
+4. A private Monday board `✉️ Email Drafting Agent: Drafts` (`5032291843`, created 2026-11-04) is part of v1 (not optional, per the 2026-11-04 request), with two-way status sync.
 5. Drafting flows live in a new Solution (`RSFAEmailDraftingAgent`) separate from `RSFAOutlookEmailFilling`.
 6. Make scenario `9789700` is not used.
 
