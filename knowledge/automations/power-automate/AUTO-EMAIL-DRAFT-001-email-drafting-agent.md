@@ -266,7 +266,7 @@ Exact field IDs for linked-item status columns on the pipeline/existing boards a
 
 ### 13.1 Configuration (per mailbox, settings board)
 
-`Enabled` (Yes/No — master switch per mailbox), `Default depth`, `Daily draft cap`, `Max context chars` per depth, `Tone`, `Style`, `Other instructions`, `Email Signature (HTML)`, `Allowed approvers` (Monday people allowed to trigger **Approve & send**). The OpenAI model is the environment variable `rsfa_EDA_OpenAIModel` (not on the board). Drafts are always **Reply all** (Reply mode removed 2026-11-04). Full schema in `BOARD-EMAIL-DRAFTS-001`.
+`Enabled` (Yes/No — master switch per mailbox), `Daily draft cap`, `Max context chars` per depth, `Tone`, `Style`, `Other instructions`, `Email Signature (HTML)`, `Allowed approvers` (Monday people allowed to trigger **Approve & send**). The OpenAI model is the environment variable `rsfa_EDA_OpenAIModel` (not on the board). Drafts are always **Reply all** (Reply mode removed 2026-11-04). Full schema in `BOARD-EMAIL-DRAFTS-001`.
 
 ### 13.2 Status model (simplified 2026-11-04)
 
@@ -282,7 +282,7 @@ The adviser sees seven `Draft Status` values; the reason is in **Status Detail**
 | `Discarded` | Deleted in Outlook, discarded from Monday, or replaced by a newer email in the same thread |
 | `No draft` | No reply needed, automatic message, sender not a client contact, protected message, daily cap reached |
 
-The **Research Depth** column was removed. Automatic drafts use the mailbox `Default depth`; **Regenerate** always uses **Medium** plus the adviser's **Instructions for AI**. The depth used is written in `Model / Depth` (`eda_model`, e.g. `gpt-4o · Basic`, hidden in the Adviser View).
+The **Research Depth** column was removed. Automatic drafts are always **Basic** (Default Depth column removed 2026-11-04); **Regenerate** always uses **Medium** plus the adviser's **Instructions for AI**. The depth used is written in `Model / Depth` (`eda_model`, e.g. `gpt-4o · Basic`, hidden in the Adviser View).
 
 ### 13.3 Eligibility checks (Intake) — in order, first failure wins
 
@@ -500,7 +500,7 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 | D1 | Store AI draft text in the `✉️ Email Drafting Agent: Drafts` board (required for editing/sending from Monday) | Yes, private board, draft text only — no incoming body | Rod |
 | D2 | Approve sending client email content to OpenAI for drafting | Required for the project; confirm OpenAI data-retention settings first | Rod |
 | D3 | Reply vs Reply all when the client email has CCs | **Decided 2026-11-04 (Leonardo Melman): always Reply all**; CCs listed in Notes for Adviser | — |
-| D4 | Default depth for automatic drafts and daily cap | Basic, 20/day | Rod |
+| D4 | Depth for automatic drafts and daily cap | Depth decided 2026-11-04: Basic (Regenerate = Medium; Deep unused in v1). Daily cap 20 proposed | Rod |
 | D5 | Tone / Style / Other instructions and Email Signature (HTML) for Rod | To be written with Rod; signature copied once from one of his sent emails (with his OK) | Rod |
 | D6 | Slack as a context source and which channels | Excluded from v1 | Rod |
 | G1 | Key Vault / secret store availability | TODO: verify — blocker | Tech |
@@ -519,3 +519,4 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 | 2026-11-04 | Created both Monday boards (`5032291843`, `5032291851`) with fixed column IDs and settings items (rod@ disabled, tech@ test). Renamed proposed flows to the RSFA naming convention, added `Child - Email Drafting Agent - Outlook Graph Request` and the test harness, aligned Change A/B with the 2026-11-04 flow exports, and added the implementation guide. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Simplified status model (6 Draft Status labels + Status Detail), Research Depth column deleted (depth recorded in Model / Depth, chosen via two Regenerate actions), Stale status removed; §13 renumbered. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Second simplification: statuses `Sent from Outlook` / `Sent from Monday` restored (7 labels); adviser actions reduced to Approve & send / Regenerate / Discard; Regenerate = Medium + new `Instructions for AI` column; automatic signature (§14.4); always Reply all (D3 decided); model moved to env var; removed edited flags, reply category, reply mode, model and stale columns; Adviser View added. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | `eds_default_depth` (Default Depth) removed from Mailbox Settings by Leonardo Melman: automatic drafts are always **Basic**, Regenerate is always **Medium**; Deep is not used in v1. | Claude (requested by Leonardo Melman) |

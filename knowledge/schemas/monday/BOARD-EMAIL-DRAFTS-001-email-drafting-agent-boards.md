@@ -104,22 +104,21 @@ One item per mailbox; item name = mailbox address (lookup key). Group `topics` =
 | `eds_enabled` | Enabled | status | `Yes`, `No` |
 | `eds_adviser` | Adviser | people | |
 | `eds_approvers` | Allowed Approvers | people | Who may use Approve & send |
-| `eds_default_depth` | Default Depth | status | `Basic`, `Medium`, `Deep` — depth of automatic drafts |
 | `eds_daily_cap` | Daily Draft Cap | numbers | |
-| `eds_max_chars_basic` / `_medium` / `_deep` | Max Context Chars … | numbers | Technical; candidates to move to environment variables |
+| `eds_max_chars_basic` / `_medium` / `_deep` | Max Context Chars … | numbers | Technical; candidates to move to environment variables (`_deep` unused while Deep is not used) |
 | `eds_tone` | Tone | long_text | Rod's prompt input |
 | `eds_style` | Style | long_text | Rod's prompt input |
 | `eds_other_instr` | Other Instructions | long_text | Rod's prompt input |
 | `eds_signoff` | Email Signature (HTML) | long_text | Appended automatically to every draft (AUTO-EMAIL-DRAFT-001 §14.4) |
 | `eds_change_note` | Last Changed Note | text | |
 
-Removed on 2026-11-04: `eds_stale_days`, `eds_model_basic`, `eds_model_medium`, `eds_model_deep`, `eds_reply_mode`. The OpenAI model is now the environment variable `rsfa_EDA_OpenAIModel`; drafts are always created as **Reply all** (`createReplyAll`).
+Removed on 2026-11-04: `eds_default_depth` (by Leonardo Melman — automatic drafts always Basic), `eds_stale_days`, `eds_model_basic`, `eds_model_medium`, `eds_model_deep`, `eds_reply_mode`. The OpenAI model is now the environment variable `rsfa_EDA_OpenAIModel`; drafts are always created as **Reply all** (`createReplyAll`).
 
 ### Items
 
 | Item ID | Name | Enabled | Notes |
 |---|---|---|---|
-| `2899339258` | rod@rsfa.co.nz | **No** | Basic, cap 20. Tone/Style/Other/Signature pending Rod (D5) |
+| `2899339258` | rod@rsfa.co.nz | **No** | Cap 20. Tone/Style/Other/Signature pending Rod (D5) |
 | `2899339259` | tech@rsfa.co.nz | Yes | Test mailbox for Phase 0 only |
 
 The fixed RSFA safety rules are in the Generate Draft flow, not on this board.
@@ -134,3 +133,4 @@ The fixed RSFA safety rules are in the Generate Draft flow, not on this board.
 | 2026-11-04 | Both boards created in Monday with fixed column IDs, groups and two settings items. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | 13 fictional `[DEMO]` items added for the Rod demo. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Simplification after review: Draft Status = 7 labels (incl. `Sent from Outlook` / `Sent from Monday`) + Status Detail; Adviser Action reduced to Approve & send / Regenerate / Discard (by Leonardo Melman); new `Instructions for AI`; deleted `eda_research_depth`, `eda_reply_category`, `eda_risk_details`, `eda_edited_outlook`, `eda_edited_on_send`; `eda_model` → Model / Depth; `eda_reason` → Status Detail; pinned **Adviser View** (`58179384`) hiding technical columns. Settings: deleted `eds_stale_days`, the three model columns and `eds_reply_mode`; `eds_signoff` → Email Signature (HTML). | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | `eds_default_depth` (Default Depth) removed from Mailbox Settings by Leonardo Melman: automatic drafts are always **Basic**, Regenerate is always **Medium**; Deep is not used in v1. | Claude (requested by Leonardo Melman) |

@@ -191,7 +191,7 @@ Drafts board group IDs: `topics` = **Needs Review**, `group_mm8sfnf` = **Process
 - There is no "Stale" status: old drafts are found with a board view filtered on `Draft Created At`.
 - The flows decide on **status + Status Detail + `eda_change_key`**. An Outlook edit is detected live by a changeKey mismatch (→ `Needs attention`). An edit of `Draft Text` in Monday needs no detection: **Approve & send always rebuilds the Outlook draft from the Monday text before sending** (§3.3).
 - **Adviser actions (reduced 2026-11-04): `Approve & send`, `Regenerate`, `Discard`.** There is no "Update Outlook draft" action any more.
-- **Regenerate** = new draft at **Medium** depth (adds linked business + client timeline) using the adviser's **Instructions for AI** (`eda_ai_instructions`) when filled. Without instructions it only adds context, so the board help text tells the adviser to write instructions first. Depth used is written in `eda_model` (**Model / Depth**). `Deep` remains available only as a mailbox default (`eds_default_depth`).
+- **Regenerate** = new draft at **Medium** depth (adds linked business + client timeline) using the adviser's **Instructions for AI** (`eda_ai_instructions`) when filled. Without instructions it only adds context, so the board help text tells the adviser to write instructions first. Depth used is written in `eda_model` (**Model / Depth**). Automatic drafts are always **Basic**. `Deep` is not used in v1 (kept in the design for later).
 - **Signature:** the flow appends `eds_signoff` (**Email Signature (HTML)**) to every draft automatically (§3.2). `Draft Text` in Monday never contains the signature, so it is never duplicated when Monday text is pushed.
 - **Recipients:** drafts are always created with `createReplyAll` (Reply mode column removed). CC recipients are listed in `Notes for Adviser` so they are visible in Monday before Approve & send.
 
@@ -239,8 +239,8 @@ Try_Intake [Scope]
   Get_Mailbox_Settings          [HTTP Monday]
       query { items_page_by_column_values(board_id: <SettingsBoardId>, limit: 1,
               columns: [{column_id: "name", column_values: ["<mailbox>"]}]) {
-              items { id column_values(ids:["eds_enabled","eds_default_depth","eds_daily_cap"]) { id text } } } }
-  Compose_Settings              → object {enabled, defaultdepth, dailycap} from column_values text
+              items { id column_values(ids:["eds_enabled","eds_daily_cap"]) { id text } } } }
+  Compose_Settings              → object {enabled, dailycap} from column_values text
   Mailbox_Enabled               [Condition] enabled == 'Yes'
      False → Update_Log (Succeeded, Developer Notes "mailbox disabled") → Terminate Succeeded
   Check_Duplicate_Message       [HTTP Monday] items_page_by_column_values on eda_internet_msg_id = internetmessageid
@@ -277,7 +277,7 @@ Try_Intake [Scope]
   Has_Skip_Reason [Condition] SkipReason not empty
      True  → Update Drafts item: eda_draft_status='No draft', eda_reason=SkipReason; move_item_to_group group_mm8s3hhz
      False → Supersede_Previous_Drafts (below) → Run_Generate_Draft [Run Child: Generate Draft]
-                 draftitemid, mailbox, depth=<defaultdepth>, parentlogid=<this run log id>, advisername
+                 draftitemid, mailbox, depth=Basic, parentlogid=<this run log id>, advisername
 
   Supersede_Previous_Drafts:
      Get_Open_Drafts_Same_Conversation [HTTP Monday] items_page rules eda_conversation_id = conversationId
@@ -524,3 +524,4 @@ Settings items: `rod@rsfa.co.nz` (`2899339258`, **Enabled = No**), `tech@rsfa.co
 | 2026-11-04 | Initial build guide based on the 2026-11-04 flow exports supplied in chat. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Simplified the status model: 6 Draft Status labels + Status Detail text; Research Depth column deleted (depth in Model / Depth); depth selected via `Regenerate - more context` / `Regenerate - deep research`; Stale status removed. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Second simplification: statuses `Sent from Outlook` / `Sent from Monday` restored; actions reduced to Approve & send / Regenerate / Discard; Regenerate = Medium + `Instructions for AI`; signature appended automatically from `Email Signature (HTML)`; always Reply all; model moved to env var `rsfa_EDA_OpenAIModel`; removed reply_category, edited flags, reply mode, stale. | Claude (requested by Leonardo Melman) |
+| 2026-11-04 | `eds_default_depth` (Default Depth) removed from Mailbox Settings by Leonardo Melman: automatic drafts are always **Basic**, Regenerate is always **Medium**; Deep is not used in v1. | Claude (requested by Leonardo Melman) |
