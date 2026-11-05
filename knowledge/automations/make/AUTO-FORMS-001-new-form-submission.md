@@ -154,7 +154,7 @@ Simulated against all 32 existing submissions, using Rod's manual links as groun
 
 | Automation | Effect |
 |---|---|
-| 4 native Monday automations on `5025483251` ("When an item is created, connect … email matches Primary Email in Contacts", recipe 229, IDs `26275513`, `26275581`, `26275626`, `26275700`) | Still active at the time of writing; they link `Contacts` ~5 s after creation. `[301]` sees the same set and does not rewrite it. RSFA plans to deactivate them so `[302]` becomes the single writer of `Contacts` — **TODO: verify after deactivation** (§20, test 3). |
+| 4 native Monday automations on `5025483251` ("When an item is created, connect … email matches Primary Email in Contacts", recipe 229, IDs `26275513`, `26275581`, `26275626`, `26275700`) | **Deleted by RSFA on 2026-11-05** (confirmed live). `[302]` is now the only writer of `Contacts` on new submissions; Contacts appear ~20–25 s after creation instead of ~5 s. |
 | `8410524` Mortgage App → Masterboard (`AUTO-MASTERBOARD-001`) | Independent: does its own Contact search via subflow `8518416`, **updates the matched Contact** (`[485]`) and **renames the Mortgage App item to the Contact's Client Profile name** (`[491]`). Only runs when `1st App First Name` is present. Does not read or write `board_relation_mm6fr9y4` / `board_relation_mkzqbtd0`. |
 | `10083674` Related Assets Renaming after Client Profile Rename (Nov 2026) | When a Client Profile is renamed, renames Mortgage App items whose `board_relation_mm6fr9y4` holds exactly that profile. Automatic linking therefore extends this cascade to new submissions (intended). Linking itself does not trigger it. |
 | `9555578` Branded SOP Filling and Filing (`AUTO-BRANDED-SOP-001`) | Reads the first Contact in `board_relation_mkzqbtd0` to reach the profile/SharePoint folder; with Contacts taken from the profile this resolves to the same profile. |
@@ -240,7 +240,7 @@ Live tests on 2026-11-05, with the existing test household `Leo Test 15 & leotes
 | Two-applicant submission, both emails match Contacts of one profile | **Passed** | Execution `5c88bbc4a641418981f2e0da7e516576`: SUCCESS, 13 operations (was 10–11), 89 s. Activity log: `board_relation_mm6fr9y4` = `2519813525` written by the Make connection user at 20:52:38Z (~23 s after creation). `Contacts` had already been linked by the native automations (user `-4`) at +5 s; `[301]` did not rewrite them (same set). |
 | Submission whose email matches no Contact | **Passed** | Execution `1c2e924ab38e4c598ffa4a945d850530`: SUCCESS, 12 operations, 83 s. `Outlook: Email Notification after Failed Scenario` (`8732008`) did not run. Item left untouched. Slack `#1_mortgage_finance_automations` received the existing "No Related Contacts found … no PDF" notification. |
 | `8410524` not triggered without first name | **Passed** | `8410524` executions: 1 operation each, no Masterboard item created. |
-| Contacts written by `[302]` with native automations deactivated | **Planned** | Requires RSFA to deactivate the 4 native "connect by email" automations first. |
+| Contacts written by `[302]` with native automations removed | **Passed** | After RSFA deleted the 4 native automations (confirmed live: none left on the board). Execution `bc981c6bbbb24704a53b9e85f899bfd4`: SUCCESS, 13 operations, 93 s. Activity log: `Client Profiles` = `2519813525` at 21:00:06.0Z and `Contacts` = `2654537673`, `2654609722` at 21:00:06.7Z, both by the Make connection user (~24 s after creation); no automation-user (`-4`) writes; `8732008` not called. Test item `2900412710` deleted. |
 | Ambiguous household / profile already linked / KiwiSaver & Insurance unchanged | **Partially verified** | Unit-tested against the 32 historical cases and edge cases (offline, `node`); not exercised live. |
 
 ### Required regression tests
@@ -286,7 +286,6 @@ To roll back only the 2026-11-05 household linking: restore the previous scenari
 - Wait-step timeout behaviour if a PDF is delayed or never generated is unconfirmed.
 - Manual reprocessing procedure for a failed filing is unconfirmed.
 - Root cause of the one recorded recent error is not investigated.
-- Test 3 (Contacts written by `[302]` once the native automations are deactivated) is pending.
 - Make's execution-detail API returned only the status for the 2026-11-05 test runs; per-module outputs of `[300]`/`[301]` were verified indirectly (Monday activity log, operation counts, Slack).
 
 ## 26. Change history
