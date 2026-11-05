@@ -411,13 +411,14 @@ flowchart LR
 - **Criticality:** Critical
 - **Column count:** 498 (confirmed live 2026-09-05, up from 492 in the 2026-07-30 export)
 - **Purpose:** Stores Mortgage Application submissions from Superforms and supports SOP and Masterboard processing.
-- **Key columns:** `Related Contacts`, `Adviser`, `Ready for SOP`, `SF Update Link`, `PDF Apps`, `1st App Date of Birth`, `Files 1st App Proof of Residency`, `1st App Proof of Residency`
-- **Related boards detected in schema:** `Contacts`, `Subitems of ✍ Mortgage App/SOP`
+- **Key columns:** `Related Contacts`, `Adviser`, `Ready for SOP`, `SF Update Link`, `PDF Apps`, `1st App Date of Birth`, `Files 1st App Proof of Residency`, `1st App Proof of Residency`; `Contacts` (`board_relation_mkzqbtd0` → `Contacts` `2074688484`) and `Client Profiles` (`board_relation_mm6fr9y4` → `Client Profiles` `5024661649`, one-way link) — confirmed live 2026-11-05
+- **Related boards detected in schema:** `Contacts`, `Subitems of ✍ Mortgage App/SOP`; `Client Profiles` (confirmed live 2026-11-05)
 - **Full schema:** `knowledge/schemas/monday/5025483251-mortgage-app-sop.md`
 - **Operational notes:**
   - The board receives Mortgage Application data through Superforms.
   - Its data is mapped into Masterboard: End Forms.
   - It feeds the now-production Branded SOP generation automation (`AUTO-BRANDED-SOP-001`).
+  - **Since 2026-11-05:** `Client Profiles` (`board_relation_mm6fr9y4`) and `Contacts` (`board_relation_mkzqbtd0`) are linked automatically on new submissions by `9447215` when the applicants' emails resolve to one unambiguous Client Profile (`AUTO-FORMS-001` §10a). Before that date `Client Profiles` was filled manually. As of 2026-11-05 the board also still has 4 native automations that link `Contacts` by matching `1st/2nd App Primary/Secondary email` to `Contacts` `Primary Email` (RSFA plans to deactivate them).
   - **Confirmed live 2026-09-05 — Superform/board changes since 2026-07-30:** `Amount Current Rent` + `Current Rent Frequency` added under Household Expenses; a per-application `Applicant's Intention` question (`What is/are your intention(s) with this finance application?`); an expanded Purchase Property field set with conditional-logic-style associated-cost fields; refinance/top-up specific fields (`Properties Looking to Refinance`, `Refinance Reasons`, `Top Up Lending Increase Purpose`, `Top Up Amount`); and a restructured Postal Address / address-tenure / employment-tenure column set per applicant, with the prior `(OLD)` columns retained rather than deleted. Not independently confirmed which exact intention values (Refix/Refinance/Sell/Top Up) route to which of these — see the automation doc for what could and could not be confirmed from the column list alone.
 
 ### `5026093057` — ✍️ ROMA/Stage3: Mortgages
