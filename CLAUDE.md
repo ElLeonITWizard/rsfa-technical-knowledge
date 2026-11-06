@@ -523,7 +523,7 @@ Never perform destructive, bulk or irreversible actions without explicit approva
 
 When investigating a request from Rod or another RSFA team member:
 
-1. Retrieve the full Slack thread when available.
+1. Retrieve the full Slack thread when available, including attachments. Transcribe any audio/voice messages with the `transcribe-slack-audio` skill and read screenshots with `slack_read_file`.
 2. Identify the original request.
 3. Identify later clarifications.
 4. Extract dates, links, filenames and system references.
