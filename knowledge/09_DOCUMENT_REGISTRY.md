@@ -37,6 +37,7 @@ Document IDs use the `DOC-` prefix per `knowledge/06_NAMING_AND_ID_CONVENTIONS.m
 | `DOC-PA-SYS-003` | `knowledge/systems/power-automate/environments.md` | System documentation | Active | 2026-07-30 |
 | `DOC-PA-SYS-004` | `knowledge/systems/power-automate/connection-references.md` | System documentation | Active | 2026-07-30 |
 | `ADR-001` | `knowledge/decisions/ADR-001-deprecate-monday-workflows.md` | Decision record | Active | 2026-09-05 |
+| `INC-2026-001` | `knowledge/incidents/INC-2026-001-aircall-unknown-client-deactivation-and-gpt-failure.md` | Incident record | Resolved (monitoring) | 2026-11-06 |
 
 ## 4. Maintenance rule
 

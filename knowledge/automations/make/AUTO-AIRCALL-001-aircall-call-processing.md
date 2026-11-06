@@ -38,8 +38,8 @@ related_scenarios:
   - name: M.com: Contact Change in Aircall Board (Jul 2026)
     id: "9627714"
 related_flows: []
-last_modified: 2026-09-06
-last_verified: 2026-09-06
+last_modified: 2026-11-06
+last_verified: 2026-11-06
 documentation_status: partial
 ---
 
@@ -185,6 +185,7 @@ TODO: complete mapping from current production configuration for exact template 
 - If the call cannot be matched to a known contact, `M.com: Calls > Unknown/Client` handles routing instead of the main transcription path.
 - If no transcription is available (typically short calls), no transcript/summary document is generated — this is expected behaviour, not an error.
 - The Aircall native integration occasionally creates a stray Contacts record; `M.com: New item in Contacts (Aircall) -> Delete` removes it.
+- `M.com: Calls > Unknown/Client` (`5543887`) waits 15 s after item creation and then renames the call item to the linked Contact's name, or to "Unknown" if no Contact is linked yet. Since 2026-11-06 both rename modules use the trigger's `{{7.pulseId}}` as the item ID instead of `{{9.id}}`, and the scenario stores incomplete executions (`dlq: true`) instead of deactivating on a single error. See `INC-2026-001`. — *Confirmed from live system (2026-11-06)*
 - Voicemail items are excluded from the Aircall retrieval/document-generation branch: the `Get Contacts To Get Client Profiles` filter ("Recording and Call ID exist") was extended with an additional AND condition — `{{4.mappable_column_values.link_mm01c4ba.url}}` does NOT contain `/voicemail`. This routes voicemail records to skip the branch entirely, treated as an expected no-op, the same way short calls with no transcription are already handled. — *Confirmed from live system (2026-09-06 blueprint inspection + live fix applied by RSFA IT)*
 
 ## 14. Dependencies
@@ -197,13 +198,23 @@ TODO: complete mapping from current production configuration for exact template 
 
 `M.com: Aircall Upload Transcriptions To SP (Jul 2026)` calls the shared `COMP-MAKE-ERROR-001` Outlook failure-notification component on error.
 
+**GPT summary retry (added 2026-11-06, `INC-2026-001`):** if module 14 `Summarise Transcription` (OpenAI `gpt-4.1-mini`) errors, its handler now does the following:
+
+1. Waits 90 s (module 171).
+2. Repeats the identical OpenAI call (module 174, `Summarise Transcription (Retry)`).
+3. Resumes the normal flow with `result = {{174.result}}` (module 175 `Resume`).
+
+Only if the retry also fails does the `COMP-MAKE-ERROR-001` email go out ("The GPT Fails (also failed on automatic retry). CallID: …"), followed by `Ignore`. Because of `Ignore`, such a run still shows SUCCESS in Make; the email is the only signal, and the call must be reprocessed manually (§17). Retry branch status: **Not testable** (not yet exercised by a real failure). — *Confirmed from live system (blueprint saved 2026-11-06)*
+
+`M.com: Calls > Unknown/Client` (`5543887`) has "Allow storing of incomplete executions" enabled since 2026-11-06. Errors appear as incomplete executions in Make rather than deactivating the scenario.
+
 ## 16. Logging and observability
 
 Recent-errors counts are visible in the Make inventory export (`exports/make/valid-scenarios-working-inventory.md`) but are not otherwise summarised in a Monday board. TODO: verify whether a dedicated error/health board (e.g. System Health Monitor, board `5030207135`) currently tracks this automation.
 
 ## 17. Manual operations and reprocessing
 
-Not confirmed. TODO: verify whether a failed transcription/summary generation can be manually re-triggered, or requires a Make.com scenario re-run from the error point.
+**Confirmed 2026-11-06:** a call whose summary failed can be reprocessed by running `9498962` on demand with input `CallID` set to the call item's `Call ID` column (`text_mm01eq0c`, e.g. `CA…`). The scenario has no "already processed" gate. Only reprocess calls whose documents were **not** produced, or duplicate documents, timeline entries and Slack notices will be created. A full successful run uses about 21 operations.
 
 ## 18. Known limitations
 
@@ -260,6 +271,7 @@ Disable the affected Make.com scenario(s). No automated rollback of already-gene
 - `knowledge/01_RSFA_SYSTEM_MAP.md` §11 — Current. Business-process flow and expected-short-call behaviour.
 - `knowledge/04_MONDAY_BOARDS_REGISTRY.md` — Current. Aircall VOIP Call Board description.
 - RSFA direct report, 2026-09-05 — reported the transcription/summary automation as stabilised.
+- `knowledge/incidents/INC-2026-001-aircall-unknown-client-deactivation-and-gpt-failure.md` — Current. 2026-11-04 deactivation and GPT failure, and the 2026-11-06 fixes.
 - Live Make MCP scenario list and blueprint inspection, 2026-09-05 — confirmed `6123035` inactive, `9627699`/`9627714` new and active, and both calling `9498962` as a subscenario.
 
 ## 25. Known gaps
@@ -267,7 +279,9 @@ Disable the affected Make.com scenario(s). No automated rollback of already-gene
 - Exact Monday native automation recipe used in the call-routing path is not documented.
 - Slack notification status (built vs. planned) is unconfirmed.
 - Root cause of recent errors on scenarios `9498962` and `9254149`-adjacent flows: **partially investigated 2026-09-06.** One cause — voicemail records producing a 404 in `Get Item Call` because the Recording/VM URL ends in `/voicemail` instead of `/recording` — is confirmed diagnosed and fixed (§13, §18). This is **not confirmed** to be the cause of all 6 recent errors recorded in `exports/make/valid-scenarios-working-inventory.md`; only the voicemail-404 pattern itself is confirmed. The remaining error count/causes are still open — TODO: verify.
-- Manual reprocessing procedure for a failed transcription/summary generation is not confirmed.
+- Manual reprocessing procedure: confirmed 2026-11-06 (§17).
+- GPT retry branch (modules 171/174/175) not yet exercised by a real OpenAI failure. TODO: verify on next occurrence.
+- Actual OpenAI error behind the 2026-11-05 failure is unknown (no module-level detail available from the Make API).
 - The reason `6123035` was deactivated is not confirmed (inferred from timing only).
 
 ## 26. Change history
@@ -276,4 +290,5 @@ Disable the affected Make.com scenario(s). No automated rollback of already-gene
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry, call-graph and source-material evidence. | Claude (documentation task) |
 | 2026-09-05 | Documented the stabilised trigger architecture per RSFA and live Make MCP re-verification: `6123035` confirmed Inactive; two new scenarios (`9627699` Aircall-native transcription webhook, `9627714` Monday Contact-change webhook) confirmed live, both calling `9498962` as a subscenario. Recorded that the causal link between the two changes is inferred from timing, not confirmed. | Claude (documentation task) |
+| 2026-11-06 | `INC-2026-001`: fixed and reactivated `5543887` (rename modules now use `{{7.pulseId}}`; incomplete executions enabled). Queued backlog renamed automatically (23 items). Added automatic GPT retry (Sleep → retry → Resume) to module 14 of `9498962`. Reprocessed the call whose summary failed (execution `ad060e17…`, 21 ops). Documented the manual reprocessing procedure. | Claude (ticket investigation, on RSFA IT request) |
 | 2026-09-06 | Fixed voicemail-404 root cause in scenario `9498962` (module "Get Contacts To Get Client Profiles" filter extended to skip items whose Recording/VM URL contains "/voicemail"). Also corrected documented trigger type for `9498962` from "Monday.com instant trigger (watch)" to "on-demand / bridge (subscenario only)" based on live blueprint inspection. | TODO: confirm author |
