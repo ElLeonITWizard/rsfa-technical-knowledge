@@ -32,8 +32,10 @@ of reading the thread — the user does not need to ask for it.
    - Default model is `small` (≈15 s for a 1-minute message on CPU). Use `--model medium`
      when names, amounts or technical terms are unclear and accuracy matters.
    - Default language is `en`. Use `--language auto` if the speaker may not be speaking English.
-4. If the script reports that `faster-whisper` is missing, run `pip install -q faster-whisper`
-   once and retry. The first run downloads the model from Hugging Face.
+4. If `faster-whisper` is missing, the script installs it automatically and continues
+   (and the first run downloads the model from Hugging Face). A missing package is **not**
+   a blocker: do not stop or report the skill as unavailable — run the script and only report
+   a problem if it actually fails (e.g. network denied).
 5. Present the transcript in place of the audio message, attributed to its author and
    timestamp, and integrate it into the thread summary.
 
@@ -64,6 +66,10 @@ of reading the thread — the user does not need to ask for it.
 
 - Network access to `huggingface.co`, `*.huggingface.co` and `*.hf.co` (environment
   Allowed domains) for the model download.
+
+The setup script is an optimisation, not a requirement. Its result is cached between
+sessions, and a session can start from a cache built before the script was added or changed;
+in that case the package is missing and the script self-installs it (~10–20 s extra).
 
 ## Known issue
 

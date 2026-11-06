@@ -31,8 +31,16 @@ def main() -> int:
         import numpy as np
         from faster_whisper import WhisperModel
     except ImportError:
-        print("ERROR: faster-whisper is not installed. Run: pip install -q faster-whisper", file=sys.stderr)
-        return 2
+        # The environment setup script normally installs this, but its result can be
+        # served from a cache built before the script was added. Self-heal instead of failing.
+        print("[faster-whisper not installed; installing it now (one-time per session)...]", file=sys.stderr)
+        install = subprocess.run([sys.executable, "-m", "pip", "install", "-q", "faster-whisper"],
+                                 capture_output=True, text=True)
+        if install.returncode != 0:
+            print(f"ERROR: could not install faster-whisper:\n{install.stderr}", file=sys.stderr)
+            return 2
+        import numpy as np
+        from faster_whisper import WhisperModel
 
     start = time.time()
     try:
