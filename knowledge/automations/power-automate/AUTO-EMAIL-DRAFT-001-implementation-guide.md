@@ -16,7 +16,7 @@ Step-by-step build instructions for `AUTO-EMAIL-DRAFT-001` (design, guardrails a
 
 > **Evidence base.** Flow JSON exports of `Main Outlook Inbox Email Filling`, `Outlook Email Filling - Rod v2` and `Outlook SENT Email Filling - Rod v2` supplied by Leonardo Melman in chat on 2026-11-04 (point-in-time snapshot, not live-verified). They are newer than the `RSFAOutlookEmailFilling` 1.0.0.3 snapshot under `exports/`. They were not stored in this repository because they contain a plaintext Monday token (§0.1). All existing action names below come from those exports.
 >
-> **Update 2026-11-07 — current exports re-checked.** Leonardo Melman supplied current exports of `Main Outlook Inbox Email Filling`, `Outlook Email Filling - Seth v2` (`21fc918f-c9da-f011-8544-000d3ae07e1d`) and `Outlook SENT Email Filling - Seth v2` (`0fa8c03a-ccda-f011-8544-000d3ae07e1d`), stating no changes had been made yet. The current `Main` is **different from the 2026-11-04 copy**: it has no `ResolvedMessageID` variable, no `text_5` (InternetMessageID) input, no `contactmatchingdetails` output and no IMID/contact-matching actions. Its Response actions return only `status` and `slackbackupchannels`. Change A (Phase 4) and Change B (Phase 5) below are written against this **current** version. Open question: the 2026-11-04 `Outlook Email Filling - Rod v2` export passes `text_5` to `Main`, which the current `Main` does not define — re-export `Rod v2` and check before editing it (TODO: verify).
+> **Update 2026-11-07 — current exports re-checked.** Leonardo Melman supplied the current `Main Outlook Inbox Email Filling` (definition identical to the 2026-11-04 copy: inputs `text`…`text_5`, `ResolvedMessageID`, Response outputs `status`, `slackbackupchannels`, `contactmatchingdetails`), `Outlook Email Filling - Seth v2` (`21fc918f-c9da-f011-8544-000d3ae07e1d`, passes `text_5` like Rod v2) and `Outlook SENT Email Filling - Seth v2` (`0fa8c03a-ccda-f011-8544-000d3ae07e1d`). No changes had been made to any of them yet. (An older `Main` copy supplied earlier the same day, without `ResolvedMessageID`/`text_5`, was confirmed outdated and is ignored.)
 >
 > **Nothing here has been built or tested.** Every step is `Planned`.
 
@@ -378,19 +378,17 @@ T-11…T-16 (design doc §20). Then delete the temporary `… - Sent Items Sync 
 
 **Goal:** tell the calling flow whether the email was filed into a client folder, for which Client Profile, and in which direction. Additive — existing outputs (`status`, `slackbackupchannels`, `contactmatchingdetails`) stay as they are, so every other caller keeps working.
 
-Open each of the **seven** *Respond to a PowerApp or flow* actions. Today each has two outputs (`Status`, `SlackBackupChannels`). On each one, **+ Add an output → Text** three times, with exactly these names (Power Automate requires the same outputs on every Response action of a flow):
+Open each of the **seven** *Respond to a PowerApp or flow* actions. Today each has three outputs (`Status`, `SlackBackupChannels`, `ContactMatchingDetails`). On each one, **+ Add an output → Text** four times, with exactly these names (Power Automate requires the same outputs on every Response action of a flow):
 
-| Response action | Location | `matchstatus` | `clientprofileid` | `direction` |
-|---|---|---|---|---|
-| `Respond_to_a_Parent_Flow_Success_02` | `Try_Upload_Email_to_SP` → `ID_Not_Found` (No) → `Were_File_Properties_Updated` (Yes) | `ClientFolder` | `@{outputs('Get_ClientID')}` | `@{variables('StatusVariable')}` |
-| `Respond_to_a_Parent_Flow_Success_03` | `ID_Not_Found` (Yes) → `No_Duplicate_Found_in_Common_Folder` | `NoMatch` | *(empty)* | `@{variables('StatusVariable')}` |
-| `Respond_to_a_Parent_Flow_Success_RSFA_Team_Old_Site` | `Were_File_Properties_Updated` (No) → `Client_Folder_not_in_Real_Savvy_Clients_Site` | `OldSite` | *(empty)* | `@{variables('StatusVariable')}` |
-| `Respond_to_a_Parent_Flow_Success` | top level, `Child_did_not_Respond` | `Unknown` | *(empty)* | `@{variables('StatusVariable')}` |
-| `Respond_to_a_Parent_Flow_Upload_Email_Error` | `Catch_Upload_Email_to_SP_Error` | `Error` | *(empty)* | `@{variables('StatusVariable')}` |
-| `Respond_to_a_Parent_Flow_Monday.com_Search_Error` | `Catch_Monday.com_Search_Error` | `Error` | *(empty)* | *(empty)* |
-| `Respond_to_a_Parent_Flow_Switch_Error` | `Catch_Switch_Error` | `Error` | *(empty)* | *(empty)* |
-
-(The 2026-11-04 design also had a fourth output `resolvedmessageid`; it is dropped because the current `Main` has no `ResolvedMessageID` variable. The calling flows pass their own trigger message ID to the agent instead.)
+| Response action | Location | `matchstatus` | `clientprofileid` | `direction` | `resolvedmessageid` |
+|---|---|---|---|---|---|
+| `Respond_to_a_Parent_Flow_Success_02` | `Try_Upload_Email_to_SP` → `ID_Not_Found` (No) → `Apply_to_each_Folder_Obtained` → … → `Were_File_Properties_Updated` (Yes) | `ClientFolder` | `@{outputs('Get_ClientID')}` | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
+| `Respond_to_a_Parent_Flow_Success_03` | `ID_Not_Found` (Yes) → `No_Duplicate_Found_in_Common_Folder` | `NoMatch` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
+| `Respond_to_a_Parent_Flow_Success_RSFA_Team_Old_Site` | `Were_File_Properties_Updated` (No) → `Client_Folder_not_in_Real_Savvy_Clients_Site` | `OldSite` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
+| `Respond_to_a_Parent_Flow_Success` | top level, `Child_did_not_Respond` | `Unknown` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
+| `Respond_to_a_Parent_Flow_Upload_Email_Error` | `Catch_Upload_Email_to_SP_Error` | `Error` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
+| `Respond_to_a_Parent_Flow_Monday.com_Search_Error` | `Catch_Monday.com_Search_Error` | `Error` | *(empty)* | *(empty)* | `@{variables('ResolvedMessageID')}` |
+| `Respond_to_a_Parent_Flow_Switch_Error` | `Catch_Switch_Error` | `Error` | *(empty)* | *(empty)* | *(empty)* |
 
 Notes:
 - `Get_ClientID` is the Client Profile **item ID** (it is the `item_id` used by `Add_Email_to_Timeline_Monday`).
@@ -420,7 +418,7 @@ Add **after `Flow_Has_Failed`**:
      - `@body('Run_a_Main_Email_Filling_Flow')?['direction']` is equal to `Received`
    - **Yes → Run a Child Flow `Run_Email_Drafting_Agent_Intake`** → `Child - Email Drafting Agent - Intake`:
      - `mailbox` = `@{variables('MailConnection')}`
-     - `messageid` = `@{triggerOutputs()?['body/id']}`
+     - `messageid` = `@{coalesce(body('Run_a_Main_Email_Filling_Flow')?['resolvedmessageid'], triggerOutputs()?['body/id'])}`
      - `internetmessageid` = `@{triggerOutputs()?['body/internetMessageId']}`
      - `clientprofileid` = `@{body('Run_a_Main_Email_Filling_Flow')?['clientprofileid']}`
      - `parentlogid` = `@{body('Create_item_in_PA_Executions_Board')?['data']?['create_item']?['id']}`
@@ -445,11 +443,11 @@ Same change as Phase 5, safe to do now because `seth@rsfa.co.nz` is `Enabled = N
 
 Differences from the Rod flow to be aware of (do not change them):
 - The trigger has no folder set (default = Inbox), `Include attachments = No`, and uses connection reference `new_sharedoffice365_0fe42`, while `Flow_Has_Failed` uses `cr3e8_Outlook_Seth_RSFA`.
-- `Run_a_Main_Email_Filling_Flow` has timeout `PT15M` and retry policy `none`; `Try_Run_Main_Filling_Flow` runs after `Create_item_in_PA_Executions_Board` in any state.
+- `Run_a_Main_Email_Filling_Flow` passes `text_5` (internetMessageId) like Rod v2, has timeout `PT15M` and retry policy `none`; `Try_Run_Main_Filling_Flow` runs after `Create_item_in_PA_Executions_Board` in any state.
 - The item name of the run log is `Seth - Email Filing Parent - …`.
 
 Add after `Flow_Has_Failed`, exactly as in Phase 5:
-1. Scope `Try_Run_Email_Drafting_Agent` (run after `Flow_Has_Failed`: successful, failed, skipped, timed out) → Condition `Is_Client_Email_for_Drafting` (same three rules) → Yes: Run a Child Flow `Run_Email_Drafting_Agent_Intake` with `mailbox` = `@{variables('MailConnection')}`, `messageid` = `@{triggerOutputs()?['body/id']}`, `internetmessageid` = `@{triggerOutputs()?['body/internetMessageId']}`, `clientprofileid` = `@{body('Run_a_Main_Email_Filling_Flow')?['clientprofileid']}`, `parentlogid` = `@{body('Create_item_in_PA_Executions_Board')?['data']?['create_item']?['id']}`, `advisername` = `Seth`; timeout `PT2M`.
+1. Scope `Try_Run_Email_Drafting_Agent` (run after `Flow_Has_Failed`: successful, failed, skipped, timed out) → Condition `Is_Client_Email_for_Drafting` (same three rules) → Yes: Run a Child Flow `Run_Email_Drafting_Agent_Intake` with `mailbox` = `@{variables('MailConnection')}`, `messageid` = `@{coalesce(body('Run_a_Main_Email_Filling_Flow')?['resolvedmessageid'], triggerOutputs()?['body/id'])}`, `internetmessageid` = `@{triggerOutputs()?['body/internetMessageId']}`, `clientprofileid` = `@{body('Run_a_Main_Email_Filling_Flow')?['clientprofileid']}`, `parentlogid` = `@{body('Create_item_in_PA_Executions_Board')?['data']?['create_item']?['id']}`, `advisername` = `Seth`; timeout `PT2M`.
 2. Scope `Catch_Email_Drafting_Agent` (run after Try: failed, timed out) → `Compose_Email_Drafting_Agent_Error` only.
 
 `Outlook SENT Email Filling - Seth v2` is **not** changed.
@@ -485,3 +483,4 @@ Validation: Seth's filing works exactly as before; the new scope runs and Intake
 | 2026-11-04 | Rewritten as a phase-by-phase walkthrough reflecting the final board design; Deep/SharePoint context removed from v1 build; full system prompt added; HTML escaping for Monday text; previous-draft check moved before draft creation. | Claude (requested by Leonardo Melman) |
 | 2026-11-07 | Research Depth restored (Basic/Medium/Deep, model per depth from Mailbox Settings, Deep = longer thread + SharePoint file list; richer Deep ideas listed); one Drafts board per adviser (`5032291843` Rod/Kathleen, `5032343560` Seth) with board routing via `eds_drafts_board`; Kathleen/Seth rollout steps. | Claude (requested by Leonardo Melman) |
 | 2026-11-07 | Re-checked against current exports (Main, Seth v2, SENT Seth v2): Change A reduced to 3 outputs (no `resolvedmessageid` — not present in current Main); parents pass their own trigger message ID; Seth Graph case and connection reference added to Phase 1; new Phase 5b for `Outlook Email Filling - Seth v2`; open question on `Rod v2` `text_5`. | Claude (requested by Leonardo Melman) |
+| 2026-11-07 | Correction: the `Main` supplied first on 2026-11-07 was outdated; the current `Main` equals the 2026-11-04 copy. Change A restored to 4 outputs (incl. `resolvedmessageid`); parents pass `coalesce(resolvedmessageid, trigger id)`; open question on Rod v2 `text_5` closed. | Claude (requested by Leonardo Melman) |
