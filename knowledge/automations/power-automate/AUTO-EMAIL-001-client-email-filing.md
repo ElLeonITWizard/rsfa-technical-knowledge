@@ -49,7 +49,7 @@ related_flows:
   - name: Overflow Emails Contact Matching
   - name: Overflow Emails Suggested Match Approval
   - name: Overflow Emails Related Client Profile Change
-last_modified: 2026-11-04
+last_modified: 2026-11-07
 last_verified: 2026-09-05
 documentation_status: partial
 ---
@@ -321,3 +321,4 @@ Disable the affected mailbox-specific flow(s) in Power Automate; the `Main Outlo
 | 2026-08-04 | Rewrote the companion staff walkthrough, `source-material/power-automate/Outlook Email Filing to SharePoint.md`, to cover the current flow end-to-end; updated its source-reference entry above accordingly. | Claude (documentation task) |
 | 2026-09-05 | Live re-verification via Monday MCP of the `⚡ Power Automate Runs` board (`5030408927`): confirmed public access, 13,217 items, and its full column set including two previously-undocumented columns (`Developer Notes`, and a `Reprocessed` status label). Board schema queried only — no item-level content (e.g. `Processing Details`) was pulled, to avoid PII. Flow-level Power Automate facts (mailbox membership, credential handling) were not re-verified this pass, as no Power Automate MCP access was available. | Claude (documentation task) |
 | 2026-11-04 | Added §4 "Planned change" note linking `AUTO-EMAIL-DRAFT-001` (proposed changes A and B, not implemented) and recorded the export observation that all child-flow success responses are identical. No production change made; `last_verified` unchanged. | Claude (design task) |
+| 2026-11-07 | Recorded new export evidence (supplied in chat, not stored — contains a plaintext Monday token): `Outlook Email Filling - Seth v2` (`21fc918f-c9da-f011-8544-000d3ae07e1d`, Inbox trigger via `new_sharedoffice365_0fe42`, calls `Main`) and `Outlook SENT Email Filling - Seth v2` (`0fa8c03a-ccda-f011-8544-000d3ae07e1d`). These confirm both Seth flows exist (previously registry-only). The current `Main` export (2026-11-07) differs from a 2026-11-04 copy supplied in chat (no `ResolvedMessageID`, no `text_5` input, no contact-matching details output). The Monday token is still hardcoded in all of them. See `AUTO-EMAIL-DRAFT-001-implementation-guide.md`. | Claude (documentation task) |

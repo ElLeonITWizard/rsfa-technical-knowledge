@@ -185,6 +185,8 @@ Build files (flow definitions) belong in `../rsfa-automation-development/project
 
 ### 10.2 Changes to existing `AUTO-EMAIL-001` flows (proposed — production change)
 
+> **Superseded again (2026-11-07):** the current `Main` (export supplied 2026-11-07) has no `ResolvedMessageID`/`contactmatchingdetails`; Change A now adds **three** outputs (`matchstatus`, `clientprofileid`, `direction`) and a Change C applies the same pattern to `Outlook Email Filling - Seth v2`. See the implementation guide Phases 4, 5 and 5b.
+>
 > **Superseded detail (2026-11-04):** the flow exports supplied on 2026-11-04 are newer than the 2026-07-30 snapshot. All seven Response actions in `Main` now share the schema `{status, slackbackupchannels, contactmatchingdetails}`; Change A therefore adds **four** fields (`matchstatus`, `clientprofileid`, `direction`, `resolvedmessageid`) to **all seven** Response actions, and Change B is placed after `Flow_Has_Failed`, outside `Try_Run_Main_Filling_Flow`. The exact, current instructions are in `AUTO-EMAIL-DRAFT-001-implementation-guide.md` §1–§2 and take precedence over the text below.
 
 **Change A — `Main Outlook Inbox Email Filling` (additive response fields).**

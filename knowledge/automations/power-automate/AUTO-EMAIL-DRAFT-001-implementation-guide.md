@@ -16,6 +16,8 @@ Step-by-step build instructions for `AUTO-EMAIL-DRAFT-001` (design, guardrails a
 
 > **Evidence base.** Flow JSON exports of `Main Outlook Inbox Email Filling`, `Outlook Email Filling - Rod v2` and `Outlook SENT Email Filling - Rod v2` supplied by Leonardo Melman in chat on 2026-11-04 (point-in-time snapshot, not live-verified). They are newer than the `RSFAOutlookEmailFilling` 1.0.0.3 snapshot under `exports/`. They were not stored in this repository because they contain a plaintext Monday token (§0.1). All existing action names below come from those exports.
 >
+> **Update 2026-11-07 — current exports re-checked.** Leonardo Melman supplied current exports of `Main Outlook Inbox Email Filling`, `Outlook Email Filling - Seth v2` (`21fc918f-c9da-f011-8544-000d3ae07e1d`) and `Outlook SENT Email Filling - Seth v2` (`0fa8c03a-ccda-f011-8544-000d3ae07e1d`), stating no changes had been made yet. The current `Main` is **different from the 2026-11-04 copy**: it has no `ResolvedMessageID` variable, no `text_5` (InternetMessageID) input, no `contactmatchingdetails` output and no IMID/contact-matching actions. Its Response actions return only `status` and `slackbackupchannels`. Change A (Phase 4) and Change B (Phase 5) below are written against this **current** version. Open question: the 2026-11-04 `Outlook Email Filling - Rod v2` export passes `text_5` to `Main`, which the current `Main` does not define — re-export `Rod v2` and check before editing it (TODO: verify).
+>
 > **Nothing here has been built or tested.** Every step is `Planned`.
 
 ## How the build is ordered
@@ -53,7 +55,7 @@ The new flows are built and tested **first**, on the `tech@` test mailbox, witho
 
 The boards already exist: `5032291843` Drafts - Rod/Kathleen, `5032343560` Drafts - Seth (one Drafts board per adviser, for permissions), `5032291851` Mailbox Settings. Two manual steps:
 
-1. On `⚡ Power Automate Runs` (`5030408927`), column **Solution** (`dropdown_mm5xp991`): add the label **`Email Drafting Agent`**.
+1. On `⚡ Power Automate Runs` (`5030408927`), column **Solution** (`dropdown_mm5xp991`): add the label **`Email Drafting Agent`** (manual — not done by Claude; the board is production).
 2. In Mailbox Settings, item `tech@rsfa.co.nz`: paste a test signature in **Email Signature (HTML)** (e.g. `<p>Kind regards,<br>RSFA IT</p>`).
 
 ### 0.4 Create the Solution
@@ -68,7 +70,8 @@ Inside it, **New → More → Connection reference**:
 | `EDA_Outlook_Tech_RSFA` | Office 365 Outlook | Same connection used by `Outlook_Tech_RSFA` (`cr3e8_sharedoffice365_591c0`) — test mailbox |
 | `EDA_ContentConversion` | Content Conversion | (no auth) |
 | `EDA_SharePoint_RSFA` | SharePoint | Same connection as `rsfa_sharedsharepointonline_8fd5d` — used by Deep research only |
-| `EDA_Outlook_Insurance_RSFA` / `EDA_Outlook_Seth_RSFA` | Office 365 Outlook | Same connections as `Outlook_Insurance_RSFA` (`rsfa_sharedoffice365_326a9`) / `Outlook_Seth_RSFA` (`cr3e8_Outlook_Seth_RSFA`) — add only when Kathleen / Seth go live |
+| `EDA_Outlook_Seth_RSFA` | Office 365 Outlook | Same connection as `Outlook_Seth_RSFA` (`cr3e8_Outlook_Seth_RSFA`) — the one `Main` uses in `Case_Seth` to call `GET /me/messages/{id}` on Seth's messages |
+| `EDA_Outlook_Insurance_RSFA` | Office 365 Outlook | Same connection as `Outlook_Insurance_RSFA` (`rsfa_sharedoffice365_326a9`) — add when Kathleen goes live |
 | Key Vault or the 2 custom connectors | per §0.1 | |
 
 **New → More → Environment variable** (Text):
@@ -162,7 +165,8 @@ Inputs (Text): `mailbox`, `method`, `uri`, `body`, `bodytextonly`.
      URI `https://graph.microsoft.com/v1.0@{triggerBody()?['uri']}` · Method `@{triggerBody()?['method']}` · Body `@{triggerBody()?['body']}` · Content-Type `application/json` · CustomHeader1 `Prefer: @{outputs('Compose_Prefer_Header')}` · Secure in/out ON
      → `Respond_Graph_Result_Rod` (configure run after: **is successful, has failed**): outputs `statuscode` = `@{outputs('Send_an_HTTP_request_Rod')?['statusCode']}`, `responsebody` = `@{string(body('Send_an_HTTP_request_Rod'))}`
    - Case `tech@rsfa.co.nz` → same with `EDA_Outlook_Tech_RSFA`.
-   - Later: Case `insurance@rsfa.co.nz` (`EDA_Outlook_Insurance_RSFA`) and Case `seth@rsfa.co.nz` (`EDA_Outlook_Seth_RSFA`) when those mailboxes go live.
+   - Case `seth@rsfa.co.nz` → same with `EDA_Outlook_Seth_RSFA`.
+   - Later: Case `insurance@rsfa.co.nz` (`EDA_Outlook_Insurance_RSFA`) when Kathleen goes live.
    - Default → `Respond_Unsupported_Mailbox` (`statuscode` = `400`, `responsebody` = `{}`).
 
 Callers always check `statuscode` (a `404` on a deleted draft is a valid answer, not an error) and parse with `json(body('…')?['responsebody'])`.
@@ -374,17 +378,19 @@ T-11…T-16 (design doc §20). Then delete the temporary `… - Sent Items Sync 
 
 **Goal:** tell the calling flow whether the email was filed into a client folder, for which Client Profile, and in which direction. Additive — existing outputs (`status`, `slackbackupchannels`, `contactmatchingdetails`) stay as they are, so every other caller keeps working.
 
-Open each of the **seven** *Respond to a PowerApp or flow* actions and **+ Add an output → Text** with these four outputs (Power Automate requires the same outputs on all Response actions):
+Open each of the **seven** *Respond to a PowerApp or flow* actions. Today each has two outputs (`Status`, `SlackBackupChannels`). On each one, **+ Add an output → Text** three times, with exactly these names (Power Automate requires the same outputs on every Response action of a flow):
 
-| Response action | Location | `matchstatus` | `clientprofileid` | `direction` | `resolvedmessageid` |
-|---|---|---|---|---|---|
-| `Respond_to_a_Parent_Flow_Success_02` | `Try_Upload_Email_to_SP` → `ID_Not_Found` (No) → `Were_File_Properties_Updated` (Yes) | `ClientFolder` | `@{outputs('Get_ClientID')}` | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
-| `Respond_to_a_Parent_Flow_Success_03` | `ID_Not_Found` (Yes) → `No_Duplicate_Found_in_Common_Folder` | `NoMatch` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
-| `Respond_to_a_Parent_Flow_Success_RSFA_Team_Old_Site` | `Were_File_Properties_Updated` (No) → `Client_Folder_not_in_Real_Savvy_Clients_Site` | `OldSite` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
-| `Respond_to_a_Parent_Flow_Success` | top level, `Child_did_not_Respond` | `Unknown` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
-| `Respond_to_a_Parent_Flow_Upload_Email_Error` | `Catch_Upload_Email_to_SP_Error` | `Error` | *(empty)* | `@{variables('StatusVariable')}` | `@{variables('ResolvedMessageID')}` |
-| `Respond_to_a_Parent_Flow_Monday.com_Search_Error` | `Catch_Monday.com_Search_Error` | `Error` | *(empty)* | *(empty)* | `@{variables('ResolvedMessageID')}` |
-| `Respond_to_a_Parent_Flow_Switch_Error` | `Catch_Switch_Error` | `Error` | *(empty)* | *(empty)* | *(empty)* |
+| Response action | Location | `matchstatus` | `clientprofileid` | `direction` |
+|---|---|---|---|---|
+| `Respond_to_a_Parent_Flow_Success_02` | `Try_Upload_Email_to_SP` → `ID_Not_Found` (No) → `Were_File_Properties_Updated` (Yes) | `ClientFolder` | `@{outputs('Get_ClientID')}` | `@{variables('StatusVariable')}` |
+| `Respond_to_a_Parent_Flow_Success_03` | `ID_Not_Found` (Yes) → `No_Duplicate_Found_in_Common_Folder` | `NoMatch` | *(empty)* | `@{variables('StatusVariable')}` |
+| `Respond_to_a_Parent_Flow_Success_RSFA_Team_Old_Site` | `Were_File_Properties_Updated` (No) → `Client_Folder_not_in_Real_Savvy_Clients_Site` | `OldSite` | *(empty)* | `@{variables('StatusVariable')}` |
+| `Respond_to_a_Parent_Flow_Success` | top level, `Child_did_not_Respond` | `Unknown` | *(empty)* | `@{variables('StatusVariable')}` |
+| `Respond_to_a_Parent_Flow_Upload_Email_Error` | `Catch_Upload_Email_to_SP_Error` | `Error` | *(empty)* | `@{variables('StatusVariable')}` |
+| `Respond_to_a_Parent_Flow_Monday.com_Search_Error` | `Catch_Monday.com_Search_Error` | `Error` | *(empty)* | *(empty)* |
+| `Respond_to_a_Parent_Flow_Switch_Error` | `Catch_Switch_Error` | `Error` | *(empty)* | *(empty)* |
+
+(The 2026-11-04 design also had a fourth output `resolvedmessageid`; it is dropped because the current `Main` has no `ResolvedMessageID` variable. The calling flows pass their own trigger message ID to the agent instead.)
 
 Notes:
 - `Get_ClientID` is the Client Profile **item ID** (it is the `item_id` used by `Add_Email_to_Timeline_Monday`).
@@ -414,7 +420,7 @@ Add **after `Flow_Has_Failed`**:
      - `@body('Run_a_Main_Email_Filling_Flow')?['direction']` is equal to `Received`
    - **Yes → Run a Child Flow `Run_Email_Drafting_Agent_Intake`** → `Child - Email Drafting Agent - Intake`:
      - `mailbox` = `@{variables('MailConnection')}`
-     - `messageid` = `@{body('Run_a_Main_Email_Filling_Flow')?['resolvedmessageid']}`
+     - `messageid` = `@{triggerOutputs()?['body/id']}`
      - `internetmessageid` = `@{triggerOutputs()?['body/internetMessageId']}`
      - `clientprofileid` = `@{body('Run_a_Main_Email_Filling_Flow')?['clientprofileid']}`
      - `parentlogid` = `@{body('Create_item_in_PA_Executions_Board')?['data']?['create_item']?['id']}`
@@ -433,6 +439,23 @@ If the Intake flow does not appear in the *Run a Child Flow* picker, add it to t
 
 ---
 
+## Phase 5b — Change C: `Outlook Email Filling - Seth v2` (production, optional now)
+
+Same change as Phase 5, safe to do now because `seth@rsfa.co.nz` is `Enabled = No` (Intake exits immediately). Evidence: export supplied 2026-11-07 (`21fc918f-c9da-f011-8544-000d3ae07e1d`).
+
+Differences from the Rod flow to be aware of (do not change them):
+- The trigger has no folder set (default = Inbox), `Include attachments = No`, and uses connection reference `new_sharedoffice365_0fe42`, while `Flow_Has_Failed` uses `cr3e8_Outlook_Seth_RSFA`.
+- `Run_a_Main_Email_Filling_Flow` has timeout `PT15M` and retry policy `none`; `Try_Run_Main_Filling_Flow` runs after `Create_item_in_PA_Executions_Board` in any state.
+- The item name of the run log is `Seth - Email Filing Parent - …`.
+
+Add after `Flow_Has_Failed`, exactly as in Phase 5:
+1. Scope `Try_Run_Email_Drafting_Agent` (run after `Flow_Has_Failed`: successful, failed, skipped, timed out) → Condition `Is_Client_Email_for_Drafting` (same three rules) → Yes: Run a Child Flow `Run_Email_Drafting_Agent_Intake` with `mailbox` = `@{variables('MailConnection')}`, `messageid` = `@{triggerOutputs()?['body/id']}`, `internetmessageid` = `@{triggerOutputs()?['body/internetMessageId']}`, `clientprofileid` = `@{body('Run_a_Main_Email_Filling_Flow')?['clientprofileid']}`, `parentlogid` = `@{body('Create_item_in_PA_Executions_Board')?['data']?['create_item']?['id']}`, `advisername` = `Seth`; timeout `PT2M`.
+2. Scope `Catch_Email_Drafting_Agent` (run after Try: failed, timed out) → `Compose_Email_Drafting_Agent_Error` only.
+
+`Outlook SENT Email Filling - Seth v2` is **not** changed.
+
+Validation: Seth's filing works exactly as before; the new scope runs and Intake logs "mailbox disabled".
+
 ## Phase 6 — Go-live for Rod (then Kathleen and Seth, one at a time)
 
 1. Rod approves D1 (draft text stored in Monday) and D2 (email content sent to OpenAI; check the OpenAI account's data-retention settings first).
@@ -443,8 +466,8 @@ If the Intake flow does not appear in the *Run a Child Flow* picker, add it to t
 6. Turn off `Manual - Email Drafting Agent - Test Harness`.
 
 **Kathleen (`insurance@`) and Seth (`seth@`) later**, each after Rod's go-live is stable:
-1. Add the mailbox case in `Child - Email Drafting Agent - Outlook Graph Request` and its connection reference.
-2. Add the same `Try_Run_Email_Drafting_Agent` / `Catch_Email_Drafting_Agent` scopes to `Outlook Email Filling - Kathleen v2` / `Outlook Email Filling - Seth v2` (Phase 5 pattern; `advisername` = `Kathleen` / `Seth`). Note: `Outlook Email Filling - Seth v2` is not in the exports supplied so far — export it first.
+1. Kathleen only: add the `insurance@` case in `Child - Email Drafting Agent - Outlook Graph Request` and its connection reference (the Seth case is built in Phase 1).
+2. Kathleen: add the Phase 5 scopes to `Outlook Email Filling - Kathleen v2` (`advisername` = `Kathleen`; export it first). Seth: already done in Phase 5b.
 3. Create `Outlook - Email Drafting Agent - Sent Items Sync - Kathleen` / `- Seth`.
 4. Fill the mailbox's settings item (Adviser, Allowed Approvers, Tone, Style, Signature). For Seth: add him to `✉️ Email Drafting Agent: Drafts - Seth` (`5032343560`).
 5. `Enabled = Yes`.
@@ -461,3 +484,4 @@ If the Intake flow does not appear in the *Run a Child Flow* picker, add it to t
 | 2026-11-04 | Board simplifications (7 statuses + Status Detail, 3 adviser actions, Instructions for AI, automatic signature, Reply all, model as env var, no Research/Default Depth). | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Rewritten as a phase-by-phase walkthrough reflecting the final board design; Deep/SharePoint context removed from v1 build; full system prompt added; HTML escaping for Monday text; previous-draft check moved before draft creation. | Claude (requested by Leonardo Melman) |
 | 2026-11-07 | Research Depth restored (Basic/Medium/Deep, model per depth from Mailbox Settings, Deep = longer thread + SharePoint file list; richer Deep ideas listed); one Drafts board per adviser (`5032291843` Rod/Kathleen, `5032343560` Seth) with board routing via `eds_drafts_board`; Kathleen/Seth rollout steps. | Claude (requested by Leonardo Melman) |
+| 2026-11-07 | Re-checked against current exports (Main, Seth v2, SENT Seth v2): Change A reduced to 3 outputs (no `resolvedmessageid` — not present in current Main); parents pass their own trigger message ID; Seth Graph case and connection reference added to Phase 1; new Phase 5b for `Outlook Email Filling - Seth v2`; open question on `Rod v2` `text_5`. | Claude (requested by Leonardo Melman) |
