@@ -28,8 +28,10 @@ related_boards:
     id: "2074688484"
   - name: ⚡ Power Automate Runs
     id: "5030408927"
-  - name: ✉️ Email Drafting Agent: Drafts
+  - name: ✉️ Email Drafting Agent: Drafts - Rod/Kathleen
     id: "5032291843"
+  - name: ✉️ Email Drafting Agent: Drafts - Seth
+    id: "5032343560"
   - name: ⚙️ Email Drafting Agent: Mailbox Settings
     id: "5032291851"
 related_flows:
@@ -50,7 +52,7 @@ implementation_guide: knowledge/automations/power-automate/AUTO-EMAIL-DRAFT-001-
 source_documents:
   - RSFA_Email_Drafting_Agent_Concept_v1_1.docx (Leonardo Melman, September 2026 — shared in chat 2026-11-04, not stored in this repository)
   - Slack thread between Rod Schubert and Leonardo Melman (shared in chat 2026-11-04 as pasted text)
-last_modified: 2026-11-04
+last_modified: 2026-11-07
 last_verified: "TODO: verify — not yet built"
 documentation_status: design — not implemented
 ---
@@ -151,6 +153,8 @@ Outlook / Microsoft Graph (source and draft destination), Power Automate (execut
 | ✉️ Email Drafting Agent: Drafts | `5032291843` | Draft tracking and adviser actions | Created 2026-11-04 (private) — `BOARD-EMAIL-DRAFTS-001` |
 | ⚙️ Email Drafting Agent: Mailbox Settings | `5032291851` | Per-mailbox configuration and prompt rules | Created 2026-11-04 (private) — `BOARD-EMAIL-DRAFTS-001` |
 
+> **Per-adviser Drafts boards (2026-11-07):** because RSFA has no Monday Enterprise (no item-level permissions), drafts are split into one board per adviser, mirroring the Overflow Emails boards: `✉️ Email Drafting Agent: Drafts - Rod/Kathleen` (`5032291843`, mailboxes `rod@` and `insurance@`) and `✉️ Email Drafting Agent: Drafts - Seth` (`5032343560`). Both boards have identical structure; the flows pick the board from the mailbox's **Drafts Board ID** in Mailbox Settings.
+
 ## 10. Platform implementation
 
 ### 10.1 New Power Automate Solution (proposed)
@@ -245,7 +249,7 @@ flowchart TD
 
 Depth is chosen per draft. The default for automatic drafts comes from the settings board (proposed default: `Basic`). The adviser can regenerate any draft at a higher depth from Monday — this is how token spend and research effort stay under the adviser's control, as Rod proposed.
 
-> **v1 build scope (2026-11-04):** only **Basic** (automatic drafts) and **Medium** (Regenerate) are built. The Deep column below, including the SharePoint file index, is kept for a later version.
+> **v1 build scope (updated 2026-11-07):** all three levels are built again at Rod's request. Each level also selects its own OpenAI model (`Model Basic/Medium/Deep` in Mailbox Settings). Automatic drafts use the mailbox **Default Depth**; the adviser can change **Research Depth** on the item and choose **Regenerate**. Ideas for a richer Deep level (older call summaries, full SharePoint documents, more timeline history, designated Slack channels) are listed in the implementation guide and need Rod's approval before being built.
 
 | Context | Basic | Medium | Deep |
 |---|:-:|:-:|:-:|
@@ -284,7 +288,7 @@ The adviser sees seven `Draft Status` values; the reason is in **Status Detail**
 | `Discarded` | Deleted in Outlook, discarded from Monday, or replaced by a newer email in the same thread |
 | `No draft` | No reply needed, automatic message, sender not a client contact, protected message, daily cap reached |
 
-The **Research Depth** column was removed. Automatic drafts are always **Basic** (Default Depth column removed 2026-11-04); **Regenerate** always uses **Medium** plus the adviser's **Instructions for AI**. The depth used is written in `Model / Depth` (`eda_model`, e.g. `gpt-4o · Basic`, hidden in the Adviser View).
+**Research Depth** (restored 2026-11-07, column `eda_depth`) is set from the mailbox Default Depth and can be changed by the adviser before choosing **Regenerate**, which always uses the item's current depth (and the matching model) plus **Instructions for AI**. The depth and model actually used are written in `Model / Depth` (`eda_model`, hidden in the Adviser View).
 
 ### 13.3 Eligibility checks (Intake) — in order, first failure wins
 
@@ -502,7 +506,7 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 | D1 | Store AI draft text in the `✉️ Email Drafting Agent: Drafts` board (required for editing/sending from Monday) | Yes, private board, draft text only — no incoming body | Rod |
 | D2 | Approve sending client email content to OpenAI for drafting | Required for the project; confirm OpenAI data-retention settings first | Rod |
 | D3 | Reply vs Reply all when the client email has CCs | **Decided 2026-11-04 (Leonardo Melman): always Reply all**; CCs listed in Notes for Adviser | — |
-| D4 | Depth for automatic drafts and daily cap | Depth decided 2026-11-04: Basic (Regenerate = Medium; Deep unused in v1). Daily cap 20 proposed | Rod |
+| D4 | Default depth, models per depth and daily cap | Proposed: Default Depth Basic; models gpt-4o-mini / gpt-4o / strongest available for Deep (to confirm in testing); cap 20/day | Rod |
 | D5 | Tone / Style / Other instructions and Email Signature (HTML) for Rod | To be written with Rod; signature copied once from one of his sent emails (with his OK) | Rod |
 | D6 | Slack as a context source and which channels | Excluded from v1 | Rod |
 | G1 | Key Vault / secret store availability | TODO: verify — blocker | Tech |
@@ -523,3 +527,4 @@ See §21. No action in this design deletes filed emails, SharePoint files or cli
 | 2026-11-04 | Second simplification: statuses `Sent from Outlook` / `Sent from Monday` restored (7 labels); adviser actions reduced to Approve & send / Regenerate / Discard; Regenerate = Medium + new `Instructions for AI` column; automatic signature (§14.4); always Reply all (D3 decided); model moved to env var; removed edited flags, reply category, reply mode, model and stale columns; Adviser View added. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | `eds_default_depth` (Default Depth) removed from Mailbox Settings by Leonardo Melman: automatic drafts are always **Basic**, Regenerate is always **Medium**; Deep is not used in v1. | Claude (requested by Leonardo Melman) |
 | 2026-11-04 | Noted that v1 builds Basic and Medium only (Deep/SharePoint deferred); implementation guide rewritten as a phase-by-phase walkthrough. | Claude (requested by Leonardo Melman) |
+| 2026-11-07 | Research Depth restored (3 levels, model per level, Default Depth per mailbox, adviser can change + Regenerate); one Drafts board per adviser (Rod/Kathleen `5032291843`, Seth `5032343560`) for permissions. | Claude (requested by Leonardo Melman) |
