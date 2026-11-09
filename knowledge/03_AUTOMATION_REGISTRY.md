@@ -6,7 +6,7 @@ owner: RSFA
 audience:
   - Authorised developers
   - Authorised technical consultants
-last_modified: 2026-09-20
+last_modified: 2026-11-09
 last_verified: 2026-09-05
 ---
 
@@ -112,7 +112,7 @@ The call graph previously resolved 20 of 22 chained scenarios, with two parent s
 | Exact Make name | Scenario ID | Status | Trigger | Functional area | Relationship | Main systems | Canonical family | Last modified | Verification notes |
 |---|---:|---|---|---|---|---|---|---|---|
 | AffordX Subflow Client Creation (Sep 2025) | `7292131` | Active | On-demand (called by parent scenario) | Mortgage Applications | parent (also callable as subscenario) | HTTP / Custom API | AffordX Mortgage Application Sync | 2026-04-14 | — |
-| AffordX to M.com Applications Sync (Aug 2025) | `6238398` | Active | Scheduled (daily 08:00) | Mortgage Applications | parent | HTTP / Custom API, Monday.com | AffordX Mortgage Application Sync | 2026-04-22 | Target scenario id 9067654 not found in Valid scenarios/working, confirm its actual location |
+| AffordX to M.com Applications Sync (Aug 2025) | `6238398` | Active | Scheduled (daily 08:00) | Mortgage Applications | parent | HTTP / Custom API, Monday.com | AffordX Mortgage Application Sync | 2026-04-22 | ~~Target scenario id 9067654 not found~~ Resolved 2026-09-05 (found, unfiled). 2026-11-09: confirmed live that it writes to `5025365497`; see `AUTO-AFFORDX-001` §4 for the 2026-11-07 → 2026-11-09 group incident |
 | Aircall Transcript Summary | `6123035` | Active | Monday.com instant trigger (watch) | Aircall | standalone | Make AI Tools, Aircall, Monday.com | Aircall Call Processing | 2026-02-23 | — |
 | Macroforge to M.com: End Forms Filled (May 2026) | `9254149` | Active | Webhook (custom webhook) | MacroForge | standalone | Webhook Gateway, Monday.com | MacroForge End-Forms Trigger | 2026-07-16 | — |
 | M.com: Aircall Upload Transcriptions To SP (Jul 2026) | `9498962` | Active | Monday.com instant trigger (watch) | Aircall | parent | Aircall, Docx Templater, Microsoft SharePoint, Monday.com, OpenAI (GPT), Slack | Aircall Call Processing | 2026-07-29 | — |
