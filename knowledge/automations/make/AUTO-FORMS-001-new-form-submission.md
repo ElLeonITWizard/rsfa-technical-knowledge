@@ -29,7 +29,7 @@ related_scenarios:
   - name: "M.com: New Form Submission in IQ/MA/KQ (Jun 2026)"
     id: "9447215"
 related_flows: []
-last_modified: 2026-11-17
+last_modified: 2026-11-18
 last_verified: 2026-07-30
 documentation_status: partial
 ---
@@ -54,7 +54,7 @@ RSFA collects KiwiSaver and Mortgage submissions via Superforms, and Insurance s
 - Downloading and re-uploading the PDF using the naming convention `{{lastname}}_{{questionnaire_name}}_{{month}}{{year}}`.
 - For Mortgage App/SOP submissions specifically, waiting for the corresponding Masterboard item to be created before notifying, and including a link to it.
 - Slack and email notification once filing is complete.
-- For KiwiSaver submissions that were filed successfully, a copy of the Slack notification also goes to `#a_seth_rod_kathleen` (added 2026-11-17, see §10 and §26).
+- For KiwiSaver, Insurance and Mortgage App submissions that were filed successfully, a copy of the Slack notification also goes to `#a_seth_rod_kathleen`. KiwiSaver was added on 2026-11-17, Insurance and Mortgage on 2026-11-18 (see §10 and §26).
 
 ### Excluded
 
@@ -79,7 +79,7 @@ Active. `High` criticality per `knowledge/03_AUTOMATION_REGISTRY.md` §3. One re
 
 - PDF filed to the client's SharePoint folder, named `{{lastname}}_{{questionnaire_name}}_{{month}}{{year}}`.
 - Slack notification confirming filing (with a Masterboard link for Mortgage submissions).
-- KiwiSaver, successful filing only: an identical copy of the Slack notification posted in `#a_seth_rod_kathleen` (`C0A594W1HA5`).
+- All three forms, successful filing only: an identical copy of the Slack notification posted in `#a_seth_rod_kathleen` (`C0A594W1HA5`).
 - Email notification confirming filing.
 
 ## 8. Systems involved
@@ -111,8 +111,14 @@ All Slack modules use the connection `Make Bot General Slack Connection (rsfa-re
 | `32` | KiwiSaver — filed successfully | `#1_kiwisaver_investment_automations` (`C0B2X0BMUMA`) | Route `[32 → 60 → 322]` |
 | `322` | KiwiSaver — filed successfully (copy) | `#a_seth_rod_kathleen` (`C0A594W1HA5`) | Added 2026-11-17 at Rod's request. Same text as `32`. Placed after email `60` so that a failure here cannot block the email. Error handler: `323` (`Outlook: Email Notification after Failed Scenario`, `8732008`) → `324` `Ignore` |
 | `121` | KiwiSaver — no PDF / no related Contact | `#1_kiwisaver_investment_automations` (`C0B2X0BMUMA`) | Not forwarded |
-| `46` / `148` | Insurance — success / no PDF or Contact | `C08MXH0GHJT` | Not forwarded |
-| `51` / `136` | Mortgage — success / no PDF, Contact or Masterboard item | `C07R2JNE0J0` | Not forwarded |
+| `46` | Insurance — filed successfully | `e_insurance_all_automations` (`C08MXH0GHJT`) | Route `[46 → 61 → 325]` |
+| `325` | Insurance — filed successfully (copy) | `#a_seth_rod_kathleen` (`C0A594W1HA5`) | Added 2026-11-18. Same text as `46`. Error handler: `326` → `327` `Ignore` |
+| `148` | Insurance — no PDF or Contact | `C08MXH0GHJT` | Not forwarded |
+| `51` | Mortgage — filed successfully | `e_mortgage_all_automations` (`C07R2JNE0J0`) | Route `[51 → 62 → 328]` |
+| `328` | Mortgage — filed successfully (copy) | `#a_seth_rod_kathleen` (`C0A594W1HA5`) | Added 2026-11-18. Same text as `51`, including the conditional Masterboard link. Error handler: `329` → `330` `Ignore` |
+| `136` | Mortgage — no PDF, Contact or Masterboard item | `C07R2JNE0J0` | Not forwarded |
+
+All copy modules sit after the email module of their route, so a forward failure cannot block the confirmation email. The "no PDF / no Contact" cases are not forwarded.
 
 ### Power Automate flows
 
@@ -191,6 +197,7 @@ Filed PDFs contain client financial, insurance or KiwiSaver personal data. Never
 None recorded.
 
 - 2026-11-17, KiwiSaver forward to `#a_seth_rod_kathleen` (module `322`): `Planned`. The live blueprint was confirmed to hold the module (route `[32, 60, 322]`, channel `C0A594W1HA5`, connection `4778199`). No execution has run since the change. Validate with the next KiwiSaver submission (see §21).
+- 2026-11-18, Insurance (`325`) and Mortgage (`328`) forwards: `Planned`. The live blueprint was confirmed to hold both modules (routes `[46, 61, 325]` and `[51, 62, 328]`). No execution yet.
 
 ### Required regression tests
 
@@ -207,13 +214,13 @@ Use fictional applicant data and test submissions only.
 
 Submit a test item to each of the three source boards, confirm the PDF is correctly named and filed to the expected test SharePoint location, and confirm Slack/email notifications fire — including the Masterboard link for the Mortgage App/SOP case.
 
-- After the 2026-11-17 change: with the next KiwiSaver submission, confirm that the message appears in both `#1_kiwisaver_investment_automations` and `#a_seth_rod_kathleen`, that the email (`60`) is still sent, and that the execution shows no error on module `322`.
+- After the 2026-11-17 / 2026-11-18 changes: for the next submission of each form, confirm the same points for the matching modules (`322` KiwiSaver, `325` Insurance, `328` Mortgage, with the Masterboard link present for Mortgage). For KiwiSaver: with the next submission, confirm that the message appears in both `#1_kiwisaver_investment_automations` and `#a_seth_rod_kathleen`, that the email (`60`) is still sent, and that the execution shows no error on module `322`.
 
 ## 22. Rollback
 
 Disable the `M.com: New Form Submission in IQ/MA/KQ (Jun 2026)` scenario. No automated rollback of already-filed PDFs is defined.
 
-To undo only the 2026-11-17 KiwiSaver forward: delete module `322` and its handlers `323`/`324`, or restore the previous scenario version (`version 234`, last edit 2026-11-05) from Make's scenario history.
+To undo only the 2026-11-17 KiwiSaver forward: delete module `322` and its handlers `323`/`324`, or restore the previous scenario version (`version 234`, last edit 2026-11-05) from Make's scenario history. To undo only the Insurance/Mortgage forwards (2026-11-18): delete `325`–`330`, or restore `version 235` (last edit 2026-11-17).
 
 ## 23. Troubleshooting guide
 
@@ -241,3 +248,4 @@ To undo only the 2026-11-17 KiwiSaver forward: delete module `322` and its handl
 |---|---|---|
 | 2026-07-30 | Initial canonical documentation created from registry and source-material evidence. | Claude (documentation task) |
 | 2026-11-17 | Added Slack module `322` to the KiwiSaver success route, copying the notification to `#a_seth_rod_kathleen` (Rod's request, Slack thread `C0895LK722Z` / `1794882954.622569`). Documented the live Slack modules and channels. End-to-end test still pending. | Claude (change task) |
+| 2026-11-18 | Added the same forward for Insurance (`325`, handlers `326`/`327`) and Mortgage App (`328`, handlers `329`/`330`) at Rod's request. End-to-end tests still pending. | Claude (change task) |
